@@ -31,7 +31,6 @@
   position: relative;
   display: flex;
   align-items: center;
-  border: 2px solid #AF7928;
   border-radius: 8px;
   background: #fff;
   padding-right: 8px;
@@ -48,7 +47,7 @@
 }
 
 .search-bar:focus-within {
-  border-color: #AF7928;
+  border: 2px solid #AF7928;
   box-shadow: 0 4px 16px rgba(175, 121, 40, 0.2);
 } 
 
@@ -107,7 +106,7 @@
   justify-content: center;
   color: #AF7928;
   background: #fff;
-  border: 2px solid #AF7928;
+  border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;

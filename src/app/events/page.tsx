@@ -1,15 +1,124 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MdNotifications, MdNotificationsActive } from "react-icons/md";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { FaSearch } from "react-icons/fa";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import {
+  FaSearch,
+  FaFilter,
+  FaTimes,
+  FaCalendar,
+  FaClock,
+  FaMapMarkerAlt,
+  FaUser,
+} from "react-icons/fa";
 import "./events.css";
+
+// Update the Event type definition
+type Event = {
+  date: string;
+  title: string;
+  image: string;
+  dateText: string;
+  time: string;
+  location: string;
+  details: string;
+  type: "Festival" | "Workshop" | "Fair";
+  organizer?: string; // Add optional organizer property
+};
+
+type EventType =
+  | "Festival"
+  | "Craft Fair"
+  | "Local Market"
+  | "Cultural Show"
+  | "Business Campaign"
+  | "Workshop";
+
+const events: Event[] = [
+  {
+    date: "2025-09-15",
+    title: "Subic Bay Cultural Festival",
+    image: "/event1.jpg",
+    dateText: "March 15, 2025",
+    time: "9:00 AM",
+    location: "SM Downtown Olongapo",
+    details:
+      "Annual celebration of local culture featuring artisan booths, traditional performances, and cultural exhibits.",
+    type: "Fair",
+    organizer: "Olongapo City Tourism Office",
+  },
+  {
+    date: "2026-02-17",
+    title: "Alab Sining 2026",
+    image: "/event2.jpg",
+    dateText: "February 17, 2026",
+    time: "9:00 AM",
+    location: "SM City Olongapo Central",
+    details:
+      "An art exhibit held at SM City Olongapo Central, showcasing traditional and contemporary artworks by artists from Olongapo, Zambales, and Bataan.",
+    type: "Festival",
+    organizer: "SM City Olongapo",
+  },
+  {
+    date: "2025-10-25",
+    title: "This Is Not Art Escape",
+    image: "/event3.png",
+    dateText: "October 25, 2025",
+    time: "9:00 AM",
+    location: "Ayala Malls Harbor Point",
+    details:
+      "A two-day art market at Ayala Malls Harbor Point, offering handmade crafts, original artworks, and unique creations from local artists.",
+    type: "Workshop",
+  },
+  {
+    date: "2026-06-22",
+    title: "Crft PINAY Pottery Experience",
+    image: "/event4.png",
+    dateText: "June 22, 2026",
+    time: "9:00 AM",
+    location: "Sibul Kapihan, SBFZ",
+    details:
+      "A pottery workshop held at Ianthe, providing participants with hands-on experience in traditional Filipino pottery-making techniques.",
+    type: "Workshop",
+  },
+  {
+    date: "2025-09-16",
+    title: "My City, My SM, My Crafts",
+    image: "/event5.png",
+    dateText: "September 16, 2025",
+    time: "9:00 AM",
+    location: "SM City Olongapo",
+    details:
+      "An initiative by SM City Olongapo to showcase and celebrate the craftsmanship and artistry of local Filipino artisans.",
+    type: "Fair",
+  },
+  {
+    date: "2025-10-12",
+    title: "Luzon Art Fair 2025",
+    image: "/event6.png",
+    dateText: "October 12, 2025",
+    time: "9:00 AM",
+    location: "Diwa ng Tarlac and Bulwagang Kanlahi, Tarlac City",
+    details:
+      "Olongapo Zambales Artists (OZA) is a creative collective founded in 2022, born from a shared passion to uplift and unify the art community across Olongapo and the province of Zambales.",
+    type: "Festival",
+  },
+  {
+    date: "2025-11-11",
+    title: "Sip and Sketch 'Gapo",
+    image: "/event7.png",
+    dateText: "November 11, 2025",
+    time: "9:00 AM",
+    location: "Olongapo City, Sibul Kapihan",
+    details:
+      "A creative gathering where artists and art enthusiasts come together to sketch, sip beverages, and engage in artistic conversations, fostering a community of local artists.",
+    type: "Workshop",
+  },
+];
 
 export default function EventsPage() {
   const [date, setDate] = useState<Date>(new Date());
@@ -17,84 +126,12 @@ export default function EventsPage() {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<typeof events>([]);
   const [calendarReminder, setCalendarReminder] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<EventType | null>(null);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>(events);
 
   const eventRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const featuredRef = useRef<HTMLDivElement>(null);
-
-  const events = [
-    {
-      date: "2025-09-15",
-      title: "Artisan Fair",
-      image: "/event1.jpg",
-      dateText: "Fri, Sept. 15th 2025",
-      location: "SM City Olongapo",
-      details:
-        "A four-day artisan fair held at SM City Olongapo, featuring a diverse range of Filipino crafts and handmade products from local artisans.",
-      type: "Fair",
-    },
-    {
-      date: "2026-02-17",
-      title: "Alab Sining 2026",
-      image: "/event2.jpg",
-      dateText: "Fri, Feb. 27th 2026",
-      location: "SM City Olongapo Central",
-      details:
-        "An art exhibit held at SM City Olongapo Central, showcasing traditional and contemporary artworks by artists from Olongapo, Zambales, and Bataan.",
-      type: "Festival",
-    },
-    {
-      date: "2025-10-25",
-      title: "This Is Not Art Escape",
-      image: "/event3.png",
-      dateText: "Sat, Oct. 25th 2025",
-      location: "Ayala Malls Harbor Point",
-      details:
-        "A two-day art market at Ayala Malls Harbor Point, offering handmade crafts, original artworks, and unique creations from local artists.",
-      type: "Workshop",
-    },
-    {
-      date: "2026-06-22",
-      title: "Crft PINAY Pottery Experience",
-      image: "/event4.png",
-      dateText: "Sat, June 22nd 2026",
-      location: "Sibul Kapihan, SBFZ",
-      details:
-        "A pottery workshop held at Ianthe, providing participants with hands-on experience in traditional Filipino pottery-making techniques.",
-      type: "Workshop",
-    },
-    {
-      date: "2025-09-16",
-      title: "My City, My SM, My Crafts",
-      image: "/event5.png",
-      dateText: "Sat, Sept. 16th 2025",
-      location: "SM City Olongapo",
-      details:
-        "An initiative by SM City Olongapo to showcase and celebrate the craftsmanship and artistry of local Filipino artisans.",
-      type: "Fair",
-    },
-    {
-      date: "2025-10-12",
-      title: "Luzon Art Fair 2025",
-      image: "/event6.png",
-      dateText: "Sun, Oct. 12th 2025",
-      location: "Diwa ng Tarlac and Bulwagang Kanlahi, Tarlac City",
-      details:
-        "Olongapo Zambales Artists (OZA) is a creative collective founded in 2022, born from a shared passion to uplift and unify the art community across Olongapo and the province of Zambales.",
-      type: "Festival",
-    },
-    {
-      date: "2025-11-11",
-      title: "Sip and Sketch 'Gapo",
-      image: "/event7.png",
-      dateText: "Tue, Nov. 11th 2025",
-      location: "Olongapo City, Sibul Kapihan",
-      details:
-        "A creative gathering where artists and art enthusiasts come together to sketch, sip beverages, and engage in artistic conversations, fostering a community of local artists.",
-      type: "Workshop",
-    },
-  ];
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -102,6 +139,7 @@ export default function EventsPage() {
 
     if (value.trim() === "") {
       setSuggestions([]);
+      setFilteredEvents(events);
     } else {
       const filtered = events.filter(
         (event) =>
@@ -110,6 +148,7 @@ export default function EventsPage() {
           event.dateText.toLowerCase().includes(value.toLowerCase())
       );
       setSuggestions(filtered.slice(0, 5));
+      setFilteredEvents(filtered);
     }
   };
 
@@ -141,104 +180,106 @@ export default function EventsPage() {
     setSelectedEvent(foundEvent || null);
   };
 
-  const scroll = (direction: "left" | "right") => {
-    if (featuredRef.current) {
-      const { scrollLeft, clientWidth } = featuredRef.current;
-      const scrollTo =
-        direction === "left"
-          ? scrollLeft - clientWidth
-          : scrollLeft + clientWidth;
-
-      featuredRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
-    }
-  };
-
-  const featuredEvents = events.slice(0, 3).map((event) => ({
-    ...event,
-    type: event.type,
-  }));
-
-  const communityPromotions = [
-    {
-      id: 1,
-      title: "Local Artisan Week",
-      description: "50% off on all handmade crafts at participating stores",
-      image: "/promo1.jpg",
-      validUntil: "2025-12-31",
-    },
-    {
-      id: 2,
-      title: "Cultural Workshop Series",
-      description: "Join our weekly workshops and get 20% off on materials",
-      image: "/promo2.jpg",
-      validUntil: "2025-12-31",
-    },
-  ];
+  // Add featured events from your existing events
+  const featuredEvents = events.slice(0, 3);
 
   return (
     <div className="events-page">
       <Navbar />
 
       <main role="main">
-        {/* Featured Events Section */}
+        {/* Update Hero Section */}
+        <section className="events-hero">
+          <div className="hero-content">
+            <h1>
+              Discover Local Events
+              <br />
+              in Olongapo City
+            </h1>
+            <p>
+              Festivals, workshops, fairs, and community campaigns celebrating
+              Filipino culture and craftsmanship
+            </p>
+          </div>
+        </section>
+
+        {/* Add Featured Events Section */}
         <section className="featured-events-section">
-          <div className="section-header">
+          <div className="events-section-header">
             <h2>Featured Events</h2>
-            <Link href="/events" className="view-all-link">
-              View All Events →
-            </Link>
           </div>
 
-          <div className="featured-carousel-container">
+          <div className="featured-events-wrapper">
             <button
-              className="nav-button prev"
-              onClick={() => scroll("left")}
-              aria-label="Previous"
+              className="events-nav-button prev"
+              onClick={() => {
+                const container = document.querySelector(
+                  ".featured-events-grid"
+                );
+                if (container) {
+                  container.scrollLeft -= 650; // Width of card + gap
+                }
+              }}
+              aria-label="Previous events"
             >
-              <FaChevronLeft />
+              ←
             </button>
 
-            <div className="featured-events-carousel" ref={featuredRef}>
+            <div className="featured-events-grid">
               {featuredEvents.map((event, idx) => (
                 <div className="featured-event-card" key={idx}>
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="featured-event-image"
-                  />
-                  <div className="featured-event-content">
-                    <span
-                      className={`event-type-tag ${event.type.toLowerCase()}`}
-                    >
-                      {event.type}
-                    </span>
-                    <h3>{event.title}</h3>
-                    <p className="featured-event-date">{event.dateText}</p>
-                    <p className="featured-event-location">{event.location}</p>
-                    <button
-                      className={`reminder-btn ${
-                        reminders.includes(event.date) ? "active" : ""
-                      }`}
-                      onClick={() => toggleReminder(idx)}
-                    >
-                      {reminders.includes(event.date) ? (
-                        <MdNotificationsActive className="icon-ringing" />
-                      ) : (
-                        <MdNotifications />
-                      )}
-                      Set Reminder
-                    </button>
+                  <div className="event-image-container">
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="event-image"
+                    />
+                  </div>
+                  <div className="event-content">
+                    <div className="event-header">
+                      <span
+                        className={`event-type-tag ${event.type.toLowerCase()}`}
+                      >
+                        {event.type}
+                      </span>
+                      <button
+                        className={`reminder-btn ${
+                          reminders.includes(event.date) ? "active" : ""
+                        }`}
+                        onClick={() => toggleReminder(idx)}
+                      >
+                        {reminders.includes(event.date) ? (
+                          <MdNotificationsActive className="icon-ringing" />
+                        ) : (
+                          <MdNotifications />
+                        )}
+                      </button>
+                    </div>
+                    <h3 className="event-title">{event.title}</h3>
+                    <div className="event-datetime">
+                      <span className="event-date">{event.dateText}</span>
+                      <span className="separator">|</span>
+                      <span className="event-time">{event.time}</span>
+                    </div>
+                    <p className="event-description">{event.details}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             <button
-              className="nav-button next"
-              onClick={() => scroll("right")}
-              aria-label="Next"
+              className="events-nav-button next"
+              onClick={() => {
+                const container = document.querySelector(
+                  ".featured-events-grid"
+                );
+                if (container) {
+                  container.scrollLeft += 650; // Width of card + gap
+                }
+              }}
+              aria-label="Next events"
             >
-              <FaChevronRight />
+              →
             </button>
           </div>
         </section>
@@ -251,9 +292,6 @@ export default function EventsPage() {
             onSubmit={(e) => e.preventDefault()}
           >
             <FaSearch className="search-icon" aria-hidden="true" />
-            <label htmlFor="events-search" className="sr-only">
-              Search for an event or location
-            </label>
             <input
               id="events-search"
               className="events-search-input"
@@ -263,122 +301,170 @@ export default function EventsPage() {
               onChange={handleSearchChange}
               aria-label="Search events or locations"
             />
+            {query && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => {
+                  setQuery("");
+                  setSuggestions([]);
+                }}
+                aria-label="Clear search"
+              >
+                <FaTimes />
+              </button>
+            )}
           </form>
 
-          {suggestions.length > 0 && (
-            <ul
-              className="events-suggestions-box"
-              role="listbox"
-              aria-label="Event suggestions"
-              aria-live="polite"
-            >
-              {suggestions.map((event, idx) => {
-                const eventIndex = events.findIndex(
-                  (e) => e.title === event.title
-                );
-                return (
-                  <li
-                    key={idx}
-                    role="option"
-                    tabIndex={0}
-                    onClick={() => handleSuggestionClick(eventIndex)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        handleSuggestionClick(eventIndex);
-                      }
-                    }}
-                  >
-                    <img src={event.image} alt={event.title + " event"} />
-                    <span>{event.title}</span>
-                    <span className="events-suggestion-location">
-                      {event.location}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+          <button
+            type="button"
+            className="filter-button"
+            onClick={() => setShowFilters(!showFilters)}
+            aria-label="Filter events"
+          >
+            <FaFilter />
+          </button>
+          {showFilters && (
+            <div className="filter-dropdown">
+              {[
+                "Festival",
+                "Craft Fair",
+                "Local Market",
+                "Cultural Show",
+                "Business Campaign",
+                "Workshop",
+              ].map((type) => (
+                <button
+                  key={type}
+                  className={`filter-option ${
+                    selectedFilter === type ? "active" : ""
+                  }`}
+                  onClick={() => {
+                    const newFilter =
+                      selectedFilter === type ? null : (type as EventType);
+                    setSelectedFilter(newFilter);
+                    setShowFilters(false);
+
+                    // Filter events based on selected type
+                    if (!newFilter) {
+                      setFilteredEvents(events);
+                    } else {
+                      const filtered = events.filter(
+                        (event) =>
+                          event.type.toLowerCase() === newFilter.toLowerCase()
+                      );
+                      setFilteredEvents(filtered);
+                    }
+                  }}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
-        <div className="events-content">
-          <div className="events-left">
-            {events.map((event, idx) => (
-              <article
-                className="event-card"
-                key={idx}
-                ref={(el: HTMLDivElement | null) => {
-                  eventRefs.current[idx] = el;
-                }}
-                aria-labelledby={`event-title-${idx}`}
-              >
-                <img
-                  src={event.image}
-                  alt={event.title + " event"}
-                  className="event-image"
-                />
-                <div className="event-info">
-                  <div className="event-date">{event.dateText}</div>
-                  <div className="event-title" id={`event-title-${idx}`}>
-                    {event.title}
-                  </div>
-                  <div className="event-location">
-                    <svg
-                      className="location-icon"
-                      width="9.92"
-                      height="13.33"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                      focusable="false"
-                    >
-                      <path
-                        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zM12 11.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"
-                        fill="#AF7928"
-                      />
-                    </svg>
-                    <span className="location-text">{event.location}</span>
-                  </div>
-                  <div className="event-details">{event.details}</div>
-                </div>
+        <h2 className="all-events-title">All Upcoming Events</h2>
 
-                <div className="event-actions">
+        <div className="events-content">
+          <div className="all-events-container">
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map((event, idx) => (
+                <article
+                  className="all-event-card"
+                  key={idx}
+                  ref={(el: HTMLDivElement | null) => {
+                    eventRefs.current[idx] = el;
+                  }}
+                >
+                  <div className="all-event-header">
+                    <span
+                      className={`all-event-type ${event.type.toLowerCase()}`}
+                    >
+                      {event.type}
+                    </span>
+                    <button
+                      className={`reminder-btn ${
+                        reminders.includes(event.date) ? "active" : ""
+                      }`}
+                      onClick={() => toggleReminder(idx)}
+                    >
+                      {reminders.includes(event.date) ? (
+                        <MdNotificationsActive className="icon-ringing" />
+                      ) : (
+                        <MdNotifications />
+                      )}
+                    </button>
+                  </div>
+
+                  <h3 className="all-event-title">{event.title}</h3>
+
+                  <div className="all-event-meta">
+                    <FaCalendar />
+                    <span>{event.dateText}</span>
+                  </div>
+
+                  <div className="all-event-meta">
+                    <FaClock />
+                    <span>{event.time}</span>
+                  </div>
+
+                  <p className="all-event-description">{event.details}</p>
+
+                  <div className="all-event-location">
+                    <FaMapMarkerAlt />
+                    <span>{event.location}</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="no-events-card">
+                <FaCalendar className="no-events-icon" aria-hidden="true" />
+                <h3 className="no-events-title">No Events Found</h3>
+                <p className="no-events-subtitle">
+                  {selectedFilter
+                    ? "No events match the selected filter."
+                    : query
+                    ? "No events match your search."
+                    : "No events on this date."}
+                </p>
+                <div className="no-events-actions">
                   <button
-                    type="button"
-                    className={`action-box ${
-                      reminders.includes(event.date) ? "active" : ""
-                    }`}
-                    aria-pressed={reminders.includes(event.date)}
-                    aria-label={
-                      reminders.includes(event.date)
-                        ? "Remove reminder for this event"
-                        : "Set a reminder for this event"
-                    }
-                    onClick={() => toggleReminder(idx)}
+                    className="no-events-button secondary"
+                    onClick={() => {
+                      setDate(new Date());
+                      setSelectedEvent(null);
+                      setSelectedFilter(null);
+                      setQuery("");
+                      setFilteredEvents(events);
+                    }}
                   >
-                    {reminders.includes(event.date) ? (
-                      <>
-                        <MdNotificationsActive
-                          className="icon-ringing"
-                          aria-hidden="true"
-                        />
-                        <span>Reminder Set</span>
-                      </>
-                    ) : (
-                      <>
-                        <MdNotifications aria-hidden="true" />
-                        <span>Set a Reminder</span>
-                      </>
-                    )}
+                    Clear Filters
+                  </button>
+                  <button
+                    className="no-events-button primary"
+                    onClick={() => {
+                      setSelectedFilter(null);
+                      setQuery("");
+                      setFilteredEvents(events);
+                    }}
+                  >
+                    Show All Events
                   </button>
                 </div>
-              </article>
-            ))}
+              </div>
+            )}
           </div>
 
           <aside className="calendar-box" aria-label="Event calendar">
             <div className="calendar-header">
-              <span className="calendar-title">Calendar</span>
+              <div className="calendar-title-group">
+                <span className="calendar-title">Event Calendar</span>
+                <p className="calendar-subtitle">
+                  Select a date to filter events or set a reminder. Dotted dates
+                  have events.
+                </p>
+              </div>
               <div className="calendar-actions">
                 <button
                   type="button"
@@ -507,8 +593,13 @@ export default function EventsPage() {
 
             {selectedEvent && (
               <section className="calendar-event-details" aria-live="polite">
-                <div className="calendar-event-title">
-                  {selectedEvent.title}
+                <div className="calendar-event-header">
+                  <div className="calendar-event-title">
+                    {selectedEvent.title}
+                  </div>
+                  <span className="calendar-event-type">
+                    {selectedEvent.type}
+                  </span>
                 </div>
                 <div className="calendar-event-divider"></div>
                 <div className="calendar-event-location">
@@ -526,30 +617,53 @@ export default function EventsPage() {
                   </svg>
                   <span>{selectedEvent.location}</span>
                 </div>
+                <div className="calendar-event-datetime">
+                  <span>{selectedEvent.dateText}</span>
+                  <span>|</span>
+                  <span>{selectedEvent.time}</span>
+                </div>
                 <div className="calendar-event-description">
                   {selectedEvent.details}
                 </div>
+
+                <div className="calendar-divider" />
+
+                <div className="calendar-artisans">
+                  <div className="calendar-artisans-header">
+                    <FaUser />
+                    <span>Featured Artisans:</span>
+                  </div>
+                  <div className="calendar-artisans-list">
+                    <img
+                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aba"
+                      alt="Featured artisan"
+                      className="artisan-avatar"
+                    />
+                    <img
+                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=Abc"
+                      alt="Featured artisan"
+                      className="artisan-avatar"
+                    />
+                    <img
+                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=Abf"
+                      alt="Featured artisan"
+                      className="artisan-avatar"
+                    />
+                  </div>
+                </div>
+
+                <div className="calendar-divider" />
+
+                <p className="calendar-organizer">
+                  Organized by{" "}
+                  <strong>
+                    {selectedEvent.organizer || "Olongapo City LGU"}
+                  </strong>
+                </p>
               </section>
             )}
           </aside>
         </div>
-
-        {/* Add Community Promotions section */}
-        <section className="community-promotions">
-          <h2>Community Promotions</h2>
-          <div className="promotions-grid">
-            {communityPromotions.map((promo) => (
-              <div className="promo-card" key={promo.id}>
-                <img src={promo.image} alt={promo.title} />
-                <div className="promo-content">
-                  <h3>{promo.title}</h3>
-                  <p>{promo.description}</p>
-                  <button className="learn-more-btn">Learn More →</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
       </main>
 
       <Footer />

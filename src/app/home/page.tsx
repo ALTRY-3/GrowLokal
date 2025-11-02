@@ -174,29 +174,25 @@ const upcomingEvents = [
     title: "Weaving Workshop",
     type: "Workshop",
     date: "March 15, 2025",
-    location: "Barangay Poblacion",
-    image: "/event1.jpg",
+    location: "Barangay Pag-asa",
   },
   {
     title: "Local Crafts Fair",
     type: "Fair",
     date: "April 2, 2025",
-    location: "Olongapo City Plaza",
-    image: "/event2.jpg",
+    location: "Barangay East Tapinac",
   },
   {
-    title: "Local Crafts Fair",
-    type: "Fair",
-    date: "April 2, 2025",
-    location: "Olongapo City Plaza",
-    image: "/event2.jpg",
+    title: "Pottery Demonstration",
+    type: "Demo",
+    date: "March 20, 2025",
+    location: "Olongapo City, Triangle",
   },
   {
-    title: "Local Crafts Fair",
-    type: "Fair",
-    date: "April 2, 2025",
-    location: "Olongapo City Plaza",
-    image: "/event2.jpg",
+    title: "Cultural Festival",
+    type: "Festival",
+    date: "March 25, 2025",
+    location: "Magsaysay",
   },
   {
     title: "Local Crafts Fair",
@@ -228,28 +224,27 @@ const announcements = [
       "Join the local fair and showcase your handmade creations to the community.",
   },
   {
-    title: "Barangay Craft Fair",
-    date: "April 1, 2025",
+    title: "Subic Bay Cultural Festival",
+    date: "March 15, 2025",
     description:
-      "Join the local fair and showcase your handmade creations to the community.",
+      "Annual celebration of local culture featuring artisan booths, traditional performances, and cultural exhibits.",
   },
   {
-    title: "Barangay Craft Fair",
-    date: "April 1, 2025",
+    title: "Alab Sining 2026",
+    date: "February 17, 2026",
     description:
-      "Join the local fair and showcase your handmade creations to the community.",
+      "An art exhibit held at SM City Olongapo Central, showcasing traditional and contemporary artworks by artists from Olongapo.",
   },
   {
-    title: "Barangay Craft Fair",
-    date: "April 1, 2025",
-    description:
-      "Join the local fair and showcase your handmade creations to the community.",
+    title: "Market Day Extension",
+    date: "March 8, 2025",
+    description: "Weekend market hours extended to support local artisans.",
   },
   {
-    title: "Barangay Craft Fair",
-    date: "April 1, 2025",
+    title: "New Artisan Training Program",
+    date: "March 10, 2025",
     description:
-      "Join the local fair and showcase your handmade creations to the community.",
+      "LGU announces free training for aspiring artisans in traditional crafts.s",
   },
 ];
 
