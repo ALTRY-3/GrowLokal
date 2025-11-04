@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { MdNotifications, MdNotificationsActive } from "react-icons/md";
@@ -132,6 +132,23 @@ export default function EventsPage() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(events);
 
   const eventRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    const selectedDate = localStorage.getItem("selectedEventDate");
+    if (selectedDate) {
+      setDate(new Date(selectedDate));
+
+      const dateEvents = events.filter((event) => event.date === selectedDate);
+
+      setFilteredEvents(dateEvents);
+
+      if (dateEvents.length > 0) {
+        setSelectedEvent(dateEvents[0]);
+      }
+
+      localStorage.removeItem("selectedEventDate");
+    }
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

@@ -9,7 +9,7 @@
   width: 100%;
   padding: 1rem 2rem;
   background: #2E3F36;
-  border-bottom: none; /* Remove border when filter is open */
+  border-bottom: none; 
   position: sticky;
   top: 0;
   z-index: 100;
@@ -22,7 +22,7 @@
   align-items: center;
   gap: 1rem;
   position: relative;
-  width: 100%; /* Add this */
+  width: 100%;
 }
 
 .search-bar {

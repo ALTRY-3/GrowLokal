@@ -11,6 +11,9 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Calendar } from "lucide-react";
 import { Megaphone, Store } from "lucide-react";
 import { MdNotifications, MdNotificationsActive } from "react-icons/md";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { User } from "lucide-react";
+import { useRouter } from "next/navigation";
 import "./home.css";
 
 const featuredProducts = [
@@ -68,7 +71,7 @@ const featuredProducts = [
     id: 6,
     name: "Handwoven Buri Bag",
     price: 79,
-    artist: "Brian Porlo",
+    artist: "LENG",
     category: "Handicrafts",
     craftType: "Basketry",
     barangay: "Mabayuan",
@@ -82,6 +85,7 @@ const topArtisans = [
     name: "Aba Dela Cruz",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aba",
     craftType: "Weaving",
+    category: "Handicrafts", // Add category
     location: "Asinan",
     rating: 4.8,
     productsCount: 24,
@@ -91,6 +95,7 @@ const topArtisans = [
     name: "Ben Yap",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ben",
     craftType: "Woodwork",
+    category: "Handicrafts",
     location: "Banicain",
     rating: 4.6,
     productsCount: 18,
@@ -100,6 +105,7 @@ const topArtisans = [
     name: "Carla Abdul",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carla",
     craftType: "Pottery",
+    category: "Handicrafts",
     location: "Baretto",
     rating: 4.6,
     productsCount: 18,
@@ -109,6 +115,7 @@ const topArtisans = [
     name: "David Delo Santos",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
     craftType: "Embroidery",
+    category: "Fashion",
     location: "East Bajac-Bajac",
     rating: 4.6,
     productsCount: 18,
@@ -118,6 +125,7 @@ const topArtisans = [
     name: "Ebon Santos",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ebon",
     craftType: "Cosmetics",
+    category: "Beauty & Wellness",
     location: "East Tapinac",
     rating: 4.6,
     productsCount: 18,
@@ -127,6 +135,7 @@ const topArtisans = [
     name: "Juan Reyes",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Juan",
     craftType: "Textile",
+    category: "Fashion",
     location: "Gordon Heights",
     rating: 4.6,
     productsCount: 18,
@@ -136,6 +145,7 @@ const topArtisans = [
     name: "Frances Toyang",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Frances",
     craftType: "Jewelry Making",
+    category: "Handicrafts",
     location: "Kalaklan",
     rating: 5.3,
     productsCount: 18,
@@ -145,6 +155,7 @@ const topArtisans = [
     name: "Brian Porlo",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Brian",
     craftType: "Basketry",
+    category: "Handicrafts",
     location: "Mabayuan",
     rating: 6.5,
     productsCount: 50,
@@ -154,6 +165,7 @@ const topArtisans = [
     name: "Lissy Agasa",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lissy",
     craftType: "Leatherwork",
+    category: "Handicrafts",
     location: "New Cabalan",
     rating: 2.6,
     productsCount: 8,
@@ -163,6 +175,7 @@ const topArtisans = [
     name: "Rei Bustamante",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rei",
     craftType: "Cooking",
+    category: "Food",
     location: "New Ilalim",
     rating: 3.1,
     productsCount: 10,
@@ -171,28 +184,40 @@ const topArtisans = [
 
 const upcomingEvents = [
   {
-    title: "Weaving Workshop",
-    type: "Workshop",
-    date: "March 15, 2025",
+    title: "Luzon Art Fair 2025",
+    type: "Fair",
+    date: "October 12, 2025",
     location: "Barangay Pag-asa",
+    fullDate: "2025-10-12",
   },
   {
-    title: "Local Crafts Fair",
-    type: "Fair",
-    date: "April 2, 2025",
-    location: "Barangay East Tapinac",
+    title: "Alab Sining 2026",
+    type: "Festival",
+    date: "February 17, 2026",
+    location: "SM City Olongapo Central",
+    fullDate: "2026-02  -17",
   },
   {
     title: "Pottery Demonstration",
     type: "Demo",
     date: "March 20, 2025",
     location: "Olongapo City, Triangle",
+    fullDate: "2025-03-20",
   },
   {
     title: "Cultural Festival",
     type: "Festival",
     date: "March 25, 2025",
     location: "Magsaysay",
+    fullDate: "2025-03-25",
+  },
+  {
+    title: "Sip and Sketch 'Gapo",
+    type: "Fair",
+    date: "November 11, 2025",
+    location: "Olongapo City, Sibul Kapihan",
+    image: "/event2.jpg",
+    fullDate: "2025-11-11",
   },
   {
     title: "Local Crafts Fair",
@@ -200,13 +225,7 @@ const upcomingEvents = [
     date: "April 2, 2025",
     location: "Olongapo City Plaza",
     image: "/event2.jpg",
-  },
-  {
-    title: "Local Crafts Fair",
-    type: "Fair",
-    date: "April 2, 2025",
-    location: "Olongapo City Plaza",
-    image: "/event2.jpg",
+    fullDate: "2025-04-02",
   },
 ];
 
@@ -294,11 +313,25 @@ const artisanStories = [
 
 export default function HomePage() {
   const [eventReminders, setEventReminders] = useState<string[]>([]);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const savedReminders = localStorage.getItem("eventReminders");
     if (savedReminders) {
       setEventReminders(JSON.parse(savedReminders));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check for selected product from home page
+    const selectedProductFromHome = localStorage.getItem("selectedProduct");
+    if (selectedProductFromHome) {
+      // Set the selected product and show modal
+      setSelectedProduct(JSON.parse(selectedProductFromHome));
+      // Clear the stored product
+      localStorage.removeItem("selectedProduct");
     }
   }, []);
 
@@ -332,6 +365,50 @@ export default function HomePage() {
       localStorage.setItem("eventReminders", JSON.stringify(newReminders));
       return newReminders;
     });
+  };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (openMenuId !== null) {
+      const menu = document.getElementById(`menu-${openMenuId}`);
+      if (menu && !menu.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  const handleProductClick = (product: any) => {
+    // Store the product details in localStorage
+    localStorage.setItem(
+      "selectedProduct",
+      JSON.stringify({
+        img: product.image,
+        hoverImg: product.image,
+        name: product.name,
+        artist: product.artist,
+        price: `₱${product.price.toFixed(2)}`,
+        craftType: product.craftType,
+        category: product.category,
+        productId: product.id.toString(),
+        maxStock: 10, // You can adjust this as needed
+      })
+    );
+
+    // Navigate to marketplace
+    router.push("/marketplace");
+  };
+
+  const handleViewDetails = (eventDate: string) => {
+    // Store the selected date in localStorage
+    localStorage.setItem("selectedEventDate", eventDate);
+    // Navigate to events page
+    router.push("/events");
   };
 
   return (
@@ -382,7 +459,35 @@ export default function HomePage() {
             <div className="home-artisan-carousel" ref={artisansRef}>
               {topArtisans.map((artisan) => (
                 <div className="home-artisan-card" key={artisan.id}>
-                  <div className="home-artisan-profile">
+                  <div className="home-artisan-menu" id={`menu-${artisan.id}`}>
+                    <button
+                      className="home-artisan-menu-button"
+                      onClick={(e) => {
+                        setOpenMenuId(
+                          openMenuId === artisan.id ? null : artisan.id
+                        );
+                      }}
+                      aria-label="Artisan menu"
+                    >
+                      <BsThreeDotsVertical />
+                    </button>
+                    {openMenuId === artisan.id && (
+                      <div className="home-artisan-menu-dropdown">
+                        <Link
+                          href={`/artisan/${artisan.id}`}
+                          className="home-artisan-menu-item"
+                        >
+                          <User size={16} />
+                          Visit Artisan
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                  <Link
+                    href={`/artisan/${artisan.id}`}
+                    className="home-artisan-profile"
+                    style={{ textDecoration: "none" }}
+                  >
                     <img
                       src={artisan.avatar}
                       alt={artisan.name}
@@ -390,9 +495,14 @@ export default function HomePage() {
                     />
                     <div className="home-artisan-info">
                       <h3 className="home-artisan-name">{artisan.name}</h3>
-                      <span className="home-artisan-category">
-                        {artisan.craftType}
-                      </span>
+                      <div className="home-artisan-tags">
+                        <span className="home-artisan-tag craft-type">
+                          {artisan.craftType}
+                        </span>
+                        <span className="home-artisan-tag category">
+                          {artisan.category}
+                        </span>
+                      </div>
                       <div className="home-artisan-location">
                         <MapPin size={12} />
                         <span>{artisan.location}</span>
@@ -407,7 +517,7 @@ export default function HomePage() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -427,7 +537,7 @@ export default function HomePage() {
           <div className="home-section-header">
             <h2>Featured Crafts</h2>
             <Link href="/marketplace" className="home-see-all">
-              See All →
+              See All <FaChevronRight className="home-arrow-icon" />
             </Link>
           </div>
 
@@ -442,7 +552,12 @@ export default function HomePage() {
 
             <div className="home-product-carousel" ref={featuredRef}>
               {featuredProducts.map((product) => (
-                <div className="home-product-card" key={product.id}>
+                <div
+                  className="home-product-card"
+                  key={product.id}
+                  onClick={() => handleProductClick(product)}
+                  style={{ cursor: "pointer" }}
+                >
                   <div className="home-image-container">
                     <img
                       src={product.image}
@@ -494,7 +609,7 @@ export default function HomePage() {
           <div className="home-section-header">
             <h2>Upcoming Events</h2>
             <Link href="/events" className="home-see-all">
-              View All →
+              View All <FaChevronRight className="home-arrow-icon" />
             </Link>
           </div>
 
@@ -537,6 +652,14 @@ export default function HomePage() {
                       <MapPin size={12} />
                       <span>{event.location}</span>
                     </div>
+                    <div className="home-event-actions">
+                      <button
+                        className="home-event-view-details"
+                        onClick={() => handleViewDetails(event.fullDate)}
+                      >
+                        View Event Details <FaChevronRight size={12} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -557,7 +680,7 @@ export default function HomePage() {
           <div className="home-section-header">
             <h2>Artisan Stories</h2>
             <Link href="/stories" className="home-see-all">
-              Read More →
+              Read More <FaChevronRight className="home-arrow-icon" />
             </Link>
           </div>
 
