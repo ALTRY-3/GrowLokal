@@ -195,7 +195,7 @@ const upcomingEvents = [
     type: "Festival",
     date: "February 17, 2026",
     location: "SM City Olongapo Central",
-    fullDate: "2026-02  -17",
+    fullDate: "2026-02-17",
   },
   {
     title: "Pottery Demonstration",
@@ -478,7 +478,7 @@ export default function HomePage() {
                           className="home-artisan-menu-item"
                         >
                           <User size={16} />
-                          Visit Artisan
+                          Visit Shop
                         </Link>
                       </div>
                     )}

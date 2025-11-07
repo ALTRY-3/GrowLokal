@@ -18,6 +18,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import "./events.css";
+import { useSearchParams } from "next/navigation";
 
 // Update the Event type definition
 type Event = {
@@ -126,23 +127,48 @@ export default function EventsPage() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(events);
 
   const eventRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Check for event from query string (map page)
+    const eventTitle = searchParams?.get("event");
+    if (eventTitle) {
+      const foundEvent = events.find((event) => event.title === eventTitle);
+      if (foundEvent) {
+        setFilteredEvents([foundEvent]);
+        setSelectedEvent(foundEvent);
+        setDate(new Date(foundEvent.date));
+        return; // Don't check localStorage if query param is present
+      }
+    }
+
+    // Fallback: Check for selected date from localStorage (home page)
     const selectedDate = localStorage.getItem("selectedEventDate");
     if (selectedDate) {
-      setDate(new Date(selectedDate));
+      // Sanitize date string: remove spaces and ensure format is YYYY-MM-DD
+      const cleanDate = selectedDate.replace(/\s+/g, "");
+      const parsedDate = new Date(cleanDate);
 
-      const dateEvents = events.filter((event) => event.date === selectedDate);
+      if (!isNaN(parsedDate.getTime())) {
+        setDate(parsedDate);
 
-      setFilteredEvents(dateEvents);
+        const dateEvents = events.filter((event) => event.date === cleanDate);
 
-      if (dateEvents.length > 0) {
-        setSelectedEvent(dateEvents[0]);
+        setFilteredEvents(dateEvents);
+
+        if (dateEvents.length > 0) {
+          setSelectedEvent(dateEvents[0]);
+        }
+      } else {
+        // fallback: show all events if date is invalid
+        setFilteredEvents(events);
+        setSelectedEvent(null);
+        setDate(new Date());
       }
 
       localStorage.removeItem("selectedEventDate");
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

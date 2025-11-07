@@ -14,8 +14,16 @@ export default function MapPage() {
     <main className="map-page">
       <button onClick={() => router.push("/events")} className="back-button">
         <FontAwesomeIcon icon={faChevronLeft} />
+        <span
+          style={{
+            fontWeight: 600,
+            fontSize: "1rem",
+            fontFamily: "Poppins, sans-serif",
+          }}
+        >
+          BACK
+        </span>
       </button>
-
       <div className="map-wrapper">
         <MapContent />
       </div>

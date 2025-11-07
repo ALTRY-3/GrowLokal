@@ -29,6 +29,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
 import { LatLngExpression } from "leaflet";
+import { useRouter } from "next/navigation";
 
 // --- Helper for recenter button ---
 function RecenterButton({ center }: { center: [number, number] }) {
@@ -232,35 +233,60 @@ export default function MapContent() {
   const eventIcon = L.divIcon({
     className: "custom-pin event-pin",
     html: `
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="48" viewBox="0 0 24 36">
-        <path d="M12 0C5.4 0 0 5.4 0 12c0 8.4 12 24 12 24s12-15.6 12-24C24 5.4 18.6 0 12 0z" fill="#2E3F36"/>
-        <circle cx="12" cy="12" r="5" fill="#FFC46B"/>
-      </svg>
+      <span style="
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #fff;
+        border: 5px solid #2E3F36;
+        box-sizing: border-box;
+      ">
+        <i class="fa-solid fa-calendar" style="color:#2E3F36;font-size:1.5rem;"></i>
+      </span>
     `,
-    iconSize: [32, 48],
-    iconAnchor: [16, 48],
-    popupAnchor: [0, -42],
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -44],
   });
 
   const artistIcon = L.divIcon({
     className: "custom-pin artist-pin",
     html: `
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="48" viewBox="0 0 24 36">
-        <path d="M12 0C5.4 0 0 5.4 0 12c0 8.4 12 24 12 24s12-15.6 12-24C24 5.4 18.6 0 12 0z" fill="#AF7928"/>
-        <circle cx="12" cy="12" r="5" fill="#FFC46L"/>
-      </svg>
+      <span style="
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid #AF7928;
+        box-sizing: border-box;
+      ">
+        <i class="fa-solid fa-store" style="color:#AF7928;font-size:1.5rem;"></i>
+      </span>
     `,
-    iconSize: [32, 48],
-    iconAnchor: [16, 48],
-    popupAnchor: [0, -42],
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -44],
   });
+
+  const router = useRouter();
 
   // --- Reminder ---
   const handleSetReminder = (idx: number, eventTitle: string) => {
     if (!reminders.includes(idx)) {
       setReminders([...reminders, idx]);
-      toast.success(`Reminder set for "${eventTitle}"!`);
     }
+  };
+
+  // --- View Details handler for events ---
+  const handleViewEventDetails = (event: (typeof events)[0]) => {
+    // Redirect to /events?event=<event-title>
+    router.push(`/events?event=${encodeURIComponent(event.title)}`);
   };
 
   // --- Animation for filter card ---
@@ -285,16 +311,21 @@ export default function MapContent() {
         <div className="filter-tabs-row">
           <div className="filter-tabs">
             <button
-              className={tab === "events" ? "active" : ""}
+              type="button"
+              className={`tab-btn ${tab === "events" ? "active" : ""}`}
               onClick={() => setTab("events")}
+              aria-pressed={tab === "events"}
             >
               <FontAwesomeIcon icon={faMapMarkerAlt} /> Events
             </button>
+
             <button
-              className={tab === "artists" ? "active" : ""}
+              type="button"
+              className={`tab-btn ${tab === "artists" ? "active" : ""}`}
               onClick={() => setTab("artists")}
+              aria-pressed={tab === "artists"}
             >
-              <FontAwesomeIcon icon={faUser} /> Artists
+              <FontAwesomeIcon icon={faUser} /> Artisans
             </button>
           </div>
           <div
@@ -326,7 +357,11 @@ export default function MapContent() {
               >
                 <option value="">All types</option>
                 <option value="Festival">Festival</option>
-                <option value="Fair">Fair</option>
+                <option value="Fair">Craft Fair</option>
+                <option value="Workshop">Local Market</option>
+                <option value="Workshop">Cultural Show</option>
+                <option value="Workshop">Workshop</option>
+                <option value="Workshop">Business Campaign</option>
                 <option value="Workshop">Workshop</option>
               </select>
               <input
@@ -348,7 +383,7 @@ export default function MapContent() {
             <div className="filter-fields-inner">
               <input
                 type="text"
-                placeholder="Search artist name"
+                placeholder="Search artisan or shop name"
                 value={artistSearch}
                 onChange={(e) => setArtistSearch(e.target.value)}
               />
@@ -357,11 +392,35 @@ export default function MapContent() {
                 onChange={(e) => setCraftType(e.target.value)}
               >
                 <option value="">All crafts</option>
+                {/* Static craft types */}
+                <option value="Weaving">Weaving</option>
+                <option value="Woodwork">Woodwork</option>
+                <option value="Pottery">Pottery</option>
+                <option value="Embroidery">Embroidery</option>
+                <option value="Basketry">Basketry</option>
+                <option value="Cooking">Cooking</option>
+                <option value="Textile">Textile</option>
+                <option value="Jewelry Making">Jewelry Making</option>
+                <option value="Leatherwork">Leatherwork</option>
+                <option value="Cosmetics">Cosmetics</option>
+                {/* Dynamic craft types from data */}
                 {craftTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>
                 ))}
+              </select>
+              <select
+                value={"" /* You can add a state for category if needed */}
+                onChange={() => {}}
+              >
+                <option value="">All categories</option>
+                <option value="Traditional">Handicrafts</option>
+                <option value="Modern">Fashion</option>
+                <option value="Fashion">Home</option>
+                <option value="Home">Beauty & Wellness</option>
+                <option value="Food">Food</option>
+                {/* Add more categories as needed */}
               </select>
               <select
                 value={artistRadius}
@@ -418,58 +477,22 @@ export default function MapContent() {
         {/* Event Markers */}
         {tab === "events" &&
           filteredEvents.map((event, idx) => (
-            <Marker position={[event.lat, event.lng]} icon={eventIcon}>
+            <Marker
+              position={[event.lat, event.lng]}
+              icon={eventIcon}
+              key={idx}
+            >
               <Popup>
-                <div className="popup-card">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="popup-img"
+                <div className="popup-info">
+                  {/* Category and Bell Row */}
+                  <div
                     style={{
-                      height: "80px",
-                      objectFit: "cover",
-                      borderRadius: "8px 8px 0 0",
+                      display: "flex",
+                      alignItems: "center",
+                      marginBottom: "6px",
                     }}
-                  />
-                  <div className="popup-info">
-                    <h3>{event.title}</h3>
-                    <p className="date">
-                      <FontAwesomeIcon
-                        icon={faCalendar}
-                        style={{ marginRight: 4 }}
-                      />
-                      {event.dateText}
-                    </p>
-                    <p className="location">
-                      <FontAwesomeIcon
-                        icon={faMapMarkerAlt}
-                        style={{ marginRight: 4 }}
-                      />
-                      {event.location}
-                    </p>
-                    <p className="details">{event.details}</p>
-                    <span
-                      className={`all-event-type ${event.type.toLowerCase()}`}
-                      style={{
-                        display: "inline-block",
-                        padding: "4px 10px",
-                        borderRadius: "14px",
-                        fontSize: "0.85rem",
-                        fontWeight: 500,
-                        background:
-                          event.type === "Festival"
-                            ? "#AF7928"
-                            : event.type === "Workshop"
-                            ? "#2E3F36"
-                            : "#FFC46B",
-                        color: event.type === "Fair" ? "#2E3F36" : "#fff",
-                        marginTop: "8px",
-                      }}
-                    >
-                      {event.type}
-                    </span>
-                  </div>
-                  <div className="popup-footer">
+                  >
+                    <span className={`map-event-type`}>{event.type}</span>
                     <button
                       className="popup-bell-btn"
                       title={
@@ -479,12 +502,81 @@ export default function MapContent() {
                       }
                       onClick={() => handleSetReminder(idx, event.title)}
                       disabled={reminders.includes(idx)}
+                      style={{ marginLeft: "auto" }}
                     >
                       <FontAwesomeIcon
                         icon={reminders.includes(idx) ? faCheck : faBell}
                       />
                     </button>
-                    <button className="popup-details-btn">View Details</button>
+                  </div>
+                  {/* Title and details */}
+                  <h3>{event.title}</h3>
+                  <p className="date">
+                    <FontAwesomeIcon
+                      icon={faCalendar}
+                      style={{ marginRight: 4 }}
+                    />
+                    {event.dateText}
+                  </p>
+                  <p className="details">{event.details}</p>
+                  <br />
+                  {/* Location row below description */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      margin: "6px 0 0 0",
+                    }}
+                  >
+                    {/* Location icon in circle */}
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "28px",
+                        height: "28px",
+                        background: "#fff",
+                        marginRight: "8px",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faMapMarkerAlt}
+                        style={{ color: "#2E3F36", fontSize: "1.5rem" }}
+                      />
+                    </span>
+                    <span
+                      style={{
+                        fontStyle: "italic",
+                        fontWeight: 500,
+                        color: "#2E3F36",
+                        fontSize: "0.92rem",
+                      }}
+                    >
+                      {event.location} [{event.lat.toFixed(4)},{" "}
+                      {event.lng.toFixed(4)}]
+                    </span>
+                  </div>
+                  <div
+                    className="popup-footer"
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      padding: "8px 0 0 0",
+                    }}
+                  >
+                    <button
+                      className="popup-details-btn"
+                      style={{
+                        flex: 1,
+                        width: "100%",
+                        justifyContent: "center",
+                        display: "flex",
+                      }}
+                      onClick={() => handleViewEventDetails(event)}
+                    >
+                      View Events Details
+                    </button>
                   </div>
                 </div>
               </Popup>
@@ -500,37 +592,195 @@ export default function MapContent() {
               icon={artistIcon}
             >
               <Popup>
-                <div className="popup-card">
+                <div
+                  className="popup-info"
+                  style={{ display: "flex", alignItems: "flex-start" }}
+                >
+                  {/* Profile picture on the left */}
                   <img
-                    src={artist.image}
+                    src={artist.avatar}
                     alt={artist.name}
-                    className="popup-img"
                     style={{
-                      height: "80px",
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
                       objectFit: "cover",
-                      borderRadius: "8px 8px 0 0",
+                      marginRight: "12px",
+                      border: "2px solid #AF7928",
+                      background: "#fff",
+                      flexShrink: 0,
                     }}
                   />
-                  <div className="popup-info">
-                    <h3>{artist.name}</h3>
-                    <p className="location">
-                      <FontAwesomeIcon
-                        icon={faUser}
-                        style={{ color: "#af7928", marginRight: "4px" }}
-                      />
-                      {artist.location}
-                    </p>
-                    <p className="details">
-                      <FontAwesomeIcon
-                        icon={faPaintBrush}
-                        style={{ marginRight: "4px", color: "#AF7928" }}
-                      />
-                      {artist.craftType}
-                    </p>
+                  {/* Info on the right */}
+                  <div style={{ flex: 1 }}>
+                    {/* Artist name */}
+                    <h3
+                      style={{
+                        margin: "0 0 4px 0",
+                        fontSize: "1rem",
+                        fontWeight: "bold",
+                        color: "#2E3F36",
+                      }}
+                    >
+                      {artist.name}
+                    </h3>
+                    {/* Shop icon and shop name */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "22px",
+                          height: "22px",
+                          background: "#fff",
+                          marginRight: "6px",
+                        }}
+                      >
+                        <i
+                          className="fa-solid fa-shop"
+                          style={{ color: "#AF7928", fontSize: "1rem" }}
+                        ></i>
+                      </span>
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          color: "#2E3F36",
+                          fontSize: "0.95rem",
+                        }}
+                      >
+                        {artist.shopName || `${artist.name}'s Shop`}
+                      </span>
+                    </div>
+                    {/* Craft type and category tags, full width */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        marginBottom: "8px",
+                        width: "100%",
+                      }}
+                    >
+                      <span
+                        className="map-event-type"
+                        style={{ flex: 1, textAlign: "center" }}
+                      >
+                        {artist.craftType}
+                      </span>
+                      <span
+                        className="map-event-type"
+                        style={{ flex: 1, textAlign: "center" }}
+                      >
+                        {artist.category || "Handicrafts"}
+                      </span>
+                    </div>
+                    {/* Shop rating and product count row */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: "8px",
+                        width: "100%",
+                      }}
+                    >
+                      {/* Shop rating count */}
+                      <span
+                        style={{
+                          color: "#2E3F36",
+                          fontWeight: 500,
+                          fontSize: "0.95rem",
+                        }}
+                      >
+                        {artist.ratingCount ?? 0} Ratings
+                      </span>
+                      {/* Vertical line */}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: "1px",
+                          height: "18px",
+                          background: "#787878ff",
+                          margin: "0 12px",
+                        }}
+                      ></span>
+                      {/* Number of products */}
+                      <span
+                        style={{
+                          color: "#2E3F36",
+                          fontWeight: 500,
+                          fontSize: "0.95rem",
+                        }}
+                      >
+                        {artist.productCount ?? 0} Products
+                      </span>
+                    </div>
                   </div>
-                  <div className="popup-footer">
-                    <button className="popup-details-btn">View Details</button>
-                  </div>
+                </div>
+                {/* Location row, full width below profile/info */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    margin: "8px 0 0 0",
+                    width: "100%",
+                    padding: "0 12px",
+                  }}
+                >
+                  {/* Location icon in circle */}
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "28px",
+                      height: "28px",
+                      background: "#fff",
+                      marginRight: "8px",
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faMapMarkerAlt}
+                      style={{ color: "#2E3F36", fontSize: "1.5rem" }}
+                    />
+                  </span>
+                  <span
+                    style={{
+                      fontStyle: "italic",
+                      fontWeight: 500,
+                      color: "#2E3F36",
+                      fontSize: "0.92rem",
+                    }}
+                  >
+                    {artist.location} [{artist.lat.toFixed(4)},{" "}
+                    {artist.lng.toFixed(4)}]
+                  </span>
+                </div>
+                <div
+                  className="popup-footer"
+                  style={{
+                    display: "flex",
+                    width: "100%",
+                    padding: "8px 0 0 0",
+                  }}
+                >
+                  <button
+                    className="popup-details-btn"
+                    style={{
+                      flex: 1,
+                      width: "100%",
+                      justifyContent: "center",
+                      display: "flex",
+                      fontFamily: "Poppins, sans-serif",
+                    }}
+                  >
+                    Visit Shop
+                  </button>
                 </div>
               </Popup>
             </Marker>
@@ -543,10 +793,50 @@ export default function MapContent() {
       {/* Legend Box */}
       <div className="map-legend">
         <div>
-          <span className="legend-pin event-pin"></span> Events
+          <span
+            className="legend-pin event-pin"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              background: "#fff",
+              border: "2px solid #2E3F36",
+              boxSizing: "border-box",
+              marginRight: "8px",
+            }}
+          >
+            <i
+              className="fa-solid fa-calendar"
+              style={{ color: "#2E3F36", fontSize: "1rem" }}
+            ></i>
+          </span>
+          Events
         </div>
         <div>
-          <span className="legend-pin artist-pin"></span> Artists
+          <span
+            className="legend-pin artist-pin"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              background: "#fff",
+              border: "2px solid #FFC46B",
+              boxSizing: "border-box",
+              marginRight: "8px",
+            }}
+          >
+            <i
+              className="fa-solid fa-store"
+              style={{ color: "#AF7928", fontSize: "1rem" }}
+            ></i>
+          </span>
+          Artists
         </div>
       </div>
     </>
