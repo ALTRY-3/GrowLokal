@@ -150,7 +150,7 @@ export default function ArtisanProfilePage() {
               >
                 <FontAwesomeIcon
                   icon={faMapMarkerAlt}
-                  style={{ color: "#AF7928", fontSize: "1.1rem" }}
+                  className="artisan-location-icon"
                 />
                 {artisan.location}
               </div>
@@ -234,96 +234,67 @@ export default function ArtisanProfilePage() {
           >
             Products by {artisan.name}
           </h2>
-          <div
-            className="home-product-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "1.2rem", // LESS gap between cards
-              justifyItems: "center",
-              padding: "0 2rem",
-              marginBottom: "1rem",
-            }}
-          >
+          <div className="artisan-product-grid">
             {products.map((product) => (
-              <div
-                className="home-product-card"
-                key={product._id}
-                style={{
-                  position: "relative",
-                  width: "312px",
-                  height: "461px",
-                  display: "flex",
-                  borderRadius: "8px",
-                  flexDirection: "column",
-                  background: "#ffffff",
-                  overflow: "hidden",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
-                  opacity: 1,
-                  transform: "none",
-                  cursor: "pointer",
-                }}
-              >
-                <div className="home-image-container">
+              <div className="artisan-product-card" key={product._id}>
+                <div className="artisan-image-container">
                   <img
                     src={product.images[0]}
                     alt={product.name}
-                    className="home-product-image"
+                    className="artisan-product-image"
                   />
                 </div>
-                <div className="home-product-info">
-                  <div className="home-product-info-top">
-                    <h3 className="home-product-name">{product.name}</h3>
-                    <p className="home-product-artist">{product.artistName}</p>
-                    <div
-                      className="home-product-tags"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <span className="home-product-tag craft-type">
+                <div className="artisan-product-info">
+                  <div className="artisan-product-info-top">
+                    <h3 className="artisan-product-name">{product.name}</h3>
+                    <p className="artisan-product-artist">
+                      {product.artistName}
+                    </p>
+                    <div className="artisan-product-tags">
+                      <span className="artisan-product-tag craft-type">
                         {product.craftType}
                       </span>
-                      <span className="home-product-tag category">
+                      <span className="artisan-product-tag category">
                         {product.category}
                       </span>
                     </div>
                   </div>
-                  <div className="home-product-info-bottom">
-                    <div className="home-product-price-wrapper">
-                      <span className="home-product-price">
+                  {/* Remove the line break (border-top) above the price by moving price/rating up */}
+                  <div
+                    className="artisan-product-info-bottom"
+                    style={{
+                      borderTop: "none",
+                      paddingTop: 0,
+                      marginTop: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        gap: "2px",
+                      }}
+                    >
+                      <span className="artisan-product-price">
                         ₱{product.price}
                       </span>
-                    </div>
-                    {/* Ratings inside product card, below price */}
-                    {product.averageRating > 0 && (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          color: "#AF7928",
-                          fontWeight: 600,
-                          fontSize: "0.98rem",
-                          marginTop: "6px",
-                        }}
+                      <span
+                        className="artisan-product-rating"
+                        style={{ marginLeft: 0, marginTop: "2px" }}
                       >
-                        <i className="fas fa-star"></i>
-                        {product.averageRating.toFixed(1)}
-                        <span
-                          style={{
-                            color: "#888",
-                            fontWeight: 400,
-                            fontSize: "0.95rem",
-                          }}
-                        >
-                          ({product.totalReviews})
-                        </span>
-                      </div>
-                    )}
+                        ★ {product.averageRating} ({product.totalReviews})
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "0.95rem",
+                        color: "#2e3f36",
+                        marginLeft: "18px",
+                      }}
+                    >
+                      Qty: {product.stock}
+                    </span>
                   </div>
                 </div>
               </div>
