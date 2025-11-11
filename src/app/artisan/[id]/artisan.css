@@ -12,7 +12,7 @@
   border-radius: 18px;
   box-shadow: 0 4px 24px rgba(46,63,54,0.10);
   padding: 38px 48px 32px 48px;
-  width: calc(100vw - 4rem); /* leave 2rem margin on each side */
+  width: calc(100vw - 4rem); 
   max-width: calc(100vw - 4rem);
   margin-top: 38px;
   margin-left: 2rem;
@@ -187,7 +187,7 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 1rem;
-  margin-bottom: 0.2rem; /* reduced from 0.5rem */
+  margin-bottom: 0.2rem; 
 }
 
 .artisan-product-tag {
@@ -225,7 +225,7 @@
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  margin-top: 0;           /* Remove extra space above line break */
+  margin-top: 0;          
   padding-top: 0;
   border-top: none;
   position: relative;
@@ -236,7 +236,7 @@
   color: #ffc46b;
   margin-left: 12px;
   margin-bottom: 10px;
-  position: static;        /* Always beside price */
+  position: static;        
 }
 
 .artisan-location-icon {

@@ -153,6 +153,14 @@
   overflow: hidden;
 }
 
+.hero-section img {
+  width: 100vw;
+  height: 85vh;
+  object-fit: cover;
+  object-position: center;
+  min-height: 400px;
+}
+
 .hero-overlay {
   position: absolute;
   inset: 0;

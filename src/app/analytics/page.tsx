@@ -22,7 +22,17 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMapMarkerAlt,
+  faPesoSign,
+  faBoxOpen,
+  faExclamationTriangle,
+  faUser,
+  faUserPlus,
+  faUsers,
+  faStar,
+  faPerson,
+} from "@fortawesome/free-solid-svg-icons";
 import "./analytics.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -164,6 +174,30 @@ const shopInfo = {
     "Authentic local crafts and festival products. Proudly Olongapenios.",
 };
 
+// Add mock data for Marketing Insights
+const marketingStats = {
+  totalCustomers: 142,
+  newCustomers: 45,
+  returningCustomers: 97,
+  retentionRate: 68,
+  averageRating: 4.8,
+  totalReviews: 87,
+};
+
+const customerBreakdown = [
+  { label: "New Customers", count: 45, percent: 32, color: "#2e3f36" },
+  { label: "Returning Customers", count: 97, percent: 68, color: "#af7928" },
+];
+
+const engagementTrends = [
+  { month: "Aug", visits: 120, inquiries: 30 },
+  { month: "Sep", visits: 150, inquiries: 45 },
+  { month: "Oct", visits: 170, inquiries: 60 },
+  { month: "Nov", visits: 200, inquiries: 80 },
+  { month: "Dec", visits: 220, inquiries: 90 },
+  { month: "Jan", visits: 250, inquiries: 110 },
+];
+
 export default function AnalyticsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedDate, setSelectedDate] = useState("Last 7 days");
@@ -224,26 +258,46 @@ export default function AnalyticsPage() {
       <Navbar />
       <div className="analytics-page-wrapper">
         <div className="dashboard-card">
-          {/* Artisan Profile Card at the Top */}
+          {/* TITLE ON TOP */}
+          <div
+            className="dashboard-title-bar"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "16px 10px",
+              marginBottom: "0",
+              justifyContent: "flex-start",
+            }}
+          >
+            <span
+              style={{
+                fontWeight: 600,
+                fontSize: "2rem",
+                color: "#2e3f36",
+                fontFamily: "Poppins, sans-serif",
+              }}
+            >
+              Shop Analytics
+            </span>
+          </div>
+          {/* Artisan Profile Card */}
           <div className="analytics-artisan-card">
             <div
               className="artisan-card-top"
               style={{ display: "flex", alignItems: "flex-start" }}
             >
-              {/* Profile on the top left */}
               <img
                 src={shopInfo.picture}
                 alt={shopInfo.owner}
                 className="profile-artisan-avatar"
               />
-              {/* Shop info on right of avatar */}
               <div
                 style={{
                   flex: 1,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
-                  marginLeft: "32px", // add spacing between avatar and info
+                  marginLeft: "32px",
                 }}
               >
                 <div
@@ -256,7 +310,6 @@ export default function AnalyticsPage() {
                   <span className="shop-name">{shopInfo.name}</span>
                   <span className="artisan-name">{shopInfo.owner}</span>
                 </div>
-                {/* Category, craft type tags */}
                 <div
                   style={{
                     display: "flex",
@@ -268,7 +321,6 @@ export default function AnalyticsPage() {
                   <span className="analytics-category-type">Handicrafts</span>
                   <span className="analytics-craft-type">Weaving</span>
                 </div>
-                {/* Shop location with icon */}
                 <div
                   style={{
                     margin: "12px 0 0 0",
@@ -286,76 +338,7 @@ export default function AnalyticsPage() {
                   />
                   {shopInfo.location}
                 </div>
-                {/* Shop description */}
-                <div
-                  style={{
-                    margin: "14px 0 0 0",
-                    color: "#2e3f36",
-                    fontSize: "0.98rem",
-                    fontWeight: 400,
-                  }}
-                >
-                  {shopInfo.description}
-                </div>
               </div>
-            </div>
-          </div>
-          {/* TITLE & EXPORT BUTTONS */}
-          <div
-            className="dashboard-title-bar"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: "16px 24px",
-              borderRadius: "5px",
-              marginBottom: "0",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <span
-                style={{
-                  fontWeight: 600,
-                  fontSize: "27px",
-                  color: "#af7928",
-                  fontFamily: "Poppins, sans-serif",
-                }}
-              >
-                Shop Analytics
-              </span>
-            </div>
-            <div>
-              <button
-                onClick={exportExcel}
-                style={{
-                  marginRight: "8px",
-                  padding: "8px 16px",
-                  background: "#af7928",
-                  color: "#fff",
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontFamily: "Poppins, sans-serif",
-                }}
-              >
-                Export Excel
-              </button>
-              <button
-                onClick={exportPDF}
-                style={{
-                  padding: "8px 16px",
-                  background: "#2e3f36",
-                  color: "#fff",
-                  borderRadius: "4px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontFamily: "Poppins, sans-serif",
-                }}
-              >
-                Export PDF
-              </button>
             </div>
           </div>
           <hr
@@ -365,456 +348,375 @@ export default function AnalyticsPage() {
               margin: "0 0 18px 0",
             }}
           />
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr",
-              gap: "24px",
-              marginBottom: "32px",
-              alignItems: "stretch",
-            }}
-          >
-            {/* LEFT CARDS */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
-            >
-              <div
-                style={{
-                  background: "#faf9f7",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 24px rgba(175,121,40,0.13)",
-                  border: "1px solid #e5e1dc",
-                  padding: "24px",
-                  marginBottom: "24px",
-                  maxHeight: "700px",
-                  flex: "1 1 auto",
-                }}
-              >
-                {/* FILTERS */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    marginBottom: "18px",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <select
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "4px",
-                      border: "1px solid #ddd",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: 500,
-                    }}
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                  >
-                    {dateOptions.map((opt) => (
-                      <option key={opt}>{opt}</option>
-                    ))}
-                  </select>
-                  <select
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "4px",
-                      border: "1px solid #ddd",
-                      fontFamily: "Poppins, sans-serif",
-                      fontWeight: 500,
-                    }}
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    {categoryOptions.map((opt) => (
-                      <option key={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-                {/* SALES OVERVIEW REPORT */}
-                <h3
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: "20px",
-                    color: "#af7928",
-                    fontFamily: "Poppins, sans-serif",
-                    fontSize: "18px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <FaChartLine style={{ color: "#af7928", fontSize: "20px" }} />
-                  Sales Overview Report
-                </h3>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    color: "#2e3f36",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Shows total sales over time (monthly). Sellers can track
-                  revenue growth and identify peak sales periods.
-                </div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <AreaChart data={salesOverviewData}>
-                    <defs>
-                      <linearGradient
-                        id="colorSales"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#af7928"
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#af7928"
-                          stopOpacity={0.1}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="sales"
-                      stroke="#af7928"
-                      fill="url(#colorSales)"
-                      strokeWidth={3}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#888",
-                    marginTop: "14px",
-                  }}
-                >
-                  <b>
-                    Sales spiked during the Sinulog Festival event week —
-                    indicating cultural events drive higher sales.
-                  </b>
-                </div>
-                <hr
-                  style={{
-                    border: "none",
-                    borderTop: "1px solid #eee",
-                    margin: "30px 0 16px 0",
-                  }}
-                />
-                {/* PRODUCT RANKING REPORT */}
-                <h3
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: "20px",
-                    color: "#af7928",
-                    fontFamily: "Poppins, sans-serif",
-                    fontSize: "18px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <FaCompass style={{ color: "#af7928", fontSize: "20px" }} />
-                  Product Ranking Report
-                </h3>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    color: "#2e3f36",
-                    marginBottom: "14px",
-                  }}
-                >
-                  Ranks products based on total units sold. Highlights
-                  top-performing products for the selected time range and
-                  category.
-                </div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart
-                    data={productRankingData}
-                    layout="vertical"
-                    margin={{ left: 40, right: 20, top: 10, bottom: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" dataKey="sold" />
-                    <YAxis type="category" dataKey="name" width={120} />
-                    <Tooltip />
-                    <Bar
-                      dataKey="sold"
-                      fill="#af7928"
-                      barSize={18}
-                      radius={[8, 8, 8, 8]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#888",
-                    marginTop: "8px",
-                  }}
-                >
-                  <b>
-                    Handwoven baskets are the top sellers this month,
-                    outperforming embroidered clothing.
-                  </b>
-                </div>
-              </div>
+        </div>
+        <section className="sales-tracking-section">
+          <h2 className="sales-tracking-title">
+            <FontAwesomeIcon icon={faPesoSign} className="peso-symbol" /> Sales
+            Tracking
+          </h2>
+          <div className="sales-tracking-grid">
+            {/* Total Sales Card */}
+            <div className="sales-tracking-card">
+              <span className="sales-tracking-card-title">Total Sales</span>
+              <span className="sales-tracking-card-value">
+                ₱
+                {mockSalesOverview
+                  .reduce((sum, s) => sum + s.sales, 0)
+                  .toLocaleString()}
+              </span>
             </div>
-            <div
-              style={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "stretch",
-              }}
-            >
-              <div
-                style={{
-                  background: "#faf9f7",
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 24px rgba(175,121,40,0.13)",
-                  border: "1px solid #e5e1dc",
-                  padding: "24px",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <h3
-                  style={{
-                    fontWeight: 600,
-                    marginBottom: "8px",
-                    color: "#af7928",
-                    fontFamily: "Poppins, sans-serif",
-                    fontSize: "18px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <FaBoxes style={{ color: "#af7928", fontSize: "20px" }} />
-                  Stock Levels
-                </h3>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    color: "#2e3f36",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Displays stock levels of each product. Click a product to
-                  update stock.
+            {/* Total Orders Card */}
+            <div className="sales-tracking-card">
+              <span className="sales-tracking-card-title">Total Orders</span>
+              <span className="sales-tracking-card-value">
+                {mockDailyOrders.reduce((sum, o) => sum + o.orders, 0)}
+              </span>
+            </div>
+            {/* Average Sale Value Card */}
+            <div className="sales-tracking-card">
+              <span className="sales-tracking-card-title">
+                Average Sale Value
+              </span>
+              <span className="sales-tracking-card-value">
+                ₱
+                {(
+                  mockSalesOverview.reduce((sum, s) => sum + s.sales, 0) /
+                  mockDailyOrders.reduce((sum, o) => sum + o.orders, 0)
+                ).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            {/* Sales Growth Card */}
+            <div className="sales-tracking-card">
+              <span className="sales-tracking-card-title">Sales Growth</span>
+              <span className="sales-tracking-card-value gold">
+                {(() => {
+                  const prev = mockSalesOverview[0].sales;
+                  const last =
+                    mockSalesOverview[mockSalesOverview.length - 1].sales;
+                  const growth = ((last - prev) / prev) * 100;
+                  return `${growth > 0 ? "+" : ""}${growth.toFixed(1)}%`;
+                })()}
+              </span>
+            </div>
+          </div>
+          {/* Charts Section */}
+          <div className="sales-tracking-charts">
+            <div className="chart-card">
+              <h3>Sales Trend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={mockSalesOverview}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="sales"
+                    name="Sales (₱)"
+                    stroke="#2e3f36"
+                    strokeWidth={3}
+                    dot={{ r: 5 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="orders"
+                    name="Orders"
+                    stroke="#af7928"
+                    strokeDasharray="5 5"
+                    dot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="chart-card">
+              <h3>Income Trend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mockSalesOverview}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar
+                    dataKey="sales"
+                    name="Income (₱)"
+                    fill="#2e3f36"
+                    barSize={40}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </section>
+
+        {/* Product Management Insights Section */}
+        <section className="product-management-section">
+          <h2 className="product-management-title">
+            <FontAwesomeIcon icon={faBoxOpen} className="box-symbol" /> Product
+            Management Insights
+          </h2>
+          <div className="product-management-grid">
+            {/* Total Products Card */}
+            <div className="product-management-card">
+              <span className="product-management-card-title">
+                Total Products
+              </span>
+              <span className="product-management-card-value">18</span>
+              <span className="product-management-card-subtext">
+                Active listings
+              </span>
+            </div>
+            {/* Top Performer Card */}
+            <div className="product-management-card">
+              <span className="product-management-card-title">
+                Top Performer
+              </span>
+              <span className="product-management-card-value">
+                Rattan Basket
+              </span>
+              <span className="product-management-card-subtext">45 sold</span>
+            </div>
+            {/* Low Stock Alert Card */}
+            <div className="product-management-card">
+              <span className="product-management-card-title">
+                <FontAwesomeIcon
+                  icon={faExclamationTriangle}
+                  className="warning-symbol"
+                />{" "}
+                Low Stock Alert
+              </span>
+              <span className="product-management-card-value low-stock">2</span>
+              <span className="product-management-card-subtext">
+                Products need restock
+              </span>
+            </div>
+          </div>
+          {/* Top-Selling & Needs Attention Cards */}
+          <div className="product-insights-row">
+            {/* Top-Selling Products Card */}
+            <div className="product-insights-card">
+              <h3 className="product-insights-card-title">
+                Top-Selling Products
+              </h3>
+              <table className="top-selling-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Sales</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Rattan Basket</td>
+                    <td>45</td>
+                    <td>₱38,250</td>
+                  </tr>
+                  <tr>
+                    <td>Textile Runner</td>
+                    <td>38</td>
+                    <td>₱95,000</td>
+                  </tr>
+                  <tr>
+                    <td>Clay Pot Set</td>
+                    <td>28</td>
+                    <td>₱33,600</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {/* Needs Attention Card */}
+            <div className="product-insights-card">
+              <h3 className="product-insights-card-title">Needs Attention</h3>
+              <div className="needs-attention-section">
+                {/* Low Stock Items */}
+                <div className="needs-attention-subtitle">
+                  <FontAwesomeIcon
+                    icon={faExclamationTriangle}
+                    className="alert-icon"
+                  />{" "}
+                  Low Stock Items
                 </div>
+                <ul className="low-stock-list">
+                  <li>
+                    Clay Pot Set <span className="low-stock-badge">3 left</span>
+                  </li>
+                  <li>
+                    Bamboo Tray <span className="low-stock-badge">2 left</span>
+                  </li>
+                </ul>
+                {/* Least-Selling Products */}
                 <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                    flex: "1 1 auto",
-                    overflowY: "auto",
-                  }}
+                  className="needs-attention-subtitle"
+                  style={{ marginTop: "18px" }}
                 >
-                  {stockLevelsData.map((item) => (
-                    <div
-                      key={item.name}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        background: "#fff",
-                        borderRadius: "6px",
-                        padding: "8px 12px",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                        cursor: "pointer",
-                        borderLeft: `6px solid ${
-                          stockColor[
-                            item.status === "Out" ? "Out" : item.status
-                          ]
-                        }`,
-                        transition: "background 0.2s",
-                      }}
-                      onClick={() =>
-                        (window.location.href = `/product/update-stock?name=${encodeURIComponent(
-                          item.name
-                        )}`)
-                      }
-                      title="Update Stock"
-                    >
-                      <span
-                        style={{
-                          fontWeight: 500,
-                          fontFamily: "Poppins, sans-serif",
-                        }}
-                      >
-                        {item.name}
-                      </span>
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color:
-                            stockColor[
-                              item.status === "Out" ? "Out" : item.status
-                            ],
-                          fontFamily: "Poppins, sans-serif",
-                        }}
-                      >
-                        {item.stock}{" "}
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: 400,
-                            color: "#888",
-                          }}
-                        >
-                          {item.status === "Sufficient"
-                            ? "🟢"
-                            : item.status === "Low"
-                            ? "🟠"
-                            : "🔴"}
-                        </span>
-                      </span>
-                    </div>
-                  ))}
+                  Least-Selling Products
                 </div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#888",
-                    marginTop: "8px",
-                  }}
-                >
-                  <b>
-                    Helps sellers manage inventory efficiently and prevent lost
-                    sales.
-                  </b>
-                </div>
-                {/* PRODUCT REVIEWS & RATINGS */}
-                <div
-                  style={{
-                    marginTop: "32px",
-                    background: "#fff",
-                    borderRadius: "8px",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
-                    padding: "16px",
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontWeight: 600,
-                      marginBottom: "8px",
-                      color: "#af7928",
-                      fontFamily: "Poppins, sans-serif",
-                      fontSize: "18px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <FaStar style={{ color: "#af7928", fontSize: "20px" }} />
-                    Product Reviews & Ratings
-                  </h3>
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "#2e3f36",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    Shows average rating per product based on star counts. No
-                    comments are collected, only ratings.
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {productReviewsData.map((item) => (
+                <div className="least-selling-bars">
+                  <div className="least-selling-bar">
+                    <span className="least-selling-label">Bamboo Tray</span>
+                    <div className="least-selling-bar-bg">
                       <div
-                        key={item.name}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          background: "#faf9f7",
-                          borderRadius: "6px",
-                          padding: "8px 12px",
-                          boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontWeight: 500,
-                            fontFamily: "Poppins, sans-serif",
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                        <span
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <span style={{ color: "#af7928", fontWeight: 600 }}>
-                            {item.avgRating.toFixed(1)}
-                          </span>
-                          <FaStar
-                            style={{ color: "#ffc46b", fontSize: "16px" }}
-                          />
-                          <span style={{ color: "#888", fontSize: "13px" }}>
-                            ({item.reviews} ratings)
-                          </span>
-                        </span>
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            color: "#45956a",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {item.keywords.map((kw) => (
-                            <span key={kw} style={{ marginRight: "6px" }}>
-                              #{kw}
-                            </span>
-                          ))}
-                        </span>
-                      </div>
-                    ))}
+                        className="least-selling-bar-fill"
+                        style={{ width: "40%" }}
+                      ></div>
+                    </div>
+                    <span className="least-selling-count">12 sales</span>
                   </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#888",
-                      marginTop: "8px",
-                    }}
-                  >
-                    <b>
-                      Understand customer satisfaction and improve product
-                      quality.
-                    </b>
+                  <div className="least-selling-bar">
+                    <span className="least-selling-label">
+                      Hand-carved Bowl
+                    </span>
+                    <div className="least-selling-bar-bg">
+                      <div
+                        className="least-selling-bar-fill"
+                        style={{ width: "35%" }}
+                      ></div>
+                    </div>
+                    <span className="least-selling-count">11 sales</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        {/* Marketing Insights Section */}
+        <section className="marketing-insights-section">
+          <h2 className="marketing-insights-title">
+            <FontAwesomeIcon icon={faUser} className="person-icon" /> Marketing
+            Insights
+          </h2>
+          <div className="marketing-insights-grid">
+            <div className="marketing-card">
+              <span className="marketing-card-title">Total Customers</span>
+              <span className="marketing-card-value">
+                {marketingStats.totalCustomers}
+              </span>
+              <span className="marketing-card-subtext">All time</span>
+            </div>
+            <div className="marketing-card">
+              <span className="marketing-card-title">
+                <FontAwesomeIcon
+                  icon={faUserPlus}
+                  className="add-person-icon"
+                />{" "}
+                New Customers
+              </span>
+              <span className="marketing-card-value gold">
+                {marketingStats.newCustomers}
+              </span>
+              <span className="marketing-card-subtext">This month</span>
+            </div>
+            <div className="marketing-card">
+              <span className="marketing-card-title">Returning Customers</span>
+              <span className="marketing-card-value">
+                {marketingStats.returningCustomers}
+              </span>
+              <span className="marketing-card-subtext">
+                {marketingStats.retentionRate}% retention rate
+              </span>
+            </div>
+            <div className="marketing-card">
+              <span className="marketing-card-title">
+                <FontAwesomeIcon icon={faStar} className="star-icon" /> Average
+                Rating
+              </span>
+              <span className="marketing-card-value">
+                {marketingStats.averageRating}
+              </span>
+              <span className="marketing-card-subtext">
+                {marketingStats.totalReviews} reviews
+              </span>
+            </div>
+          </div>
+          <div className="marketing-insights-row">
+            {/* Customer Breakdown Card */}
+            <div className="marketing-insights-card">
+              <h3 className="marketing-insights-card-title">
+                Customer Breakdown
+              </h3>
+              <div className="customer-breakdown-bars">
+                {customerBreakdown.map((item) => (
+                  <div className="customer-breakdown-bar" key={item.label}>
+                    <span className="customer-breakdown-label">
+                      {item.label}
+                    </span>
+                    <div className="customer-breakdown-bar-bg">
+                      <div
+                        className="customer-breakdown-bar-fill"
+                        style={{
+                          width: `${item.percent}%`,
+                          background: item.color,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="customer-breakdown-count">
+                      {item.count} ({item.percent}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="customer-breakdown-divider"></div>
+              <div className="customer-breakdown-rating">
+                <FontAwesomeIcon icon={faStar} className="star-icon" />{" "}
+                <span className="customer-breakdown-rating-value">
+                  {marketingStats.averageRating} / 5.0
+                </span>{" "}
+                <span className="customer-breakdown-rating-reviews">
+                  based on {marketingStats.totalReviews} reviews
+                </span>
+              </div>
+            </div>
+            {/* Engagement Trends Card */}
+            <div className="marketing-insights-card">
+              <h3 className="marketing-insights-card-title">
+                Engagement Trends
+              </h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <LineChart data={engagementTrends}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0ece6" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="visits"
+                    name="Profile Visits"
+                    stroke="#af7928"
+                    strokeWidth={3}
+                    dot={{ r: 5, fill: "#af7928" }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="inquiries"
+                    name="Inquiries"
+                    stroke="#2e3f36"
+                    strokeWidth={3}
+                    dot={{ r: 5, fill: "#2e3f36" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="engagement-legend">
+                <span>
+                  <span
+                    className="legend-dot"
+                    style={{ background: "#af7928" }}
+                  ></span>{" "}
+                  Profile Visits
+                </span>
+                <span>
+                  <span
+                    className="legend-dot"
+                    style={{ background: "#2e3f36" }}
+                  ></span>{" "}
+                  Inquiries
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
       <Footer />
     </>
