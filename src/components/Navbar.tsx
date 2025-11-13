@@ -367,7 +367,7 @@ export default function Navbar() {
                     className={styles.profileMenuItem}
                     onClick={() => {
                       setShowProfile(false);
-                      router.push("/profile");
+                      router.push("/profile?section=profile");
                     }}
                   >
                     <FaUser className={styles.menuIcon} />
@@ -379,7 +379,7 @@ export default function Navbar() {
                     className={styles.profileMenuItem}
                     onClick={() => {
                       setShowProfile(false);
-                      router.push("/orders");
+                      router.push("/profile?section=orders");
                     }}
                   >
                     <FaShoppingBag className={styles.menuIcon} />
@@ -391,7 +391,7 @@ export default function Navbar() {
                     className={styles.profileMenuItem}
                     onClick={() => {
                       setShowProfile(false);
-                      router.push("/wishlist");
+                      router.push("/profile?section=wishlist");
                     }}
                   >
                     <FaHeart className={styles.menuIcon} />
