@@ -1484,7 +1484,7 @@
   filter: drop-shadow(0 2px 4px rgba(231, 76, 60, 0.3));
 }
 
-.modal-content {
+.marketplace-modal-content {
   display: flex;
   gap: 20px;
   padding-bottom: 1rem; /* Reduced from 2rem */

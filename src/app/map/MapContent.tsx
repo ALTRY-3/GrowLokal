@@ -31,6 +31,21 @@ import toast, { Toaster } from "react-hot-toast";
 import { LatLngExpression } from "leaflet";
 import { useRouter } from "next/navigation";
 
+// Update artist type to include missing properties
+interface Artist {
+  name: string;
+  avatar: string;
+  location: string;
+  lat: number;
+  lng: number;
+  craftType: string;
+  image: string;
+  shopName?: string;
+  category?: string;
+  ratingCount?: number;
+  productCount?: number;
+}
+
 // --- Helper for recenter button ---
 function RecenterButton({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -46,6 +61,11 @@ function RecenterButton({ center }: { center: [number, number] }) {
 }
 
 export default function MapContent() {
+  // Temporary any-casted wrappers to suppress React 19 + react-leaflet v5 typing incompatibilities
+  // Remove once upstream types support React 19 without stripping props.
+  const AnyMapContainer: any = MapContainer;
+  const AnyCircle: any = Circle;
+  const AnyMarker: any = Marker;
   // --- Data ---
   const events = [
     {
@@ -149,7 +169,7 @@ export default function MapContent() {
     },
   ];
 
-  const artists = [
+  const artists: Artist[] = [
     {
       name: "Aba Dela Cruz",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aba",
@@ -158,6 +178,10 @@ export default function MapContent() {
       lng: 120.28,
       craftType: "Weaving",
       image: "/artist-header.jpg",
+      shopName: "Aba's Weaving Shop",
+      category: "Handicrafts",
+      ratingCount: 42,
+      productCount: 12,
     },
     {
       name: "Ben Yap",
@@ -167,8 +191,12 @@ export default function MapContent() {
       lng: 120.285,
       craftType: "Woodwork",
       image: "/artist-header.jpg",
+      shopName: "Ben's Woodcraft",
+      category: "Handicrafts",
+      ratingCount: 38,
+      productCount: 15,
     },
-    // ...other artists
+    // ... other artists
   ];
 
   // --- State ---
@@ -437,7 +465,7 @@ export default function MapContent() {
       </div>
 
       {/* Map */}
-      <MapContainer
+      <AnyMapContainer
         center={center}
         zoom={14}
         scrollWheelZoom={true}
@@ -446,9 +474,9 @@ export default function MapContent() {
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* Radius Circle */}
+        {/* Events radius circle */}
         {tab === "events" && radius > 0 && (
-          <Circle
+          <AnyCircle
             center={center}
             radius={radius * 1000}
             pathOptions={{
@@ -460,8 +488,10 @@ export default function MapContent() {
             }}
           />
         )}
+
+        {/* Artists radius circle */}
         {tab === "artists" && artistRadius > 0 && (
-          <Circle
+          <AnyCircle
             center={center}
             radius={artistRadius * 1000}
             pathOptions={{
@@ -477,7 +507,7 @@ export default function MapContent() {
         {/* Event Markers */}
         {tab === "events" &&
           filteredEvents.map((event, idx) => (
-            <Marker
+            <AnyMarker
               position={[event.lat, event.lng]}
               icon={eventIcon}
               key={idx}
@@ -580,13 +610,13 @@ export default function MapContent() {
                   </div>
                 </div>
               </Popup>
-            </Marker>
+            </AnyMarker>
           ))}
 
         {/* Artist Markers */}
         {tab === "artists" &&
           filteredArtists.map((artist, idx) => (
-            <Marker
+            <AnyMarker
               key={`artist-${idx}`}
               position={[artist.lat, artist.lng]}
               icon={artistIcon}
@@ -783,12 +813,12 @@ export default function MapContent() {
                   </button>
                 </div>
               </Popup>
-            </Marker>
+            </AnyMarker>
           ))}
 
         {/* Floating Recenter Button */}
         <RecenterButton center={center} />
-      </MapContainer>
+      </AnyMapContainer>
 
       {/* Legend Box */}
       <div className="map-legend">

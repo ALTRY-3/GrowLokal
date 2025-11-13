@@ -252,7 +252,7 @@ export default function ProductModal({
           <FaTimes />
         </button>
 
-        <div className="modal-content">
+        <div className="marketplace-modal-content">
           <div className="modal-left">
             <div className="modal-thumbs">
               <img
