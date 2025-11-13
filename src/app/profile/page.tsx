@@ -5871,7 +5871,7 @@ function WishlistContent() {
     return (
       <div style={{ padding: "60px 40px", textAlign: "center" }}>
         <FaHeart
-          style={{ fontSize: "64px", color: "#d4a664", marginBottom: "20px" }}
+          style={{ fontSize: "64px", color: "#d4a664", marginBottom: "1px" }}
         />
         <h3
           style={{ fontSize: "1.5rem", color: "#2E3F36", marginBottom: "12px" }}

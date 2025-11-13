@@ -4,72 +4,128 @@ import Link from "next/link";
 import ImageCarousel from "@/components/ImageCarousel1";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { FaStore, FaMapMarkerAlt } from "react-icons/fa";
+import { User } from "lucide-react";
 import "./stories.css";
+import { useState } from "react";
 
+// Use the same DiceBear avatar placeholder as in home
+const getProfileAvatar = (artist: string) =>
+  `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+    artist
+  )}`;
+
+// Add category, craftType, location, and profilePic to Story
 interface Story {
   id: string;
   img: string;
   title: string;
   artist: string;
   excerpt: string;
+  category: string;
+  craftType: string;
+  location: string;
+  profilePic: string;
+  storeUrl: string;
 }
 
 const stories: Story[] = [
   {
     id: "1",
-    img: "/artist1.png",
-    title: "Artist 1 Story",
+    img: "/artisans4.jpeg",
+    title: "A Journey to the Home of Rattan Furniture Making",
     artist: "Aba Dela Cruz",
     excerpt:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "Rattan is a strong part of Filipino cultural material tradition and Cebu is known through out the Philippines for its strong tradition in rattan furniture making. During my residency I visited Cebu to learn about both the traditional and innovative techniques furniture makers use. The techniques I learnt there gave me a strong understanding of frame making and weaving and it was with this knowledge that I returned to my studio in Manila. There I  began to experiment with rattan frame making and applying it to sculptural forms and concepts working towards an exhibition that was to be held at the end of my residency.",
+    category: "Handicrafts",
+    craftType: "Weaving",
+    location: "Asinan",
+    profilePic: "/profile1.jpg",
+    storeUrl: "/artisan/1",
   },
   {
     id: "2",
-    img: "/artist2.png",
-    title: "Artist 2 Story",
+    img: "/artisans4.jpg",
+    title: "Grain of Time",
     artist: "Ben Yap",
     excerpt:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "Each piece of wood I touch holds a memory, of rain, of sun, of silence. When I carve, I listen to its rhythm, the pulse hidden beneath its grain. The sound of the chisel against the wood reminds me that even something once cut down can be shaped into something new. Every curve I sand feels like rewriting a story that refuses to end.",
+    category: "Handicrafts",
+    craftType: "Woodwork",
+    location: "Banicain",
+    profilePic: "/profile2.jpg",
+    storeUrl: "/artisan/2",
   },
   {
     id: "3",
-    img: "/artist3.png",
-    title: "Artist 3 Story",
+    img: "/artisans1.jpg",
+    title: "In the Shape of My Hands",
     artist: "Carla Abdul",
     excerpt:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "The clay never lies. It remembers every hesitation, every moment I lose focus. When I sit at the wheel, it feels like time folds in on itself — just me, the slow spin, and the soft resistance beneath my palms.",
+    category: "Handicrafts",
+    craftType: "Pottery",
+    location: "Baretto",
+    profilePic: "/profile3.jpg",
+    storeUrl: "/artisan/3",
   },
   {
     id: "4",
-    img: "/artist1.png",
-    title: "Artist 4 Story",
+    img: "/artisans5.jpg",
+    title: "Threads of Quiet",
     artist: "David Delo Santos",
     excerpt:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "Each stitch feels like a whisper, a small act of patience that holds the fabric together. I lose track of time as colors bloom beneath my fingers, stories forming where there were once only blank spaces. When I finish, it’s never just a pattern — it’s a piece of calm I’ve sewn into being.",
+    category: "Fashion",
+    craftType: "Embroidery",
+    location: "East Bajac-Bajac",
+    profilePic: "/profile4.jpg",
+    storeUrl: "/artisan/4",
   },
   {
     id: "5",
-    img: "/artist2.png",
-    title: "Artist 5 Story",
-    artist: "Ebon Santos",
+    img: "/artisans6.jpg",
+    title: "Beads and Beauty",
+    artist: "Frances Toyang",
     excerpt:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "Tiny beads slip through my fingers like drops of light, each one holding a fragment of color and meaning. I thread them together slowly, finding rhythm in the quiet click of glass against glass. When the piece catches the sun, I see more than jewelry — I see patience turned into beauty.",
+    category: "Handicrafts",
+    craftType: "Jewelry Making",
+    location: "Kalaklan",
+    profilePic: "/profile5.jpg",
+    storeUrl: "/artisan/5",
   },
   {
     id: "6",
-    img: "/artist3.png",
-    title: "Artist 6 Story",
-    artist: "Frances Toyang",
+    img: "/artisans7.png",
+    title: "Threads of the Earth",
+    artist: "Juan Reyes",
     excerpt:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      "I run my hands over the fabric, feeling the texture shaped by hours of weaving and dyeing. Each thread carries the story of where it came from — the soil, the plant, the hands that spun it. As the patterns come alive, I realize I’m not just making cloth; I’m preserving memory.",
+    category: "Fashion",
+    craftType: "Textile",
+    location: "Gordon Heights",
+    profilePic: "/profile6.jpg",
+    storeUrl: "/artisan/6",
   },
 ];
 
+function getExcerptLimit() {
+  if (typeof window !== "undefined") {
+    return window.innerWidth <= 700 ? 80 : 125;
+  }
+  return 125;
+}
+
 export default function StoriesPage() {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const handleSeeMore = (id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: true }));
+  };
   return (
     <>
       <Navbar />
-
       <div className="stories-page">
         <div className="stories-carousel">
           <ImageCarousel autoSlide={true} slideInterval={3000} />
@@ -81,23 +137,81 @@ export default function StoriesPage() {
           </div>
         </div>
 
-        <div className="stories-grid">
-          {stories.map((story) => (
-            <div key={story.id} className="story-card">
-              <img src={story.img} alt={story.title} className="story-img" />
+        <div className="stories-vertical-list">
+          {stories.map((story) => {
+            const limit = getExcerptLimit();
+            const isLong = story.excerpt.length > limit;
+            const showFull = expanded[story.id];
+            const displayExcerpt =
+              showFull || !isLong
+                ? story.excerpt
+                : story.excerpt.slice(0, limit) + "…";
 
-              <h2 className="story-title">{story.title}</h2>
-              <p className="story-artist">{story.artist}</p>
-              <p className="story-excerpt">{story.excerpt}</p>
-
-              <Link href={`/artiststory/${story.id}`} className="read-more-btn">
-                Read More
-              </Link>
-            </div>
-          ))}
+            return (
+              <div key={story.id} className="story-vertical-card">
+                <div className="story-card-header">
+                  <div className="story-profile">
+                    <img
+                      src={getProfileAvatar(story.artist)}
+                      alt={story.artist}
+                      className="story-profile-pic"
+                    />
+                    <div className="story-profile-info">
+                      <span className="story-artist-name">{story.artist}</span>
+                      <div className="story-location">
+                        <FaMapMarkerAlt className="story-location-icon" />
+                        <span>{story.location}</span>
+                      </div>
+                      <div className="story-tags">
+                        <span className="story-tag">{story.category}</span>
+                        <span className="story-tag">{story.craftType}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/artisan/${story.id}`}
+                    className="visit-store-btn"
+                  >
+                    <FaStore className="visit-store-icon" />
+                    Visit Store
+                  </Link>
+                </div>
+                <hr className="story-divider" />
+                <div className="story-content">
+                  <h2 className="story-title">{story.title}</h2>
+                  <p className="story-excerpt">
+                    {displayExcerpt}
+                    {isLong && !showFull && (
+                      <button
+                        className="see-more-btn"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#AF7928",
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          marginLeft: "6px",
+                          fontSize: "0.95rem",
+                          padding: 0,
+                        }}
+                        onClick={() => handleSeeMore(story.id)}
+                        aria-label="See more"
+                      >
+                        See more
+                      </button>
+                    )}
+                  </p>
+                </div>
+                <img
+                  src={story.img}
+                  alt={story.title}
+                  className="story-img-wide"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
-
       <Footer />
     </>
   );

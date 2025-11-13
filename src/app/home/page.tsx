@@ -32,8 +32,8 @@ const featuredProducts = [
     name: "Rice Grooved Kuksa Mug",
     price: 449,
     artist: "Ben Yap",
-    category: "Woodwork",
-    craftType: "Cooking",
+    category: "Handicrafts",
+    craftType: "Woodwork",
     barangay: "Banicain",
     image: "/home6.png",
   },
@@ -51,10 +51,10 @@ const featuredProducts = [
     id: 4,
     name: "Hardin Beaded Earrings",
     price: 499,
-    artist: "Lei Cruz",
+    artist: "Frances Toyang",
     category: "Handicrafts",
     craftType: "Jewelry Making",
-    barangay: "West Tapinac",
+    barangay: "Kalaklan",
     image: "/box6.png",
   },
   {
@@ -71,10 +71,10 @@ const featuredProducts = [
     id: 6,
     name: "Handwoven Buri Bag",
     price: 79,
-    artist: "LENG",
+    artist: "Aba Dela Cruz",
     category: "Handicrafts",
-    craftType: "Basketry",
-    barangay: "Mabayuan",
+    craftType: "Weaving",
+    barangay: "Asinan",
     image: "/box7.png",
   },
 ];
@@ -272,42 +272,42 @@ const artisanStories = [
   {
     id: "1",
     title: "A Journey to the Home of Rattan Furniture Making",
-    artistName: "Fiona Gavino",
+    artistName: "Aba Dela Cruz",
     story:
       "Rattan is a strong part of Filipino cultural material tradition and Cebu is known through out the Philippines for its strong tradition in rattan furniture making. During my residency I visited Cebu to learn about both the traditional and innovative techniques furniture makers use. The techniques I learnt there gave me a strong understanding of frame making and weaving and it was with this knowledge that I returned to my studio in Manila. There I  began to experiment with rattan frame making and applying it to sculptural forms and concepts working towards an exhibition that was to be held at the end of my residency.",
     image: "/artisans4.jpeg",
   },
   {
     id: "2",
-    title: "Artist 2 Story",
-    artistName: "MANG BEN",
+    title: "Grain of Time",
+    artistName: "Ben Yap",
     story:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    image: "/artisans3.jpg",
+      "Each piece of wood I touch holds a memory, of rain, of sun, of silence. When I carve, I listen to its rhythm, the pulse hidden beneath its grain. The sound of the chisel against the wood reminds me that even something once cut down can be shaped into something new. Every curve I sand feels like rewriting a story that refuses to end.",
+    image: "/artisans4.jpg",
   },
   {
     id: "3",
-    title: "Artist 3 Story",
-    artistName: "CARLA",
+    title: "In the Shape of My Hands",
+    artistName: "Carla Abdul",
     story:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    image: "/artisans2.jpg",
-  },
-  {
-    id: "4",
-    title: "Artist 4 Story",
-    artistName: "DAVID",
-    story:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      "The clay never lies. It remembers every hesitation, every moment I lose focus. When I sit at the wheel, it feels like time folds in on itself — just me, the slow spin, and the soft resistance beneath my palms.",
     image: "/artisans1.jpg",
   },
   {
-    id: "5",
-    title: "Artist 4 Story",
-    artistName: "DAVID",
+    id: "4",
+    title: "Threads of Quiet",
+    artistName: "David Delo Santos",
     story:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    image: "/artist4.png",
+      "Each stitch feels like a whisper, a small act of patience that holds the fabric together. I lose track of time as colors bloom beneath my fingers, stories forming where there were once only blank spaces. When I finish, it’s never just a pattern — it’s a piece of calm I’ve sewn into being.",
+    image: "/artisans5.jpg",
+  },
+  {
+    id: "5",
+    title: "Beads and Beauty",
+    artistName: "Frances Toyang",
+    story:
+      "Tiny beads slip through my fingers like drops of light, each one holding a fragment of color and meaning. I thread them together slowly, finding rhythm in the quiet click of glass against glass. When the piece catches the sun, I see more than jewelry — I see patience turned into beauty.",
+    image: "/artisans6.jpg",
   },
 ];
 

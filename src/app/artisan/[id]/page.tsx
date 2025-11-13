@@ -4,11 +4,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendar, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
+import { useParams } from "next/navigation";
 import "./artisan.css";
 
-export default function ArtisanProfilePage() {
-  // Example static data, replace with real fetch logic
-  const artisan = {
+// Example frontend artisan data
+const artisans = [
+  {
+    id: "1",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aba",
     shopName: "Aba's Weaving Shop",
     name: "Aba Dela Cruz",
@@ -17,48 +19,208 @@ export default function ArtisanProfilePage() {
     rating: 4.8,
     location: "Asinan",
     joined: "2025-11-07",
-    storyImage: "/artist1.jpg",
-    storyTitle: "Threads of Heritage",
+    storyImage: "/artisans4.jpeg",
+    storyTitle: "A Journey to the Home of Rattan Furniture Making",
     storyExcerpt:
-      "I've been weaving traditional Filipino textiles for over 15 years, learning the craft from my grandmother. Each piece tells a story of our heritage and community. I specialize in indigenous patterns that have been passed down through generations.",
-  };
+      "Rattan is a strong part of Filipino cultural material tradition and Cebu is known through out the Philippines for its strong tradition in rattan furniture making. During my residency I visited Cebu to learn about both the traditional and innovative techniques furniture makers use. The techniques I learnt there gave me a strong understanding of frame making and weaving and it was with this knowledge that I returned to my studio in Manila. There I  began to experiment with rattan frame making and applying it to sculptural forms and concepts working towards an exhibition that was to be held at the end of my residency.",
+    products: [
+      {
+        _id: "1",
+        name: "Handwoven Buri Bag",
+        artistName: "Aba Dela Cruz",
+        price: 799,
+        images: ["/box7.png", "/box7-hover.png"],
+        averageRating: 4.7,
+        totalReviews: 12,
+        isAvailable: true,
+        stock: 5,
+        isFeatured: true,
+        craftType: "Weaving",
+        category: "Handicrafts",
+        thumbnailUrl: "/box7.png",
+      },
+      // ...more products
+    ],
+  },
+  {
+    id: "2",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ben",
+    shopName: "Ben's Pottery Studio",
+    name: "Ben Yap",
+    craftType: "Woodwork",
+    category: "Banicain",
+    rating: 4.6,
+    location: "Banicain",
+    joined: "2024-08-15",
+    storyImage: "/artisans4.jpg",
+    storyTitle: "Grain of Time",
+    storyExcerpt:
+      "Each piece of wood I touch holds a memory, of rain, of sun, of silence. When I carve, I listen to its rhythm, the pulse hidden beneath its grain. The sound of the chisel against the wood reminds me that even something once cut down can be shaped into something new. Every curve I sand feels like rewriting a story that refuses to end.",
+    products: [
+      {
+        _id: "1",
+        name: "Rice Grooved Kuksa Mug",
+        artistName: "Ben Yap",
+        price: 499,
+        images: ["/home6.png", "/home6-hover.png"],
+        averageRating: 4.9,
+        totalReviews: 2,
+        isAvailable: true,
+        stock: 3,
+        isFeatured: true,
+        craftType: "Woodwork",
+        category: "Handicrafts",
+        thumbnailUrl: "/home6.png",
+      },
+    ],
+  },
+  {
+    id: "3",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dan",
+    shopName: "Carla's Shop",
+    name: "Carla Abdul",
+    craftType: "Pottery",
+    category: "Handicrafts",
+    rating: 4.7,
+    location: "Baretto",
+    joined: "2022-03-10",
+    storyImage: "/artisans1.jpg",
+    storyTitle: "In the Shape of My Hands",
+    storyExcerpt:
+      "The clay never lies. It remembers every hesitation, every moment I lose focus. When I sit at the wheel, it feels like time folds in on itself — just me, the slow spin, and the soft resistance beneath my palms.",
+    products: [
+      {
+        _id: "1",
+        name: "Embroidered Shawls",
+        artistName: "Carla Abdul",
+        price: 699,
+        images: ["/fashion5.png", "/fashion5-hover.png"],
+        averageRating: 4.5,
+        totalReviews: 8,
+        isAvailable: true,
+        stock: 10,
+        isFeatured: false,
+        craftType: "Pottery",
+        category: "Handicrafts",
+        thumbnailUrl: "/fashion5.png",
+      },
+    ],
+  },
+  {
+    id: "4",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Cara",
+    shopName: "David's Store",
+    name: "David Delo Santos",
+    craftType: "Embroidery",
+    category: "Fashion",
+    rating: 4.9,
+    location: "East Bajac-Bajac",
+    joined: "2023-05-22",
+    storyImage: "/artisans5.jpg",
+    storyTitle: "Threads of Quiet",
+    storyExcerpt:
+      "Each stitch feels like a whisper, a small act of patience that holds the fabric together. I lose track of time as colors bloom beneath my fingers, stories forming where there were once only blank spaces. When I finish, it’s never just a pattern — it’s a piece of calm I’ve sewn into being.",
+    products: [
+      {
+        _id: "1",
+        name: "Embroidered Shawls",
+        artistName: "David Delo Santos",
+        price: 699,
+        images: ["/fashion5.png", "/fashion5-hover.png"],
+        averageRating: 4.5,
+        totalReviews: 8,
+        isAvailable: true,
+        stock: 10,
+        isFeatured: false,
+        craftType: "Embroidery",
+        category: "Fashion",
+        thumbnailUrl: "/fashion5.png",
+      },
+    ],
+  },
+  {
+    id: "5",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Eve",
+    shopName: "Frances' Creations",
+    name: "Frances Toyang",
+    craftType: "Jewelry Making",
+    category: "Handicrafts",
+    rating: 4.85,
+    location: "Kalaklan",
+    joined: "2021-12-05",
+    storyImage: "/artisans6.jpg",
+    storyTitle: "Beads of Beauty",
+    storyExcerpt:
+      "Tiny beads slip through my fingers like drops of light, each one holding a fragment of color and meaning. I thread them together slowly, finding rhythm in the quiet click of glass against glass. When the piece catches the sun, I see more than jewelry — I see patience turned into beauty.",
+    products: [
+      {
+        _id: "1",
+        name: "Hardin Beaded Earrings",
+        artistName: "Frances Toyang",
+        price: 499,
+        images: ["/box6.png", "/box6-hover.png"],
+        averageRating: 4.85,
+        totalReviews: 15,
+        isAvailable: true,
+        stock: 20,
+        isFeatured: true,
+        craftType: "Jewelry Making",
+        category: "Handicrafts",
+        thumbnailUrl: "/box6.png",
+      },
+    ],
+  },
+  {
+    id: "6",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joe",
+    shopName: "Juan's Textiles",
+    name: "Juan Reyes",
+    craftType: "Textile",
+    category: "Fashion",
+    rating: 4.75,
+    location: "Gordon Heights",
+    joined: "2020-09-18",
+    storyImage: "/artisans7.png",
+    storyTitle: "Threads of the Earth",
+    storyExcerpt:
+      "I run my hands over the fabric, feeling the texture shaped by hours of weaving and dyeing. Each thread carries the story of where it came from — the soil, the plant, the hands that spun it. As the patterns come alive, I realize I’m not just making cloth; I’m preserving memory.",
+    products: [
+      {
+        _id: "1",
+        name: "Crochet Dress with Beaded Straps",
+        artistName: "Juan Reyes",
+        price: 799,
+        images: ["/fashion3.png", "/fashion3-hover.png"],
+        averageRating: 4.75,
+        totalReviews: 10,
+        isAvailable: true,
+        stock: 15,
+        isFeatured: false,
+        craftType: "Textile",
+        category: "Fashion",
+        thumbnailUrl: "/fashion3.png",
+      },
+    ],
+  },
+];
 
-  // Example products for this artisan (replace with real fetch)
-  const products = [
-    {
-      _id: "1",
-      name: "Handwoven Buri Bag",
-      artistName: artisan.name,
-      price: 799,
-      images: ["/box7.png", "/box7-hover.png"],
-      averageRating: 4.7,
-      totalReviews: 12,
-      isAvailable: true,
-      stock: 5,
-      isFeatured: true,
-      craftType: artisan.craftType,
-      category: artisan.category,
-      thumbnailUrl: "/box7.png",
-    },
-    {
-      _id: "2",
-      name: "Traditional Table Runner",
-      artistName: artisan.name,
-      price: 499,
-      images: ["/box8.png"],
-      averageRating: 4.9,
-      totalReviews: 8,
-      isAvailable: true,
-      stock: 3,
-      isFeatured: false,
-      craftType: artisan.craftType,
-      category: artisan.category,
-      thumbnailUrl: "/box8.png",
-    },
-    // ...add more products as needed
-  ];
+export default function ArtisanProfilePage() {
+  const params = useParams();
+  const artisanId = params.id;
+  const artisan = artisans.find((a) => a.id === artisanId);
 
-  // Format joined date
+  if (!artisan) {
+    return (
+      <div>
+        <Navbar />
+        <main className="artisan-profile-main">
+          <div>Artisan not found.</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const joinedDate = new Date(artisan.joined);
   const joinedText = joinedDate.toLocaleString("en-US", {
     month: "long",
@@ -235,7 +397,7 @@ export default function ArtisanProfilePage() {
             Products by {artisan.name}
           </h2>
           <div className="artisan-product-grid">
-            {products.map((product) => (
+            {artisan.products.map((product) => (
               <div className="artisan-product-card" key={product._id}>
                 <div className="artisan-image-container">
                   <img

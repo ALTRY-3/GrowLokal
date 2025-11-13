@@ -5,8 +5,10 @@
   font-family: "Poppins", sans-serif;
 }
 
+/* Carousel Section */
 .stories-carousel {
   position: relative;   
+  border-radius: 8px;
   width: 1318px;
   height: 249px;
   border: 4px solid #2E3F36;
@@ -43,6 +45,7 @@
   margin: 1rem;
 }
 
+/* Carousel Dots */
 .dots-indicator {
   position: absolute;
   bottom: 1rem;
@@ -65,93 +68,173 @@
   background: #fff;
 }
 
-.stories-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 25.5rem);
-  gap: 3rem;
-  margin: 2rem 0;
-  justify-content: center;
-}
-
-.story-card {
-  width: 25.5rem;
-  min-height: 517px; 
-  background: #fff;
-  border-radius: 5px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 1rem;
+/* Vertical Stories List */
+.stories-vertical-list {
   display: flex;
   flex-direction: column;
+  gap: 2.5rem;
+  margin: 2rem 0;
   align-items: center;
-  text-align: center;
+  width: 100%;
+  max-width: 1318px;
+}
+
+.story-vertical-card {
+  background: #fff;
+  border: 2px solid #E0E0E0;
+  border-radius: 8px;
+  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.13);
+  width: 100%;
+  max-width: 1318px;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2.5rem;
   box-sizing: border-box;
-  transition: box-shadow 0.3s ease;
 }
 
-.story-card:hover {
-  box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.35);
+/* Story Card Header */
+.story-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
 
-.story-img {
-  width: 355px;
-  height: 201px;
-  border-radius: 5px;
+.story-profile {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.story-profile-pic {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
   object-fit: cover;
-  margin: 0 auto;
-  display: block;
+  border: 2px solid #AF7928;
+  background: #fff;
+}
+
+.story-profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.story-artist-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2E3F36;
+  margin-bottom: 0.10rem;
+}
+
+.story-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.story-tag {
+  background: #2E3F36;
+  border: 2px solid #ffc46b;  
+  color: #ffc46b;
+  font-size: 0.80rem;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+.story-location {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #666;
+  gap: 0.25rem;
+  margin-bottom: 0.15rem;
+}
+
+.story-location-icon {
+  font-size: 1.1rem;
+  color: #AF7928;
+  margin-right: 0.2rem;
+}
+
+/* Visit Store Button */
+.visit-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #2E3F36;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.65rem 1.25rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: auto;
+}
+
+.visit-store-btn:hover {
+  background: #1E2A25;
+}
+
+.visit-store-icon {
+  font-size: 0.90rem;
+  margin-right: 0.2rem;
+}
+
+/* Story Content */
+.story-divider {
+  border: none;
+  border-top: 5px solid #AF7928;
+  margin: 1rem 0 0.50rem 0;
+  width: 100%;
+}
+
+.story-content {
+  margin-bottom: 0.50rem;
 }
 
 .story-title {
   font-weight: 700;
-  font-size: 24px;
-  line-height: 90%;
+  font-size: 1.3rem;
   color: #2E3F36;
-  margin: 1rem 0 0.25rem;
-}
-
-.story-artist {
-  font-weight: 300;
-  font-size: 15px;
-  line-height: 90%;
-  letter-spacing: 0.07em;
-  color: #AF7928;
-  margin-bottom: 0.75rem;
-  margin-top: 1rem;
-}
-
-.story-title,
-.story-artist {
-  text-align: center;
-  width: 100%;   
+  margin-bottom: 0.7rem;
 }
 
 .story-excerpt {
   font-weight: 400;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: #000;
-  margin-bottom: 1rem;
-  text-align: left;
-  align-self: stretch;
+  font-size: 0.95rem;
+  color: #444;
+  opacity: 0.85;
+  margin-bottom: 0.5rem;
 }
 
-.read-more-btn {
-  min-width: 8rem;
-  height: 2.5rem;
-  border-radius: 5px;
-  background: #2E3F36;
-  color: #fff;
-  font-size: 14px; 
-  font-weight: 500;
+.story-img-wide {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 7px;
+  margin-top: 0.5rem;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.story-img-wide:hover {
+  transform: scale(1.02);
+}
+
+.see-more-btn {
+  background: none;
   border: none;
+  color: #AF7928;
+  font-weight: 500;
   cursor: pointer;
-  align-self: center;
-  transition: background 0.3s ease;
-  display: flex;            
-  justify-content: center;  
-  align-items: center;      
-}
-
-.read-more-btn:hover {
-  background: #1E2A25;
+  margin-left: 6px;
+  font-size: 0.95rem;
+  padding: 0;
 }

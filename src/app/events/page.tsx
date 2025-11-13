@@ -361,6 +361,20 @@ export default function EventsPage() {
           </button>
           {showFilters && (
             <div className="event-filter-dropdown">
+              {/* Add "All Events" option at the top */}
+              <button
+                key="All Events"
+                className={`event-filter-option ${
+                  selectedFilter === null ? "active" : ""
+                }`}
+                onClick={() => {
+                  setSelectedFilter(null);
+                  setShowFilters(false);
+                  setFilteredEvents(events);
+                }}
+              >
+                All Events
+              </button>
               {[
                 "Festival",
                 "Craft Fair",
@@ -672,17 +686,17 @@ export default function EventsPage() {
                     <img
                       src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aba"
                       alt="Featured artisan"
-                      className="artisan-avatar"
+                      className="events-artisan-avatar"
                     />
                     <img
                       src="https://api.dicebear.com/7.x/avataaars/svg?seed=Abc"
                       alt="Featured artisan"
-                      className="artisan-avatar"
+                      className="events-artisan-avatar"
                     />
                     <img
                       src="https://api.dicebear.com/7.x/avataaars/svg?seed=Abf"
                       alt="Featured artisan"
-                      className="artisan-avatar"
+                      className="events-artisan-avatar"
                     />
                   </div>
                 </div>

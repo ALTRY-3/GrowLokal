@@ -1,6 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
-// Update the imports at the top
+import React, { useEffect, useState, useRef } from "react";
 import {
   FaTimes,
   FaStar,
@@ -79,13 +78,13 @@ export default function ProductModal({
   onClose,
   isInWishlist = false,
   onToggleWishlist,
-  onProductChange, // Add this prop
+  onProductChange,
 }: {
   product: Product;
   onClose: () => void;
   isInWishlist?: boolean;
   onToggleWishlist?: () => void;
-  onProductChange: (product: Product) => void; // Add this type
+  onProductChange: (product: Product) => void;
 }) {
   const [mainImage, setMainImage] = useState(product.img);
   const [quantity, setQuantity] = useState(1);
@@ -98,7 +97,60 @@ export default function ProductModal({
 
   const [reviewText, setReviewText] = useState("");
 
-  const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
+  // Description should be closed when modal opens
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
+  const modalBoxRef = useRef<HTMLDivElement>(null);
+
+  // Dummy reviews for demonstration
+  const allReviews = [
+    {
+      name: "John Doe",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+      rating: 4,
+      text: "Great product! The quality is excellent and the craftsmanship is outstanding. Would definitely recommend to others.",
+    },
+    {
+      name: "Jane Smith",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
+      rating: 5,
+      text: "Absolutely loved it! Fast shipping and beautiful work.",
+    },
+    {
+      name: "Carlos Reyes",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos",
+      rating: 5,
+      text: "The artisan was very helpful and the product exceeded my expectations.",
+    },
+    {
+      name: "Maria Santos",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
+      rating: 4,
+      text: "Nice quality, will buy again!",
+    },
+    // ...add more reviews as needed
+  ];
+
+  // Close description on modal open
+  useEffect(() => {
+    setIsDescriptionOpen(false);
+  }, [product]);
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        modalBoxRef.current &&
+        !modalBoxRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
 
   const { addItem } = useCartStore();
 
@@ -195,7 +247,7 @@ export default function ProductModal({
 
   return (
     <div className="modal-overlay">
-      <div className="modal-box">
+      <div className="modal-box" ref={modalBoxRef}>
         <button className="modal-close" onClick={onClose}>
           <FaTimes />
         </button>
@@ -388,11 +440,14 @@ export default function ProductModal({
           <div className="ratings-section">
             <div className="ratings-header">
               <div className="ratings-title">
-                <span className="ratings-count">0</span>
+                <span className="ratings-count">{allReviews.length}</span>
                 <FaStar className="rating-star" />
                 <span className="ratings-label">Product Ratings</span>
               </div>
-              <button className="view-all-btn">
+              <button
+                className="view-all-btn"
+                onClick={() => setShowAllReviews(true)}
+              >
                 View all
                 <i className="fa-solid fa-chevron-right"></i>
               </button>
@@ -401,34 +456,77 @@ export default function ProductModal({
             <div className="modal-divider-ratings"></div>
 
             <div className="ratings-list">
-              {/* Example review cards */}
-              <div className="review-card">
-                <div className="reviewer-info">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=John"
-                    alt="User Avatar"
-                    className="reviewer-avatar"
-                  />
-                  <div className="reviewer-details">
-                    <h4 className="reviewer-name">John Doe</h4>
-                    <div className="review-rating">
-                      {[...Array(5)].map((_, index) => (
-                        <FaStar
-                          key={index}
-                          className={index < 4 ? "star-filled" : "star-empty"}
-                        />
-                      ))}
+              {/* Show only first review if not viewing all */}
+              {!showAllReviews ? (
+                <div className="review-card">
+                  <div className="reviewer-info">
+                    <img
+                      src={allReviews[0].avatar}
+                      alt="User Avatar"
+                      className="reviewer-avatar"
+                    />
+                    <div className="reviewer-details">
+                      <h4 className="reviewer-name">{allReviews[0].name}</h4>
+                      <div className="review-rating">
+                        {[...Array(5)].map((_, index) => (
+                          <FaStar
+                            key={index}
+                            className={
+                              index < allReviews[0].rating
+                                ? "star-filled"
+                                : "star-empty"
+                            }
+                          />
+                        ))}
+                      </div>
+                      <p className="review-text">{allReviews[0].text}</p>
                     </div>
-                    <p className="review-text">
-                      Great product! The quality is excellent and the
-                      craftsmanship is outstanding. Would definitely recommend
-                      to others.
-                    </p>
                   </div>
                 </div>
-              </div>
-
-              {/* Add more review cards as needed */}
+              ) : (
+                // Show all reviews in a scrollable modal
+                <div className="all-reviews-modal">
+                  <div className="all-reviews-header">
+                    <h3>All Product Reviews</h3>
+                    <button
+                      className="modal-close"
+                      style={{ position: "static", marginLeft: "auto" }}
+                      onClick={() => setShowAllReviews(false)}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                  <div className="all-reviews-list">
+                    {allReviews.map((review, idx) => (
+                      <div className="review-card" key={idx}>
+                        <div className="reviewer-info">
+                          <img
+                            src={review.avatar}
+                            alt={review.name}
+                            className="reviewer-avatar"
+                          />
+                          <div className="reviewer-details">
+                            <h4 className="reviewer-name">{review.name}</h4>
+                            <div className="review-rating">
+                              {[...Array(5)].map((_, index) => (
+                                <FaStar
+                                  key={index}
+                                  className={
+                                    index < review.rating
+                                      ? "star-filled"
+                                      : "star-empty"
+                                  }
+                                />
+                              ))}
+                            </div>
+                            <p className="review-text">{review.text}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -450,10 +548,14 @@ export default function ProductModal({
                     <span>Barangay Name</span>
                   </div>
                 </div>
-                <button className="visit-shop-btn">
+                {/* Redirect to artisan/[id] */}
+                <Link
+                  href={`/artisan/${product.productId}`}
+                  className="visit-shop-btn"
+                >
                   <i className="fa-solid fa-shop"></i>
-                  Visit
-                </button>
+                  Visit Shop
+                </Link>
               </div>
               <div className="seller-stats">
                 <div className="stat-item">
