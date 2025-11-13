@@ -238,3 +238,9 @@
   font-size: 0.95rem;
   padding: 0;
 }
+
+.story-vertical-card.emphasized {
+  box-shadow: 0 0 0 4px #ffc46b, 0px 4px 14px rgba(0,0,0,0.13);
+  transition: box-shadow 0.4s cubic-bezier(0.4,0,0.2,1);
+  z-index: 2;
+}

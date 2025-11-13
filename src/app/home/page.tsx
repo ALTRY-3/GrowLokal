@@ -712,7 +712,7 @@ export default function HomePage() {
                         : story.story}
                     </p>
                     <Link
-                      href={`/artiststory/${story.id}`}
+                      href={`/stories?storyId=${story.id}`}
                       className="home-story-read-more"
                     >
                       Read More

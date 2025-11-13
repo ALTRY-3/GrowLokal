@@ -7,7 +7,8 @@ import Footer from "@/components/Footer";
 import { FaStore, FaMapMarkerAlt } from "react-icons/fa";
 import { User } from "lucide-react";
 import "./stories.css";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 
 // Use the same DiceBear avatar placeholder as in home
 const getProfileAvatar = (artist: string) =>
@@ -119,10 +120,28 @@ function getExcerptLimit() {
 
 export default function StoriesPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const searchParams = useSearchParams();
+  const storyId = searchParams.get("storyId");
+  const [emphasizedId, setEmphasizedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (storyId && cardRefs.current[storyId]) {
+      cardRefs.current[storyId]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      setEmphasizedId(storyId);
+      // Remove emphasis after 2 seconds
+      const timer = setTimeout(() => setEmphasizedId(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [storyId]);
 
   const handleSeeMore = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: true }));
   };
+
   return (
     <>
       <Navbar />
@@ -148,7 +167,15 @@ export default function StoriesPage() {
                 : story.excerpt.slice(0, limit) + "…";
 
             return (
-              <div key={story.id} className="story-vertical-card">
+              <div
+                key={story.id}
+                ref={(el) => {
+                  cardRefs.current[story.id] = el;
+                }}
+                className={`story-vertical-card${
+                  emphasizedId === story.id ? " emphasized" : ""
+                }`}
+              >
                 <div className="story-card-header">
                   <div className="story-profile">
                     <img
@@ -184,16 +211,6 @@ export default function StoriesPage() {
                     {isLong && !showFull && (
                       <button
                         className="see-more-btn"
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#AF7928",
-                          fontWeight: 500,
-                          cursor: "pointer",
-                          marginLeft: "6px",
-                          fontSize: "0.95rem",
-                          padding: 0,
-                        }}
                         onClick={() => handleSeeMore(story.id)}
                         aria-label="See more"
                       >
