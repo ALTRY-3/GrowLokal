@@ -130,9 +130,6 @@
     position: sticky;
     top: 24px;
     height: fit-content;
-    max-height: calc(100vh - 32px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
