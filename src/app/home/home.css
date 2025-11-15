@@ -987,6 +987,9 @@
 }
 
 .home-event-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.825rem;
   color: #666;
   margin-top: 0.2rem;
@@ -1021,12 +1024,58 @@
   background-color: rgba(175, 121, 40, 0.1);
 }
 
+.home-event-reminder:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.home-event-reminder:disabled:hover {
+  background-color: transparent;
+}
+
 .home-event-reminder.active {
   color: #af7928;
 }
 
 .home-event-reminder .icon-ringing {
   animation: bell-ring 900ms ease-in-out;
+}
+
+.book-experience-btn {
+  background: linear-gradient(135deg, #AF7928, #d4913d);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.book-experience-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8d6620, #b8740e);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(175, 121, 40, 0.3);
+}
+
+.book-experience-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.book-experience-btn:disabled {
+  background: #4CAF50;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.book-experience-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .home-event-content {
@@ -1637,6 +1686,11 @@
     font-size: 0.7rem;
   }
 
+  .book-experience-btn {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.75rem;
+  }
+
   /* Announcements */
   .home-announcement-card {
     width: 320px;
@@ -1713,6 +1767,11 @@
     font-size: 0.5rem;
     padding: 5px 12px;
     width: auto;
+  }
+
+  .book-experience-btn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.7rem;
   }
 
   .section {
@@ -2009,6 +2068,11 @@
     font-size: 0.5rem;
     padding: 5px 10px;
     width: auto;
+  }
+
+  .book-experience-btn {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.65rem;
   }
 
   .section {

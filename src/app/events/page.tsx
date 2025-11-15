@@ -437,6 +437,20 @@ export default function EventsPage() {
   const [emphasizedEvent, setEmphasizedEvent] = useState<string | null>(null);
   const searchParams = useSearchParams();
 
+  // Load reminders from localStorage on mount
+  useEffect(() => {
+    const savedReminders = localStorage.getItem("eventReminders");
+    if (savedReminders) {
+      setReminders(JSON.parse(savedReminders));
+    }
+
+    // Load bookings from localStorage on mount
+    const savedBookings = localStorage.getItem("eventBookings");
+    if (savedBookings) {
+      setBookings(JSON.parse(savedBookings));
+    }
+  }, []);
+
   useEffect(() => {
     // Check for event from query string (map page)
     const eventTitle = searchParams?.get("event");
@@ -508,11 +522,15 @@ export default function EventsPage() {
 
   const toggleReminder = (idx: number) => {
     const eventDate = events[idx].date;
-    setReminders((prev) =>
-      prev.includes(eventDate)
+    setReminders((prev) => {
+      const newReminders = prev.includes(eventDate)
         ? prev.filter((d) => d !== eventDate)
-        : [...prev, eventDate]
-    );
+        : [...prev, eventDate];
+
+      // Save to localStorage to sync with home page
+      localStorage.setItem("eventReminders", JSON.stringify(newReminders));
+      return newReminders;
+    });
   };
 
   const handleDateClick = (clickedDate: Date) => {
@@ -525,10 +543,7 @@ export default function EventsPage() {
     setSelectedEvent(foundEvent || null);
   };
 
-  // Add featured events from your existing events
-  const featuredEvents = events.slice(0, 3);
-
-  // Add this helper function at the top of the component
+  // Helper function to check if event is in the past
   const isPastEvent = (eventDate: string): boolean => {
     const eventDateTime = new Date(eventDate);
     const today = new Date();
@@ -536,8 +551,16 @@ export default function EventsPage() {
     return eventDateTime < today;
   };
 
+  // Add featured events from your existing events
+  const featuredEvents = events.filter((event) => [2, 4, 6].includes(event.id));
+
   const handleBookingSubmit = (booking: Booking) => {
-    setBookings((prev) => [...prev, booking]);
+    setBookings((prev) => {
+      const newBookings = [...prev, booking];
+      // Save to localStorage to sync with home page
+      localStorage.setItem("eventBookings", JSON.stringify(newBookings));
+      return newBookings;
+    });
     // In a real app, you'd send this to a backend API here
     console.log("Booking saved:", booking);
   };
@@ -662,9 +685,18 @@ export default function EventsPage() {
                         <button
                           className="book-experience-btn"
                           onClick={() => openBookingModal(event)}
-                          title="Book this experience"
+                          disabled={
+                            isPastEvent(event.date) || isEventBooked(event.id)
+                          }
+                          title={
+                            isPastEvent(event.date)
+                              ? "Event has passed - booking unavailable"
+                              : isEventBooked(event.id)
+                              ? "Already booked"
+                              : "Book this experience"
+                          }
                         >
-                          📅 Book
+                          {isEventBooked(event.id) ? "✓ Booked" : "📅 Book"}
                         </button>
                       ) : (
                         <button
@@ -699,11 +731,11 @@ export default function EventsPage() {
                     <FaClock />
                     <span>{event.time}</span>
                   </div>
-                  <p className="all-event-description">{event.details}</p>
                   <div className="all-event-location">
                     <FaMapMarkerAlt />
                     <span>{event.location}</span>
                   </div>
+                  <p className="all-event-description">{event.details}</p>
                 </div>
               ))}
             </div>
@@ -824,90 +856,107 @@ export default function EventsPage() {
         <div className="events-content">
           <div className="all-events-container">
             {filteredEvents.length > 0 ? (
-              filteredEvents.map((event, idx) => (
-                <article
-                  className={`all-event-card${
-                    emphasizedEvent === event.title ? " emphasized" : ""
-                  }`}
-                  key={event.id} // Use id instead of title
-                  ref={(el: HTMLDivElement | null) => {
-                    if (el) {
-                      eventRefs.current[event.title] = el;
-                    }
-                  }}
-                >
-                  <div className="all-event-header">
-                    <span
-                      className={`all-event-type ${event.type.toLowerCase()}`}
-                    >
-                      {event.type}
-                    </span>
-                    {event.type === "Workshop" || event.type === "Demo" ? (
-                      <button
-                        className={`book-experience-btn ${
-                          isEventBooked(event.id) ? "booked" : ""
-                        }`}
-                        onClick={() =>
-                          !isEventBooked(event.id) && openBookingModal(event)
-                        }
-                        disabled={isEventBooked(event.id)}
-                        title={
-                          isEventBooked(event.id)
-                            ? "Already booked"
-                            : "Book this experience"
-                        }
+              filteredEvents
+                .sort((a, b) => {
+                  const aIsPast = isPastEvent(a.date);
+                  const bIsPast = isPastEvent(b.date);
+                  if (aIsPast === bIsPast) {
+                    return (
+                      new Date(a.date).getTime() - new Date(b.date).getTime()
+                    );
+                  }
+                  return aIsPast ? 1 : -1;
+                })
+                .map((event, idx) => (
+                  <article
+                    className={`all-event-card${
+                      emphasizedEvent === event.title ? " emphasized" : ""
+                    }`}
+                    key={event.id} // Use id instead of title
+                    ref={(el: HTMLDivElement | null) => {
+                      if (el) {
+                        eventRefs.current[event.title] = el;
+                      }
+                    }}
+                  >
+                    <div className="all-event-header">
+                      <span
+                        className={`all-event-type ${event.type.toLowerCase()}`}
                       >
-                        {isEventBooked(event.id) ? "✓ Booked" : "📅 Book"}
-                      </button>
-                    ) : (
-                      <button
-                        className={`reminder-btn ${
-                          reminders.includes(event.date) ? "active" : ""
-                        }`}
-                        onClick={() => {
-                          const eventIndex = events.findIndex(
-                            (e) => e.id === event.id
-                          );
-                          if (!isPastEvent(event.date)) {
-                            toggleReminder(eventIndex);
+                        {event.type}
+                      </span>
+                      {event.type === "Workshop" || event.type === "Demo" ? (
+                        <button
+                          className={`book-experience-btn ${
+                            isEventBooked(event.id) ? "booked" : ""
+                          }`}
+                          onClick={() =>
+                            !isPastEvent(event.date) &&
+                            !isEventBooked(event.id) &&
+                            openBookingModal(event)
                           }
-                        }}
-                        disabled={isPastEvent(event.date)}
-                        title={
-                          isPastEvent(event.date)
-                            ? "Cannot set reminder for past events"
-                            : "Set reminder"
-                        }
-                      >
-                        {reminders.includes(event.date) ? (
-                          <MdNotificationsActive className="icon-ringing" />
-                        ) : (
-                          <MdNotifications />
-                        )}
-                      </button>
-                    )}
-                  </div>
+                          disabled={
+                            isPastEvent(event.date) || isEventBooked(event.id)
+                          }
+                          title={
+                            isPastEvent(event.date)
+                              ? "Event has passed - booking unavailable"
+                              : isEventBooked(event.id)
+                              ? "Already booked"
+                              : "Book this experience"
+                          }
+                        >
+                          {isEventBooked(event.id) ? "✓ Booked" : "📅 Book"}
+                        </button>
+                      ) : (
+                        <button
+                          className={`reminder-btn ${
+                            reminders.includes(event.date) ? "active" : ""
+                          }`}
+                          onClick={() => {
+                            const eventIndex = events.findIndex(
+                              (e) => e.id === event.id
+                            );
+                            if (!isPastEvent(event.date)) {
+                              toggleReminder(eventIndex);
+                            }
+                          }}
+                          disabled={isPastEvent(event.date)}
+                          title={
+                            isPastEvent(event.date)
+                              ? "Cannot set reminder for past events"
+                              : "Set reminder"
+                          }
+                        >
+                          {reminders.includes(event.date) ? (
+                            <MdNotificationsActive className="icon-ringing" />
+                          ) : (
+                            <MdNotifications />
+                          )}
+                        </button>
+                      )}
+                    </div>
 
-                  <h3 className="all-event-title">{event.title}</h3>
+                    <h3 className="all-event-title">{event.title}</h3>
 
-                  <div className="all-event-meta">
-                    <FaCalendar />
-                    <span>{event.dateText}</span>
-                  </div>
+                    <div className="all-event-meta">
+                      <FaCalendar />
+                      <span>{event.dateText}</span>
+                    </div>
 
-                  <div className="all-event-meta">
-                    <FaClock />
-                    <span>{event.time}</span>
-                  </div>
+                    <div className="all-event-meta">
+                      <FaClock />
+                      <span>{event.time}</span>
+                    </div>
 
-                  <p className="all-event-description">{event.details}</p>
+                    <div className="all-event-location">
+                      <FaMapMarkerAlt />
+                      <span>{event.location}</span>
+                    </div>
 
-                  <div className="all-event-location">
-                    <FaMapMarkerAlt />
-                    <span>{event.location}</span>
-                  </div>
-                </article>
-              ))
+                    <p className="all-event-description">{event.details}</p>
+                  </article>
+                ))
             ) : (
               <div className="no-events-card">
                 <FaCalendar className="no-events-icon" aria-hidden="true" />
