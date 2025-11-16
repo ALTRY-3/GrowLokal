@@ -431,6 +431,14 @@
   width: calc(100% - 80px);
   margin: 16px auto;
   padding: 0 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.orders-search:focus-within {
+  border-color: #af7928;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(175, 121, 40, 0.1);
 }
 
 .orders-search-icon {
@@ -451,6 +459,29 @@
 
 .orders-search-input::placeholder {
   color: rgba(0, 0, 0, 0.2); 
+}
+
+.orders-search-clear-btn {
+  background: none;
+  border: none;
+  color: #af7928;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  font-size: 16px;
+  margin-left: 8px;
+}
+
+.orders-search-clear-btn:hover {
+  color: #946520;
+}
+
+.orders-search-clear-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .orders-content {
@@ -900,6 +931,16 @@
     width: calc(100% - 40px);
   }
 
+  .orders-search-clear-btn {
+    padding: 3px 6px;
+    font-size: 14px;
+  }
+
+  .orders-search-clear-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
   .order-status-msg {
     position: static;
     margin: 8px 0 0 0;
@@ -989,6 +1030,16 @@
   .orders-search {
     width: calc(100% - 32px);
     margin: 12px auto;
+  }
+
+  .orders-search-clear-btn {
+    padding: 3px 6px;
+    font-size: 13px;
+  }
+
+  .orders-search-clear-btn svg {
+    width: 15px;
+    height: 15px;
   }
 
   .order-card {
@@ -1112,6 +1163,17 @@
 
   .orders-search {
     height: 32px;
+  }
+
+  .orders-search-clear-btn {
+    padding: 2px 4px;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  .orders-search-clear-btn svg {
+    width: 14px;
+    height: 14px;
   }
 
   .orders-search-input {

@@ -45,6 +45,7 @@ interface Product {
   isAvailable: boolean;
   isFeatured: boolean;
   craftType: string;
+  barangay?: string;
 }
 
 // Legacy interface for ProductModal compatibility
@@ -59,6 +60,7 @@ interface LegacyProduct {
   // Add these new properties
   craftType?: string;
   category?: string;
+  barangay?: string;
   soldCount?: number;
 }
 
@@ -219,6 +221,43 @@ export default function Marketplace() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Helper function to assign craft types and barangays to products
+  const enrichProductsWithMetadata = (products: Product[]): Product[] => {
+    const barangays = [
+      "Asinan",
+      "Banicain",
+      "Barretto",
+      "East Bajac-Bajac",
+      "East Tapinac",
+      "Gordon Heights",
+      "Kalaklan",
+      "Mabayuan",
+      "New Cabalan",
+      "New Ilalim",
+      "New Kababae",
+      "New Kalalake",
+      "Old Cabalan",
+      "Pag-asa",
+      "Santa Rita",
+      "West Bajac-Bajac",
+      "West Tapinac",
+    ];
+
+    return products.map((product, index) => {
+      // If product doesn't have craftType, assign one from the list
+      if (!product.craftType || product.craftType === "Unspecified") {
+        product.craftType = craftTypes[index % craftTypes.length];
+      }
+
+      // If product doesn't have barangay, assign one from the list
+      if (!product.barangay) {
+        product.barangay = barangays[index % barangays.length];
+      }
+
+      return product;
+    });
+  };
+
   const fetchAllProducts = async () => {
     try {
       setLoading(true);
@@ -241,12 +280,12 @@ export default function Marketplace() {
         }
       });
 
-      // Set products by category
-      setHandicrafts(results[0].data || []);
-      setFashion(results[1].data || []);
-      setHome(results[2].data || []);
-      setFood(results[3].data || []);
-      setBeauty(results[4].data || []);
+      // Enrich products with craft types and barangays, then set by category
+      setHandicrafts(enrichProductsWithMetadata(results[0].data || []));
+      setFashion(enrichProductsWithMetadata(results[1].data || []));
+      setHome(enrichProductsWithMetadata(results[2].data || []));
+      setFood(enrichProductsWithMetadata(results[3].data || []));
+      setBeauty(enrichProductsWithMetadata(results[4].data || []));
     } catch (err: any) {
       console.error("Error fetching products:", err);
       setError(err.message || "Failed to load products");
@@ -299,6 +338,17 @@ export default function Marketplace() {
   };
 
   // Convert API product to legacy format for ProductModal
+  const formatCategory = (category: string): string => {
+    const categoryMap: { [key: string]: string } = {
+      handicrafts: "Handicrafts",
+      fashion: "Fashion",
+      home: "Home",
+      food: "Food",
+      beauty: "Beauty & Wellness",
+    };
+    return categoryMap[category.toLowerCase()] || "General";
+  };
+
   const convertToLegacyProduct = (product: Product): LegacyProduct => ({
     img: product.images[0] || product.thumbnailUrl,
     hoverImg: product.images[1] || product.images[0] || product.thumbnailUrl,
@@ -307,14 +357,91 @@ export default function Marketplace() {
     price: `₱${product.price.toFixed(2)}`,
     productId: product._id,
     maxStock: product.stock,
-    // Add these new properties
-    craftType: product.craftType || "No Craft Type", // Fallback if craftType is missing
-    category: product.category || "General", // Fallback if category is missing
+    // Add these new properties with proper formatting
+    craftType: product.craftType || "Unspecified",
+    category: formatCategory(product.category),
+    barangay: product.barangay || "Unspecified",
     soldCount: 0, // Default to 0 since the API doesn't provide sold count yet
   });
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(convertToLegacyProduct(product));
+  };
+
+  // Helper function to match price range
+  const matchesPriceRange = (price: number, range: string): boolean => {
+    if (!range) return true; // If no range selected, include all
+
+    switch (range) {
+      case "Under ₱500":
+        return price < 500;
+      case "₱500 - ₱1,000":
+        return price >= 500 && price <= 1000;
+      case "₱1,000 - ₱2,000":
+        return price > 1000 && price <= 2000;
+      case "₱2,000 - ₱5,000":
+        return price > 2000 && price <= 5000;
+      case "Over ₱5,000":
+        return price > 5000;
+      default:
+        return true;
+    }
+  };
+
+  // Apply all filters to products
+  const applyFilters = () => {
+    const filterProducts = (products: Product[]): Product[] => {
+      return products.filter((product) => {
+        // Check craft type filter
+        if (
+          filters.craftType.length > 0 &&
+          !filters.craftType.includes(product.craftType)
+        ) {
+          return false;
+        }
+
+        // Check category filter - normalize category name to match database values
+        if (filters.category.length > 0) {
+          const categoryLower = product.category.toLowerCase();
+          const categoryMatches = filters.category.some((cat) => {
+            const catLower = cat.toLowerCase();
+            // Handle special case for "Beauty & Wellness"
+            if (catLower === "beauty & wellness") {
+              return categoryLower === "beauty";
+            }
+            return catLower === categoryLower;
+          });
+          if (!categoryMatches) {
+            return false;
+          }
+        }
+
+        // Check price range filter
+        if (
+          filters.priceRange &&
+          !matchesPriceRange(product.price, filters.priceRange)
+        ) {
+          return false;
+        }
+
+        // Check barangay filter
+        if (
+          filters.barangay.length > 0 &&
+          (!product.barangay || !filters.barangay.includes(product.barangay))
+        ) {
+          return false;
+        }
+
+        return true;
+      });
+    };
+
+    // Apply filters to all category arrays
+    setHandicrafts(filterProducts(handicrafts));
+    setFashion(filterProducts(fashion));
+    setHome(filterProducts(home));
+    setFood(filterProducts(food));
+    setBeauty(filterProducts(beauty));
   };
 
   // Loading state with brown spinner
@@ -577,20 +704,24 @@ export default function Marketplace() {
           <div className="filter-actions">
             <button
               className="filter-button-reset"
-              onClick={() =>
+              onClick={() => {
                 setFilters({
                   craftType: [],
                   category: [],
                   priceRange: "",
                   barangay: [],
-                })
-              }
+                });
+                // Reload all products when reset
+                fetchAllProducts();
+              }}
             >
               Reset
             </button>
             <button
               className="filter-button-apply"
               onClick={() => {
+                // Apply filters before closing modal
+                applyFilters();
                 setFilterModalState("exiting");
                 setTimeout(() => {
                   setShowFilters(false);

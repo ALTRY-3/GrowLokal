@@ -22,6 +22,7 @@ import {
   FaBoxOpen,
   FaHeart,
   FaSave,
+  FaTimes,
 } from "react-icons/fa";
 
 const regionList = [
@@ -2768,6 +2769,7 @@ export default function ProfilePage() {
 
   // Orders Data
   const [orders, setOrders] = useState<any[]>([]);
+  const [ordersSearchQuery, setOrdersSearchQuery] = useState("");
 
   // Load cached profile picture on mount (client-side only)
   useEffect(() => {
@@ -4176,7 +4178,19 @@ export default function ProfilePage() {
                     type="text"
                     placeholder="Search Seller Name or Product"
                     className="orders-search-input"
+                    value={ordersSearchQuery}
+                    onChange={(e) => setOrdersSearchQuery(e.target.value)}
                   />
+                  {ordersSearchQuery && (
+                    <button
+                      className="orders-search-clear-btn"
+                      onClick={() => setOrdersSearchQuery("")}
+                      type="button"
+                      aria-label="Clear search"
+                    >
+                      <FaTimes />
+                    </button>
+                  )}
                 </div>
 
                 {/* Loading State */}

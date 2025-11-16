@@ -26,6 +26,7 @@ import {
   faPaintBrush,
   faSyncAlt,
   faSearch,
+  faBars,
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
 import { LatLngExpression } from "leaflet";
@@ -326,6 +327,18 @@ export default function MapContent() {
   return (
     <>
       <Toaster position="top-center" />
+
+      {/* Mobile Filter Toggle Button */}
+      <button
+        className="map-filter-toggle-btn"
+        onClick={() => setFiltersOpen((o) => !o)}
+        aria-label="Toggle filters"
+        style={{
+          display: filtersOpen ? "none" : "flex",
+        }}
+      >
+        <FontAwesomeIcon icon={faBars} />
+      </button>
 
       {/* Floating Glassmorphism Filter Card */}
       <div

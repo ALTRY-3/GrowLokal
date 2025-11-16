@@ -20,6 +20,7 @@ interface Product {
   maxStock?: number;
   craftType?: string;
   category?: string;
+  barangay?: string;
   soldCount?: number;
 }
 
@@ -32,6 +33,7 @@ interface RecommendedProduct {
   thumbnailUrl: string;
   category: string;
   craftType: string;
+  barangay?: string;
 }
 
 const dummyRecommendations = [
@@ -43,6 +45,7 @@ const dummyRecommendations = [
     thumbnailUrl: "/box7.png",
     category: "Handicrafts",
     craftType: "Weaving",
+    barangay: "Asinan",
   },
   {
     _id: "2",
@@ -52,6 +55,7 @@ const dummyRecommendations = [
     thumbnailUrl: "/fashion5.png",
     category: "Fashion",
     craftType: "Embroidery",
+    barangay: "Banicain",
   },
   {
     _id: "3",
@@ -61,6 +65,7 @@ const dummyRecommendations = [
     thumbnailUrl: "/home6.png",
     category: "Home",
     craftType: "Woodwork",
+    barangay: "Barretto",
   },
   {
     _id: "4",
@@ -70,6 +75,7 @@ const dummyRecommendations = [
     thumbnailUrl: "/food6.png",
     category: "Food",
     craftType: "Cooking",
+    barangay: "East Bajac-Bajac",
   },
 ];
 
@@ -223,6 +229,7 @@ export default function ProductModal({
     thumbnailUrl: string;
     category: string;
     craftType: string;
+    barangay?: string;
     description: string;
     stock: number;
     artistName: string;
@@ -242,6 +249,7 @@ export default function ProductModal({
     maxStock: apiProduct.stock,
     craftType: apiProduct.craftType,
     category: apiProduct.category,
+    barangay: apiProduct.barangay,
     soldCount: 0,
   });
 
@@ -415,15 +423,15 @@ export default function ProductModal({
                 <div className="description-content">
                   <div className="description-item">
                     <span className="label">Category:</span>
-                    <span className="value">{product.category}</span>
+                    <span className="value">{product.category || "N/A"}</span>
                   </div>
                   <div className="description-item">
                     <span className="label">Craft Type:</span>
-                    <span className="value">{product.craftType}</span>
+                    <span className="value">{product.craftType || "N/A"}</span>
                   </div>
                   <div className="description-item">
                     <span className="label">Made In Barangay:</span>
-                    <span className="value">Barangay Name</span>
+                    <span className="value">{product.barangay || "N/A"}</span>
                   </div>
                   <br />
                   <div className="description-text">
