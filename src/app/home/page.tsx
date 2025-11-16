@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ImageCarousel from "@/components/ImageCarousel1";
 import ProductModal from "@/components/ProductModal"; // Add this import
+import { useWishlist } from "@/lib/useWishlist";
 import { FaStar } from "react-icons/fa";
 import { MapPin } from "lucide-react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -15,19 +16,7 @@ import { MdNotifications, MdNotificationsActive } from "react-icons/md";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FaTimes, FaCalendar, FaClock, FaMapMarkerAlt } from "react-icons/fa";
 import "./home.css";
-
-// Booking type definition
-type Booking = {
-  eventId: number;
-  eventTitle: string;
-  userName: string;
-  userEmail: string;
-  participants: number;
-  message: string;
-  bookedAt: string;
-};
 
 const featuredProducts = [
   {
@@ -197,78 +186,48 @@ const topArtisans = [
 
 const upcomingEvents = [
   {
-    id: 6,
     title: "Luzon Art Fair 2025",
     type: "Fair",
     date: "October 12, 2025",
     location: "Barangay Pag-asa",
     fullDate: "2025-10-12",
-    time: "9:00 AM",
-    details:
-      "Olongapo Zambales Artists (OZA) is a creative collective founded in 2022, born from a shared passion to uplift and unify the art community across Olongapo and the province of Zambales.",
-    dateText: "October 12, 2025",
   },
   {
-    id: 2,
     title: "Alab Sining 2026",
     type: "Festival",
     date: "February 17, 2026",
     location: "SM City Olongapo Central",
     fullDate: "2026-02-17",
-    time: "9:00 AM",
-    details:
-      "An art exhibit held at SM City Olongapo Central, showcasing traditional and contemporary artworks by artists from Olongapo, Zambales, and Bataan.",
-    dateText: "February 17, 2026",
   },
   {
-    id: 8,
     title: "Pottery Demonstration",
     type: "Demo",
     date: "March 20, 2026",
     location: "Olongapo City, Triangle",
     fullDate: "2026-03-20",
-    time: "9:00 AM",
-    details:
-      "A hands-on pottery demonstration showcasing the art of shaping clay into functional and decorative pieces. Attendees will observe traditional and modern pottery techniques, learn about the tools and processes involved, and gain a deeper appreciation for the craftsmanship behind each creation. Open to artists, students, and the public who wish to explore the beauty of handmade ceramics.",
-    dateText: "March 20, 2026",
   },
   {
-    id: 9,
     title: "Cultural Festival",
     type: "Festival",
     date: "March 25, 2026",
     location: "Magsaysay Drive, Olongapo City",
     fullDate: "2026-03-25",
-    time: "9:00 AM",
-    details:
-      "Experience the art of pottery up close in this live demonstration featuring the creative process from clay molding to final design. Participants will witness various shaping and glazing techniques, learn about the cultural roots of pottery, and discover how simple clay can be transformed into timeless works of art. Ideal for anyone curious about craftsmanship and creative expression.",
-    dateText: "March 25, 2026",
   },
   {
-    id: 7,
     title: "Sip and Sketch 'Gapo",
-    type: "Workshop",
+    type: "Fair",
     date: "November 11, 2025",
     location: "Olongapo City, Sibul Kapihan",
     image: "/event2.jpg",
     fullDate: "2025-11-11",
-    time: "9:00 AM",
-    details:
-      "A creative gathering where artists and art enthusiasts come together to sketch, sip beverages, and engage in artistic conversations, fostering a community of local artists.",
-    dateText: "November 11, 2025",
   },
   {
-    id: 3,
-    title: "This Is Not Art Escape",
+    title: "Local Crafts Fair",
     type: "Fair",
-    date: "October 25, 2025",
-    location: "Ayala Malls Harbor Point",
+    date: "April 2, 2025",
+    location: "Olongapo City Plaza",
     image: "/event2.jpg",
-    fullDate: "2025-10-25",
-    time: "9:00 AM",
-    details:
-      "A two-day art market at Ayala Malls Harbor Point, offering handmade crafts, original artworks, and unique creations from local artists.",
-    dateText: "October 25, 2025",
+    fullDate: "2025-04-02",
   },
 ];
 
@@ -354,239 +313,14 @@ const artisanStories = [
   },
 ];
 
-// BookingModal Component
-interface BookingModalProps {
-  isOpen: boolean;
-  event: any | null;
-  onClose: () => void;
-  onSubmit: (booking: Booking) => void;
-}
-
-function BookingModal({ isOpen, event, onClose, onSubmit }: BookingModalProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    participants: 1,
-    message: "",
-  });
-  const [submitted, setSubmitted] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "participants" ? parseInt(value) || 1 : value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!event) return;
-
-    const booking: Booking = {
-      eventId: event.id,
-      eventTitle: event.title,
-      userName: formData.name,
-      userEmail: formData.email,
-      participants: formData.participants,
-      message: formData.message,
-      bookedAt: new Date().toISOString(),
-    };
-
-    onSubmit(booking);
-    setSubmitted(true);
-
-    setTimeout(() => {
-      setFormData({ name: "", email: "", participants: 1, message: "" });
-      setSubmitted(false);
-      onClose();
-    }, 2000);
-  };
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === modalRef.current) {
-      onClose();
-    }
-  };
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !event) return null;
-
-  return (
-    <div
-      className="booking-modal-backdrop"
-      ref={modalRef}
-      onClick={handleBackdropClick}
-    >
-      <div className="booking-modal">
-        <button
-          className="booking-modal-close"
-          onClick={onClose}
-          aria-label="Close booking modal"
-        >
-          <FaTimes />
-        </button>
-
-        {submitted ? (
-          <div className="booking-modal-success">
-            <div className="success-icon">✓</div>
-            <h2>Booking Confirmed!</h2>
-            <p>
-              You're booked for <strong>{event.title}</strong>!
-            </p>
-            <p className="success-subtitle">Check your email for details.</p>
-          </div>
-        ) : (
-          <>
-            <div className="booking-modal-header">
-              <h2>Book Experience</h2>
-              <p className="booking-modal-subtitle">
-                Secure your spot for this amazing event
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="booking-modal-form">
-              {/* Event Info Section (Read-only) */}
-              <div className="booking-form-section">
-                <label className="booking-form-label">Event Title</label>
-                <input
-                  type="text"
-                  value={event.title}
-                  readOnly
-                  className="booking-form-input readonly"
-                />
-              </div>
-
-              <div className="booking-form-section">
-                <label className="booking-form-label">Date</label>
-                <input
-                  type="text"
-                  value={event.dateText || event.date}
-                  readOnly
-                  className="booking-form-input readonly"
-                />
-              </div>
-
-              <div className="booking-form-section">
-                <label className="booking-form-label">Time</label>
-                <input
-                  type="text"
-                  value={event.time || "Not specified"}
-                  readOnly
-                  className="booking-form-input readonly"
-                />
-              </div>
-
-              <div className="booking-form-section">
-                <label className="booking-form-label">Location</label>
-                <input
-                  type="text"
-                  value={event.location}
-                  readOnly
-                  className="booking-form-input readonly"
-                />
-              </div>
-
-              <hr className="booking-form-divider" />
-
-              {/* User Info Section */}
-              <div className="booking-form-section">
-                <label className="booking-form-label">
-                  Your Name <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter your full name"
-                  className="booking-form-input"
-                  required
-                />
-              </div>
-
-              <div className="booking-form-section">
-                <label className="booking-form-label">
-                  Email Address <span className="required-asterisk">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="your.email@example.com"
-                  className="booking-form-input"
-                  required
-                />
-              </div>
-
-              <div className="booking-form-row">
-                <div className="booking-form-section">
-                  <label className="booking-form-label">
-                    Number of Participants{" "}
-                    <span className="required-asterisk">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="participants"
-                    min="1"
-                    max="50"
-                    value={formData.participants}
-                    onChange={handleInputChange}
-                    className="booking-form-input"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="booking-form-section">
-                <label className="booking-form-label">Message (Optional)</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="Any special requests or questions?"
-                  className="booking-form-input booking-form-textarea"
-                  rows={3}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="booking-modal-submit-btn"
-                disabled={!formData.name || !formData.email}
-              >
-                Confirm Booking
-              </button>
-            </form>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function HomePage() {
   const [eventReminders, setEventReminders] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Change this
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set()); // Add wishlist state
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const [selectedEventForBooking, setSelectedEventForBooking] =
-    useState<any>(null);
+  
+  // Use wishlist hook instead of local state
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  
   const router = useRouter();
 
   // Add state to track scroll positions for each carousel
@@ -629,22 +363,6 @@ export default function HomePage() {
     }
   }, []);
 
-  // Load wishlist from localStorage
-  useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist");
-    if (savedWishlist) {
-      setWishlist(new Set(JSON.parse(savedWishlist)));
-    }
-  }, []);
-
-  // Load bookings from localStorage
-  useEffect(() => {
-    const savedBookings = localStorage.getItem("eventBookings");
-    if (savedBookings) {
-      setBookings(JSON.parse(savedBookings));
-    }
-  }, []);
-
   const featuredRef = useRef<HTMLDivElement>(null);
   const artisansRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
@@ -666,22 +384,15 @@ export default function HomePage() {
     });
   };
 
-  const toggleEventReminder = (fullDate: string) => {
+  const toggleEventReminder = (title: string) => {
     setEventReminders((prev) => {
-      const newReminders = prev.includes(fullDate)
-        ? prev.filter((date) => date !== fullDate)
-        : [...prev, fullDate];
+      const newReminders = prev.includes(title)
+        ? prev.filter((prevTitle) => prevTitle !== title)
+        : [...prev, title];
 
       localStorage.setItem("eventReminders", JSON.stringify(newReminders));
       return newReminders;
     });
-  };
-
-  const isPastEvent = (fullDate: string): boolean => {
-    const eventDateTime = new Date(fullDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return eventDateTime < today;
   };
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -717,48 +428,9 @@ export default function HomePage() {
     setSelectedProduct(modalProduct);
   };
 
-  const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      const newWishlist = new Set(prev);
-      if (newWishlist.has(productId)) {
-        newWishlist.delete(productId);
-      } else {
-        newWishlist.add(productId);
-      }
-      localStorage.setItem("wishlist", JSON.stringify(Array.from(newWishlist)));
-      return newWishlist;
-    });
-  };
-
   const handleViewDetails = (eventTitle: string) => {
     // Navigate to events page with event title as query param
     router.push(`/events?event=${encodeURIComponent(eventTitle)}`);
-  };
-
-  const handleBookingSubmit = (booking: Booking) => {
-    setBookings((prev) => {
-      const newBookings = [...prev, booking];
-      // Save to localStorage to sync with events page
-      localStorage.setItem("eventBookings", JSON.stringify(newBookings));
-      return newBookings;
-    });
-    // In a real app, you'd send this to a backend API here
-    console.log("Booking saved:", booking);
-  };
-
-  // Check if an event is already booked
-  const isEventBooked = (eventId: number): boolean => {
-    return bookings.some((booking) => booking.eventId === eventId);
-  };
-
-  const openBookingModal = (event: any) => {
-    setSelectedEventForBooking(event);
-    setShowBookingModal(true);
-  };
-
-  const closeBookingModal = () => {
-    setShowBookingModal(false);
-    setSelectedEventForBooking(null);
   };
 
   const checkScrollPosition = (
@@ -848,7 +520,7 @@ export default function HomePage() {
             <Link href="/marketplace" className="btn-explore">
               Explore Marketplace
             </Link>
-            <Link href="/profile?section=selling" className="btn-start-hero">
+            <Link href="/profile" className="btn-start-hero">
               <span>Start Selling</span>
             </Link>
           </div>
@@ -1048,91 +720,46 @@ export default function HomePage() {
             )}
 
             <div className="home-event-carousel" ref={eventsRef}>
-              {upcomingEvents
-                .sort((a, b) => {
-                  const aIsPast = isPastEvent(a.fullDate);
-                  const bIsPast = isPastEvent(b.fullDate);
-                  if (aIsPast === bIsPast) {
-                    return (
-                      new Date(a.fullDate).getTime() -
-                      new Date(b.fullDate).getTime()
-                    );
-                  }
-                  return aIsPast ? 1 : -1;
-                })
-                .map((event, index) => (
-                  <div className="home-event-card" key={index}>
-                    <div className="home-event-header">
-                      <span className="home-event-type">{event.type}</span>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "0.5rem",
-                          alignItems: "center",
-                        }}
-                      >
-                        {event.type === "Workshop" || event.type === "Demo" ? (
-                          <button
-                            className="book-experience-btn"
-                            onClick={() => openBookingModal(event)}
-                            disabled={
-                              isPastEvent(event.fullDate) ||
-                              isEventBooked(event.id)
-                            }
-                            title={
-                              isPastEvent(event.fullDate)
-                                ? "Event has passed - booking unavailable"
-                                : isEventBooked(event.id)
-                                ? "Already booked"
-                                : "Book this experience"
-                            }
-                          >
-                            {isEventBooked(event.id) ? "✓ Booked" : "📅 Book"}
-                          </button>
-                        ) : (
-                          <button
-                            className={`home-event-reminder ${
-                              eventReminders.includes(event.fullDate)
-                                ? "active"
-                                : ""
-                            }`}
-                            onClick={() => toggleEventReminder(event.fullDate)}
-                            disabled={isPastEvent(event.fullDate)}
-                            aria-label={
-                              isPastEvent(event.fullDate)
-                                ? "Past event - reminders unavailable"
-                                : eventReminders.includes(event.fullDate)
-                                ? "Remove reminder"
-                                : "Set reminder"
-                            }
-                          >
-                            {eventReminders.includes(event.fullDate) ? (
-                              <MdNotificationsActive className="icon-ringing" />
-                            ) : (
-                              <MdNotifications />
-                            )}
-                          </button>
-                        )}
-                      </div>
+              {upcomingEvents.map((event, index) => (
+                <div className="home-event-card" key={index}>
+                  <div className="home-event-header">
+                    <span className="home-event-type">{event.type}</span>
+                    <button
+                      className={`home-event-reminder ${
+                        eventReminders.includes(event.title) ? "active" : ""
+                      }`}
+                      onClick={() => toggleEventReminder(event.title)}
+                      aria-label={
+                        eventReminders.includes(event.title)
+                          ? "Remove reminder"
+                          : "Set reminder"
+                      }
+                    >
+                      {eventReminders.includes(event.title) ? (
+                        <MdNotificationsActive className="icon-ringing" />
+                      ) : (
+                        <MdNotifications />
+                      )}
+                    </button>
+                  </div>
+                  <div className="home-event-content">
+                    <h3 className="home-event-title">{event.title}</h3>
+                    <p className="home-event-date">{event.date}</p>
+                    <div className="home-event-location">
+                      <MapPin size={12} />
+                      <span>{event.location}</span>
                     </div>
-                    <div className="home-event-content">
-                      <h3 className="home-event-title">{event.title}</h3>
-                      <p className="home-event-date">{event.date}</p>
-                      <div className="home-event-location">
-                        <MapPin size={12} />
-                        <span>{event.location}</span>
-                      </div>
-                      <div className="home-event-actions">
-                        <button
-                          className="home-event-view-details"
-                          onClick={() => handleViewDetails(event.title)}
-                        >
-                          View Event Details <FaChevronRight size={12} />
-                        </button>
-                      </div>
+                    <div className="home-event-actions">
+                      <button
+                        className="home-event-view-details"
+                        onClick={() => handleViewDetails(event.title)}
+                      >
+                        View Event Details <FaChevronRight size={12} />
+                      </button>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
 
             {canScrollEvents.right && (
@@ -1268,7 +895,7 @@ export default function HomePage() {
               Join hundreds of local artisans in Olongapo. Showcase your crafts,
               connect with buyers, and track your growth, all in one place.
             </p>
-            <Link href="/profile?section=selling" className="btn-start">
+            <Link href="/profile" className="btn-start">
               <Store size={20} />
               <span>Start Selling</span>
             </Link>
@@ -1283,16 +910,6 @@ export default function HomePage() {
         <ProductModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
-          isInWishlist={
-            selectedProduct.productId
-              ? wishlist.has(selectedProduct.productId)
-              : false
-          }
-          onToggleWishlist={
-            selectedProduct.productId
-              ? () => toggleWishlist(selectedProduct.productId)
-              : undefined
-          }
           onProductChange={(newProduct) => {
             setSelectedProduct(newProduct);
           }}

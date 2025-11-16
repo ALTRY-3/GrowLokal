@@ -11,10 +11,9 @@ import {
   FaSignOutAlt,
   FaChevronRight,
   FaTrash,
-  FaBars,
 } from "react-icons/fa";
 import { signOut, useSession } from "next-auth/react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import ConfirmDialog from "./ConfirmDialog";
@@ -26,7 +25,6 @@ export default function Navbar() {
   const [showCart, setShowCart] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notificationTab, setNotificationTab] = useState<
     "all" | "orders" | "messages"
   >("all");
@@ -36,30 +34,19 @@ export default function Navbar() {
 
   const { data: session } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
-  const { items, subtotal, itemCount, fetchCart, removeItem, clearLocalCart } =
+  const { items, subtotal, itemCount, fetchCart, removeItem, clearLocalCart, 
+          selectedItems, toggleSelectItem, selectAllItems, clearSelection, 
+          getSelectedItems, getSelectedSubtotal, getSelectedCount } =
     useCartStore();
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const cartRef = useRef<HTMLDivElement>(null);
 
-  // Get page name from pathname
-  const getPageName = () => {
-    const pathSegment = pathname.split("/")[1] || "home";
-    const pageNames: Record<string, string> = {
-      home: "Home",
-      marketplace: "Marketplace",
-      stories: "Stories",
-      events: "Events",
-      map: "Map",
-      profile: "Profile",
-      cart: "Cart",
-      checkout: "Checkout",
-      "add-product": "Add Product",
-      analytics: "Analytics",
-    };
-    return pageNames[pathSegment] || "Menu";
-  };
+  // Selection state
+  const selectedCartItems = getSelectedItems();
+  const selectedSubtotal = getSelectedSubtotal();
+  const selectedCount = getSelectedCount();
+  const allSelected = selectedCount === items.length && items.length > 0;
 
   // Fetch cart on mount and when session changes
   useEffect(() => {
@@ -233,6 +220,34 @@ export default function Navbar() {
                   <span className={styles.cartCount}>{itemCount} items</span>
                 </div>
 
+                {selectedCount > 0 && (
+                  <div className={styles.cartSelectionInfo}>
+                    <span>{selectedCount} selected</span>
+                  </div>
+                )}
+
+                {items.length > 0 && (
+                  <div className={styles.cartSelectionControls}>
+                    <label className={styles.selectAllLabel}>
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={(e) => selectAllItems(e.target.checked)}
+                        className={styles.selectAllCheckbox}
+                      />
+                      Select All
+                    </label>
+                    {selectedCount > 0 && (
+                      <button
+                        onClick={clearSelection}
+                        className={styles.clearSelectionBtn}
+                      >
+                        Clear Selection
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {items.length === 0 ? (
                   <div className={styles.emptyCartContainer}>
                     <div className={styles.emptyCartIcon}>
@@ -255,11 +270,21 @@ export default function Navbar() {
                 ) : (
                   <>
                     <div className={styles.cartItemsList}>
-                      {items.map((item) => (
+                      {items.map((item) => {
+                        const isSelected = selectedItems.has(item.productId);
+                        return (
                         <div
                           key={item.productId}
-                          className={styles.cartItemCard}
+                          className={`${styles.cartItemCard} ${isSelected ? styles.cartItemSelected : ''}`}
                         >
+                          <div className={styles.cartItemCheckboxWrapper}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectItem(item.productId)}
+                              className={styles.cartItemCheckbox}
+                            />
+                          </div>
                           <div className={styles.cartItemImageWrapper}>
                             <img
                               src={item.image}
@@ -295,12 +320,19 @@ export default function Navbar() {
                             <FaTrash />
                           </button>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className={styles.cartSummary}>
                       <div className={styles.summaryRow}>
-                        <span className={styles.summaryLabel}>Subtotal</span>
+                        <span className={styles.summaryLabel}>Selected</span>
+                        <span className={styles.summaryValue}>
+                          ₱{selectedSubtotal.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className={styles.summaryRow}>
+                        <span className={styles.summaryLabel}>Cart Total</span>
                         <span className={styles.summaryValue}>
                           ₱{subtotal.toFixed(2)}
                         </span>
@@ -318,7 +350,7 @@ export default function Navbar() {
                       >
                         <span className={styles.summaryLabel}>Total</span>
                         <span className={styles.summaryValue}>
-                          ₱{subtotal.toFixed(2)}
+                          ₱{selectedSubtotal.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -340,13 +372,27 @@ export default function Navbar() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          if (selectedCount === 0) {
+                            alert('Please select items to checkout');
+                            return;
+                          }
+                          
+                          // Store selected items for checkout
+                          const selectedItemsData = selectedCartItems.map(item => ({
+                            productId: item.productId,
+                            quantity: item.quantity,
+                            price: item.price
+                          }));
+                          
+                          sessionStorage.setItem('checkoutItems', JSON.stringify(selectedItemsData));
                           setShowCart(false);
                           setTimeout(() => {
                             router.push("/checkout");
                           }, 100);
                         }}
+                        disabled={selectedCount === 0}
                       >
-                        Checkout
+                        Checkout ({selectedCount})
                       </button>
                     </div>
                   </>
@@ -437,17 +483,7 @@ export default function Navbar() {
       </header>
 
       <nav className={styles.subNavbar}>
-        {/* Mobile menu toggle */}
-        <button
-          className={styles.mobileMenuToggle}
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-          aria-label="Toggle navigation menu"
-        >
-          <FaBars className={styles.menuToggleIcon} />
-        </button>
-
-        {/* Desktop navigation - always visible on desktop */}
-        <ul className={`${styles.subNavLinks} ${styles.desktopNav}`}>
+        <ul className={styles.subNavLinks}>
           <li>
             <Link href="/home">Home</Link>
           </li>
@@ -464,40 +500,6 @@ export default function Navbar() {
             <Link href="/map">Map</Link>
           </li>
         </ul>
-
-        {/* Mobile dropdown navigation */}
-        {showMobileMenu && (
-          <ul className={`${styles.subNavLinks} ${styles.mobileNav}`}>
-            <li>
-              <Link href="/home" onClick={() => setShowMobileMenu(false)}>
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/marketplace"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                Marketplace
-              </Link>
-            </li>
-            <li>
-              <Link href="/stories" onClick={() => setShowMobileMenu(false)}>
-                Stories
-              </Link>
-            </li>
-            <li>
-              <Link href="/events" onClick={() => setShowMobileMenu(false)}>
-                Events
-              </Link>
-            </li>
-            <li>
-              <Link href="/map" onClick={() => setShowMobileMenu(false)}>
-                Map
-              </Link>
-            </li>
-          </ul>
-        )}
       </nav>
 
       <div className={styles.navStrip}>

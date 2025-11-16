@@ -30,6 +30,7 @@ export interface IUser extends mongoose.Document {
   };
   gender?: 'male' | 'female' | 'other' | '';
   profilePicture?: string;
+  wishlist: mongoose.Types.ObjectId[];
   isSeller: boolean;
   shopId?: mongoose.Types.ObjectId;
   sellerProfile?: {
@@ -167,6 +168,10 @@ const UserSchema = new mongoose.Schema<IUser>(
       type: String,
       default: '/default-profile.jpg',
     },
+    wishlist: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+    }],
     isSeller: {
       type: Boolean,
       default: false,

@@ -1,3 +1,4 @@
+/* Design System Variables */
 :root {
   /* Primary Colors */
   --primary-green: #2E3F36;
@@ -54,10 +55,6 @@
 
 .marketplacePage {
   width: 100%;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background-color: var(--primary-green);
 }
 
 .navbar {
@@ -130,10 +127,7 @@
   background-color: var(--primary-gold);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 0 1rem;
-  box-sizing: border-box;
-  box-shadow: var(--shadow-sm);
+  justify-content: center;
 }
 
 .subNavLinks {
@@ -142,8 +136,6 @@
   gap: 6rem;
   margin: 0;
   padding: 0;
-  flex: 1;
-  justify-content: center;
 }
 
 .subNavLinks li a {
@@ -160,8 +152,7 @@
 
 .navStrip {
   width: 100%;
-  height: 1rem;
-  margin-left: auto;
+  height: 1rem; 
   background-image: url("/left-panel.svg");
   background-repeat: no-repeat;
   background-size: cover;
@@ -257,7 +248,7 @@
 
 .notificationList {
   overflow-y: auto;
-  max-height: 350px;
+  max-height: 380px;
 }
 
 /* Custom scrollbar for notifications */
@@ -352,19 +343,6 @@
   z-index: 1000;
   padding: 15px;
   animation: dropdownFadeIn 0.2s ease-out;
-  max-width: calc(100vw - 2rem);
-}
-
-@media (max-width: 768px) {
-  .dropdown {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    width: calc(100vw - 2rem);
-    top: 5rem;
-    min-width: unset;
-  }
 }
 
 .dropdownNotifications {
@@ -375,67 +353,16 @@
   animation: scaleIn 0.2s ease-out;
 }
 
-@media (max-width: 768px) {
-  .dropdownNotifications {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 90vw;
-    width: calc(100vw - 2rem);
-    top: 5rem;
-    max-height: 50vh;
-    min-width: unset;
-  }
-}
-
-@media (max-width: 480px) {
-  .dropdownNotifications {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 90vw;
-    width: calc(100vw - 1rem);
-    top: 5rem;
-    max-height: 45vh;
-  }
-}
-
 .dropdownCart {
   min-width: 420px;
   max-width: 420px;
-  max-height: 600px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
   padding: 0;
   overflow: hidden;
   animation: scaleIn 0.2s ease-out;
-}
-
-@media (max-width: 768px) {
-  .dropdownCart {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 90vw;
-    width: calc(100vw - 2rem);
-    top: 5rem;
-    max-height: 55vh;
-    min-width: unset;
-  }
-}
-
-@media (max-width: 480px) {
-  .dropdownCart {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 90vw;
-    width: calc(100vw - 1rem);
-    top: 5rem;
-    max-height: 50vh;
-  }
+  box-sizing: border-box;
 }
 
 .dropdownProfile {
@@ -444,33 +371,6 @@
   overflow: hidden;
   animation: scaleIn 0.2s ease-out;
   box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-  .dropdownProfile {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 90vw;
-    width: calc(100vw - 2rem);
-    top: 5rem;
-    max-height: 50vh;
-    min-width: unset;
-  }
-}
-
-@media (max-width: 480px) {
-  .dropdownProfile {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-    max-width: 90vw;
-    width: calc(100vw - 1rem);
-    top: 5rem;
-    max-height: 45vh;
-  }
 }
 
 /* ========== CART DROPDOWN STYLES ========== */
@@ -501,8 +401,11 @@
 
 .cartItemsList {
   overflow-y: auto;
-  max-height: 350px;
+  max-height: 300px;
+  min-height: 120px;
   padding: var(--space-md);
+  flex: 1;
+  scroll-behavior: smooth;
 }
 
 /* Custom scrollbar for cart items */
@@ -643,6 +546,16 @@
   padding: var(--space-lg) var(--space-xl);
   background: var(--light-gray);
   border-top: 2px solid var(--medium-gray);
+  flex-shrink: 0;
+}
+
+.cartActions {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+  background: white;
+  border-top: 1px solid var(--medium-gray);
+  flex-shrink: 0;
 }
 
 .summaryRow {
@@ -790,6 +703,79 @@
   box-shadow: var(--shadow-md);
 }
 
+/* ========== CART SELECTION STYLES ========== */
+.cartSelectionInfo {
+  padding: var(--space-sm) var(--space-xl);
+  background: var(--light-gray);
+  border-bottom: 1px solid var(--medium-gray);
+  font-size: var(--text-sm);
+  color: var(--primary-gold);
+  font-weight: var(--font-semibold);
+  text-align: center;
+}
+
+.cartSelectionControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md) var(--space-xl);
+  background: white;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.selectAllLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: var(--font-medium);
+}
+
+.selectAllCheckbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-gold);
+}
+
+.clearSelectionBtn {
+  background: none;
+  border: 1px solid var(--primary-gold);
+  color: var(--primary-gold);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearSelectionBtn:hover {
+  background: var(--primary-gold);
+  color: white;
+}
+
+.cartItemCheckboxWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs);
+}
+
+.cartItemCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-gold);
+  cursor: pointer;
+}
+
+.cartItemSelected {
+  background: #fffbf2;
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 0 2px rgba(175, 121, 40, 0.1);
+}
+
 /* ========== PROFILE DROPDOWN STYLES ========== */
 .profileUserSection {
   padding: var(--space-lg) var(--space-md);
@@ -933,30 +919,25 @@
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
-
-/* Hide GROWLOKAL text on mobile (below 768px) */
 @media (max-width: 768px) {
-  .logoText {
-    display: none;
+  .dropdownNotifications {
+    width: calc(100vw - 32px);
+    max-width: 380px;
   }
-
-  .navbar {
-    padding: 0 1rem;
+  
+  .dropdownCart {
+    width: calc(100vw - 32px);
+    max-width: 420px;
   }
-
-  /* Make icons smaller on mobile */
-  .navIcon {
-    font-size: 1.25rem;
+  
+  .dropdownProfile {
+    width: calc(100vw - 32px);
+    max-width: 320px;
   }
-
-  .rightContent {
-    gap: 1rem;
-  }
-
-  .cartBadge {
-    width: 18px;
-    height: 18px;
-    font-size: 0.65rem;
+  
+  .dropdown {
+    right: 16px;
+    left: auto;
   }
   
   .cartHeader,
@@ -979,35 +960,31 @@
     width: 50px;
     height: 50px;
   }
-
-  .cartItemsList {
-    max-height: 25vh;
-  }
-
-  .notificationList {
-    max-height: 30vh;
-  }
 }
 
-/* Extra small mobile adjustments */
 @media (max-width: 480px) {
-  .navbar {
-    padding: 0 0.75rem;
+  .dropdownCart {
+    min-width: 280px;
+    max-width: calc(100vw - 16px);
+    right: -8px;
   }
-
-  .logoImage {
-    width: 35px;
-    height: 35px;
+  
+  .cartItemsList {
+    max-height: 200px;
   }
-
-  .navIcon {
-    font-size: 1.15rem;
+  
+  .cartSelectionControls {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
   }
-
-  .rightContent {
-    gap: 0.75rem;
+  
+  .clearSelectionBtn {
+    align-self: flex-end;
+    font-size: var(--text-xs);
+    padding: var(--space-xs) var(--space-sm);
   }
-
+  
   .cartActions {
     flex-direction: column;
   }
@@ -1025,158 +1002,12 @@
     width: 50px;
     height: 50px;
   }
-
-  .cartItemsList {
-    max-height: 22vh;
+  
+  .cartItemDetails {
+    gap: 2px;
   }
-
-  .notificationList {
-    max-height: 25vh;
-  }
-}
-
-/* Mobile Menu Toggle Button */
-.mobileMenuToggle {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: auto;
-  max-width: none;
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 1rem;
-  font-weight: var(--font-medium);
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.3s ease;
-}
-
-.mobileMenuToggle:hover {
-  background: transparent;
-  border-radius: var(--radius-md);
-}
-
-.menuToggleText {
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
-  text-align: left;
-  flex: none;
-}
-
-.menuToggleIcon {
-  font-size: 1.2rem;
-  transition: transform 0.3s ease;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-left: 0;
-  flex-shrink: 0;
-  width: 20px;
-  height: 16px;
-}
-
-.menuToggleIcon::before,
-.menuToggleIcon::after {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 2px;
-  background-color: white;
-  transition: all 0.3s ease;
-}
-
-.menuToggleIcon {
-  position: relative;
-}
-
-.menuToggleIcon span {
-  display: block;
-  width: 100%;
-  height: 2px;
-  background-color: white;
-  transition: all 0.3s ease;
-}
-
-.menuToggleIconOpen {
-  transform: none;
-}
-
-/* Desktop navigation - visible by default */
-.desktopNav {
-  display: flex;
-}
-
-/* Mobile navigation dropdown */
-.mobileNav {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--primary-gold);
-  flex-direction: column;
-  gap: 0;
-  padding: 0;
-  margin: 0;
-  box-shadow: var(--shadow-lg);
-  animation: slideDown 0.3s ease-out;
-  z-index: 999;
-}
-
-.mobileNav li {
-  width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.mobileNav li:last-child {
-  border-bottom: none;
-}
-
-.mobileNav li a {
-  display: block;
-  padding: 1rem 1.5rem;
-  width: 100%;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.mobileNav li a:hover {
-  background: rgba(255, 255, 255, 0.1);
-  padding-left: 2rem;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Show mobile menu toggle on tablets and mobile */
-@media (max-width: 1024px) {
-  .subNavbar {
-    position: relative;
-  }
-
-  .mobileMenuToggle {
-    display: flex;
-  }
-
-  .desktopNav {
-    display: none;
-  }
-
-  .mobileNav {
-    display: flex;
-  }
-
-  .subNavLinks {
-    gap: 0;
+  
+  .cartItemName {
+    font-size: var(--text-sm);
   }
 }

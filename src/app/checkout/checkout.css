@@ -2,8 +2,12 @@
   padding: 24px;
   background-color: #f8f8f8;
   min-height: 100vh;
-  padding-bottom: 140px;
+  padding-bottom: 60px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 /* === TITLE BAR (same as cart) === */
@@ -14,6 +18,7 @@
   padding: 16px 24px;
   border-radius: 5px;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .checkout-title-icon {
@@ -36,6 +41,7 @@
   padding: 16px 24px;
   margin-bottom: 24px;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
 .address-header {
@@ -114,6 +120,41 @@
   border-radius: 5px;
   padding: 16px 24px;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.05);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  overflow: hidden;
+}
+
+.checkout-items-scroll {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.checkout-items-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.checkout-items-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.checkout-items-scroll::-webkit-scrollbar-thumb {
+  background: #af7928;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.checkout-items-scroll::-webkit-scrollbar-thumb:hover {
+  background: #8e6420;
+}
+
+.checkout-items-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #af7928 #f1f1f1;
 }
 
 .checkout-header-row {
@@ -577,6 +618,39 @@
   padding: 16px 24px;
   margin-top: 24px;
   box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+/* === PLACE ORDER BUTTON === */
+.place-order-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #ffffff;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.place-order-btn {
+  background-color: #af7928;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  font-family: "Poppins", sans-serif;
+  border: none;
+  border-radius: 3px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 5rem;
+}
+
+.place-order-btn:hover {
+  opacity: 0.9;
 }
 
 .payment-header {
@@ -619,7 +693,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
   background-color: #af7928; 
   color: #fff; 
   border: 2px solid #af7928; 
@@ -728,34 +801,6 @@
   font-size: 20px;
   color: #af7928;
   font-weight: 700;
-}
-
-/* Payment summary styles are defined above in payment section */
-
-
-/* === PLACE ORDER BUTTON === */
-.place-order-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.place-order-btn {
-  background-color: #af7928;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 15px;
-  font-family: "Poppins", sans-serif;
-  border: none;
-  border-radius: 3px;
-  padding: 10px 24px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-right: 5rem;
-}
-
-.place-order-btn:hover {
-  opacity: 0.9;
 }
 
 /* === MODAL === */

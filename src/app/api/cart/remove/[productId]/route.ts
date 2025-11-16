@@ -20,7 +20,7 @@ async function getUserId(request: NextRequest): Promise<string | null> {
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { productId: string } }
-) {
+): Promise<NextResponse> {
   try {
     await connectDB();
     

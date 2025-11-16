@@ -5,9 +5,8 @@ import ImageCarousel from "@/components/ImageCarousel1";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { FaStore, FaMapMarkerAlt } from "react-icons/fa";
-import { User } from "lucide-react";
 import "./stories.css";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 
 // Use the same DiceBear avatar placeholder as in home
@@ -23,14 +22,14 @@ interface Story {
   title: string;
   artist: string;
   excerpt: string;
-  category: string;
-  craftType: string;
-  location: string;
-  profilePic: string;
-  storeUrl: string;
+  category?: string | null;
+  craftType?: string | null;
+  location?: string | null;
+  profilePic?: string | null;
+  storeUrl?: string | null;
 }
 
-const stories: Story[] = [
+const featuredStories: Story[] = [
   {
     id: "1",
     img: "/artisans4.jpeg",
@@ -119,11 +118,43 @@ function getExcerptLimit() {
 }
 
 export default function StoriesPage() {
+  const [dynamicStories, setDynamicStories] = useState<Story[]>([]);
+  const [storiesLoading, setStoriesLoading] = useState(true);
+  const [storiesError, setStoriesError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const searchParams = useSearchParams();
   const storyId = searchParams.get("storyId");
   const [emphasizedId, setEmphasizedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        setStoriesError(null);
+        const response = await fetch("/api/stories");
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "Failed to load artisan stories");
+        }
+        setDynamicStories(payload.data || []);
+      } catch (error) {
+        console.error("Stories fetch error", error);
+        setStoriesError(
+          error instanceof Error ? error.message : "Failed to load artisan stories"
+        );
+      } finally {
+        setStoriesLoading(false);
+      }
+    };
+
+    fetchStories();
+  }, []);
+
+  const combinedStories = useMemo(() => {
+    const featuredIds = new Set(featuredStories.map((story) => story.id));
+    const extras = dynamicStories.filter((story) => !featuredIds.has(story.id));
+    return [...featuredStories, ...extras];
+  }, [dynamicStories]);
 
   useEffect(() => {
     if (storyId && cardRefs.current[storyId]) {
@@ -136,7 +167,7 @@ export default function StoriesPage() {
       const timer = setTimeout(() => setEmphasizedId(null), 2000);
       return () => clearTimeout(timer);
     }
-  }, [storyId]);
+  }, [storyId, combinedStories.length]);
 
   const handleSeeMore = (id: string) => {
     setExpanded((prev) => ({ ...prev, [id]: true }));
@@ -157,7 +188,18 @@ export default function StoriesPage() {
         </div>
 
         <div className="stories-vertical-list">
-          {stories.map((story) => {
+          {storiesLoading && (
+            <div className="stories-state">Loading artisan stories…</div>
+          )}
+          {!storiesLoading && storiesError && (
+            <div className="stories-state stories-state-error">
+              {storiesError}
+            </div>
+          )}
+          {!storiesLoading && !storiesError && combinedStories.length === 0 && (
+            <div className="stories-state">No artisan stories yet. Check back soon!</div>
+          )}
+          {combinedStories.map((story) => {
             const limit = getExcerptLimit();
             const isLong = story.excerpt.length > limit;
             const showFull = expanded[story.id];
@@ -179,7 +221,11 @@ export default function StoriesPage() {
                 <div className="story-card-header">
                   <div className="story-profile">
                     <img
-                      src={getProfileAvatar(story.artist)}
+                      src={
+                        story.profilePic && story.profilePic !== ""
+                          ? story.profilePic
+                          : getProfileAvatar(story.artist)
+                      }
                       alt={story.artist}
                       className="story-profile-pic"
                     />
@@ -187,16 +233,20 @@ export default function StoriesPage() {
                       <span className="story-artist-name">{story.artist}</span>
                       <div className="story-location">
                         <FaMapMarkerAlt className="story-location-icon" />
-                        <span>{story.location}</span>
+                        <span>{story.location || "Olongapo"}</span>
                       </div>
                       <div className="story-tags">
-                        <span className="story-tag">{story.category}</span>
-                        <span className="story-tag">{story.craftType}</span>
+                        {story.category && (
+                          <span className="story-tag">{story.category}</span>
+                        )}
+                        {story.craftType && (
+                          <span className="story-tag">{story.craftType}</span>
+                        )}
                       </div>
                     </div>
                   </div>
                   <Link
-                    href={`/artisan/${story.id}`}
+                    href={story.storeUrl || `/artisan/${story.id}`}
                     className="visit-store-btn"
                   >
                     <FaStore className="visit-store-icon" />
@@ -220,7 +270,7 @@ export default function StoriesPage() {
                   </p>
                 </div>
                 <img
-                  src={story.img}
+                  src={story.img || story.profilePic || getProfileAvatar(story.artist)}
                   alt={story.title}
                   className="story-img-wide"
                 />

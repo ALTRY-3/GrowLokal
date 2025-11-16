@@ -71,7 +71,7 @@ export async function PUT(
 
     await connectDB();
 
-    // Get user and verify seller status
+    const { id } = params;
     const user = await User.findOne({ email: session.user.email });
     
     if (!user || user.sellerProfile?.applicationStatus !== 'approved') {
@@ -80,8 +80,6 @@ export async function PUT(
         { status: 403 }
       );
     }
-
-    const { id } = params;
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {

@@ -2,231 +2,150 @@
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendar, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  FaEnvelope,
+  FaPhone,
+  FaFacebook,
+  FaInstagram,
+  FaTiktok,
+} from "react-icons/fa";
 import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import "./artisan.css";
 
-// Example frontend artisan data
-const artisans = [
-  {
-    id: "1",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aba",
-    shopName: "Aba's Weaving Shop",
-    name: "Aba Dela Cruz",
-    craftType: "Weaving",
-    category: "Handicrafts",
-    rating: 4.8,
-    location: "Asinan",
-    joined: "2025-11-07",
-    storyImage: "/artisans4.jpeg",
-    storyTitle: "A Journey to the Home of Rattan Furniture Making",
-    storyExcerpt:
-      "Rattan is a strong part of Filipino cultural material tradition and Cebu is known through out the Philippines for its strong tradition in rattan furniture making. During my residency I visited Cebu to learn about both the traditional and innovative techniques furniture makers use. The techniques I learnt there gave me a strong understanding of frame making and weaving and it was with this knowledge that I returned to my studio in Manila. There I  began to experiment with rattan frame making and applying it to sculptural forms and concepts working towards an exhibition that was to be held at the end of my residency.",
-    products: [
-      {
-        _id: "1",
-        name: "Handwoven Buri Bag",
-        artistName: "Aba Dela Cruz",
-        price: 799,
-        images: ["/box7.png", "/box7-hover.png"],
-        averageRating: 4.7,
-        totalReviews: 12,
-        isAvailable: true,
-        stock: 5,
-        isFeatured: true,
-        craftType: "Weaving",
-        category: "Handicrafts",
-        thumbnailUrl: "/box7.png",
-      },
-      // ...more products
-    ],
-  },
-  {
-    id: "2",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ben",
-    shopName: "Ben's Pottery Studio",
-    name: "Ben Yap",
-    craftType: "Woodwork",
-    category: "Banicain",
-    rating: 4.6,
-    location: "Banicain",
-    joined: "2024-08-15",
-    storyImage: "/artisans4.jpg",
-    storyTitle: "Grain of Time",
-    storyExcerpt:
-      "Each piece of wood I touch holds a memory, of rain, of sun, of silence. When I carve, I listen to its rhythm, the pulse hidden beneath its grain. The sound of the chisel against the wood reminds me that even something once cut down can be shaped into something new. Every curve I sand feels like rewriting a story that refuses to end.",
-    products: [
-      {
-        _id: "1",
-        name: "Rice Grooved Kuksa Mug",
-        artistName: "Ben Yap",
-        price: 499,
-        images: ["/home6.png", "/home6-hover.png"],
-        averageRating: 4.9,
-        totalReviews: 2,
-        isAvailable: true,
-        stock: 3,
-        isFeatured: true,
-        craftType: "Woodwork",
-        category: "Handicrafts",
-        thumbnailUrl: "/home6.png",
-      },
-    ],
-  },
-  {
-    id: "3",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dan",
-    shopName: "Carla's Shop",
-    name: "Carla Abdul",
-    craftType: "Pottery",
-    category: "Handicrafts",
-    rating: 4.7,
-    location: "Baretto",
-    joined: "2022-03-10",
-    storyImage: "/artisans1.jpg",
-    storyTitle: "In the Shape of My Hands",
-    storyExcerpt:
-      "The clay never lies. It remembers every hesitation, every moment I lose focus. When I sit at the wheel, it feels like time folds in on itself — just me, the slow spin, and the soft resistance beneath my palms.",
-    products: [
-      {
-        _id: "1",
-        name: "Embroidered Shawls",
-        artistName: "Carla Abdul",
-        price: 699,
-        images: ["/fashion5.png", "/fashion5-hover.png"],
-        averageRating: 4.5,
-        totalReviews: 8,
-        isAvailable: true,
-        stock: 10,
-        isFeatured: false,
-        craftType: "Pottery",
-        category: "Handicrafts",
-        thumbnailUrl: "/fashion5.png",
-      },
-    ],
-  },
-  {
-    id: "4",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Cara",
-    shopName: "David's Store",
-    name: "David Delo Santos",
-    craftType: "Embroidery",
-    category: "Fashion",
-    rating: 4.9,
-    location: "East Bajac-Bajac",
-    joined: "2023-05-22",
-    storyImage: "/artisans5.jpg",
-    storyTitle: "Threads of Quiet",
-    storyExcerpt:
-      "Each stitch feels like a whisper, a small act of patience that holds the fabric together. I lose track of time as colors bloom beneath my fingers, stories forming where there were once only blank spaces. When I finish, it’s never just a pattern — it’s a piece of calm I’ve sewn into being.",
-    products: [
-      {
-        _id: "1",
-        name: "Embroidered Shawls",
-        artistName: "David Delo Santos",
-        price: 699,
-        images: ["/fashion5.png", "/fashion5-hover.png"],
-        averageRating: 4.5,
-        totalReviews: 8,
-        isAvailable: true,
-        stock: 10,
-        isFeatured: false,
-        craftType: "Embroidery",
-        category: "Fashion",
-        thumbnailUrl: "/fashion5.png",
-      },
-    ],
-  },
-  {
-    id: "5",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Eve",
-    shopName: "Frances' Creations",
-    name: "Frances Toyang",
-    craftType: "Jewelry Making",
-    category: "Handicrafts",
-    rating: 4.85,
-    location: "Kalaklan",
-    joined: "2021-12-05",
-    storyImage: "/artisans6.jpg",
-    storyTitle: "Beads of Beauty",
-    storyExcerpt:
-      "Tiny beads slip through my fingers like drops of light, each one holding a fragment of color and meaning. I thread them together slowly, finding rhythm in the quiet click of glass against glass. When the piece catches the sun, I see more than jewelry — I see patience turned into beauty.",
-    products: [
-      {
-        _id: "1",
-        name: "Hardin Beaded Earrings",
-        artistName: "Frances Toyang",
-        price: 499,
-        images: ["/box6.png", "/box6-hover.png"],
-        averageRating: 4.85,
-        totalReviews: 15,
-        isAvailable: true,
-        stock: 20,
-        isFeatured: true,
-        craftType: "Jewelry Making",
-        category: "Handicrafts",
-        thumbnailUrl: "/box6.png",
-      },
-    ],
-  },
-  {
-    id: "6",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joe",
-    shopName: "Juan's Textiles",
-    name: "Juan Reyes",
-    craftType: "Textile",
-    category: "Fashion",
-    rating: 4.75,
-    location: "Gordon Heights",
-    joined: "2020-09-18",
-    storyImage: "/artisans7.png",
-    storyTitle: "Threads of the Earth",
-    storyExcerpt:
-      "I run my hands over the fabric, feeling the texture shaped by hours of weaving and dyeing. Each thread carries the story of where it came from — the soil, the plant, the hands that spun it. As the patterns come alive, I realize I’m not just making cloth; I’m preserving memory.",
-    products: [
-      {
-        _id: "1",
-        name: "Crochet Dress with Beaded Straps",
-        artistName: "Juan Reyes",
-        price: 799,
-        images: ["/fashion3.png", "/fashion3-hover.png"],
-        averageRating: 4.75,
-        totalReviews: 10,
-        isAvailable: true,
-        stock: 15,
-        isFeatured: false,
-        craftType: "Textile",
-        category: "Fashion",
-        thumbnailUrl: "/fashion3.png",
-      },
-    ],
-  },
-];
+interface ArtisanProduct {
+  id: string;
+  name: string;
+  price: number;
+  priceLabel?: string | null;
+  images: string[];
+  averageRating: number;
+  totalReviews: number;
+  isAvailable: boolean;
+  stock: number;
+  category?: string;
+  craftType?: string | null;
+}
+
+interface ArtisanProfile {
+  id: string;
+  shopName: string;
+  artistName: string;
+  category?: string;
+  craftType?: string | null;
+  location?: string;
+  joined?: string;
+  storyTitle: string;
+  storyExcerpt: string;
+  storyImage?: string | null;
+  avatar?: string;
+  products: ArtisanProduct[];
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  socialMedia?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    tiktok?: string | null;
+  };
+}
+
+const getProfileAvatar = (artist: string) =>
+  `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+    artist
+  )}`;
 
 export default function ArtisanProfilePage() {
-  const params = useParams();
-  const artisanId = params.id;
-  const artisan = artisans.find((a) => a.id === artisanId);
+  const params = useParams<{ id: string }>();
+  const artisanId = params?.id;
+  const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!artisan) {
+  useEffect(() => {
+    const fetchArtisan = async () => {
+      if (!artisanId) return;
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/artisans/${artisanId}`);
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "Failed to load artisan");
+        }
+
+        setArtisan(payload.data);
+      } catch (err) {
+        console.error("Failed to fetch artisan", err);
+        setError(err instanceof Error ? err.message : "Failed to load artisan");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtisan();
+  }, [artisanId]);
+
+  const joinedText = useMemo(() => {
+    if (!artisan?.joined) return null;
+    const date = new Date(artisan.joined);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }, [artisan?.joined]);
+
+  const computedShopRating = useMemo(() => {
+    if (!artisan?.products?.length) return null;
+    const rated = artisan.products.filter((product) => product.totalReviews > 0);
+    if (!rated.length) return null;
+    const total = rated.reduce((sum, product) => sum + product.averageRating, 0);
+    return (total / rated.length).toFixed(2);
+  }, [artisan?.products]);
+
+  if (loading) {
     return (
       <div>
         <Navbar />
         <main className="artisan-profile-main">
-          <div>Artisan not found.</div>
+          <div className="artisan-state">Loading artisan profile…</div>
         </main>
         <Footer />
       </div>
     );
   }
 
-  const joinedDate = new Date(artisan.joined);
-  const joinedText = joinedDate.toLocaleString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  if (error || !artisan) {
+    return (
+      <div>
+        <Navbar />
+        <main className="artisan-profile-main">
+          <div className="artisan-state artisan-state-error">
+            {error || "Artisan not found."}
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const heroImage =
+    artisan.storyImage || artisan.avatar || getProfileAvatar(artisan.artistName);
+  const avatarImage = artisan.avatar || getProfileAvatar(artisan.artistName);
+  const hasContactEmail = Boolean(artisan.contactEmail);
+  const hasContactPhone = Boolean(artisan.contactPhone);
+  const hasSocialLinks = Boolean(
+    artisan.socialMedia &&
+      (artisan.socialMedia.facebook ||
+        artisan.socialMedia.instagram ||
+        artisan.socialMedia.tiktok)
+  );
 
   return (
     <div>
@@ -234,13 +153,13 @@ export default function ArtisanProfilePage() {
       <main className="artisan-profile-main">
         <section className="artisan-card">
           <div className="artisan-card-top">
-            {/* Profile on the top left */}
-            <img
-              src={artisan.avatar}
-              alt={artisan.name}
+            <Image
+              src={avatarImage}
+              alt={artisan.artistName}
               className="artisan-avatar"
+              width={120}
+              height={120}
             />
-            {/* Shop name and artisan name */}
             <div
               style={{
                 flex: 1,
@@ -249,56 +168,48 @@ export default function ArtisanProfilePage() {
                 justifyContent: "center",
               }}
             >
-              <div
-                style={{ display: "flex", alignItems: "baseline", gap: "18px" }}
-              >
+              <div style={{ display: "flex", alignItems: "baseline", gap: "18px" }}>
                 <span
                   className="shop-name"
-                  style={{
-                    fontSize: "2rem",
-                    fontWeight: 600,
-                    color: "#2E3F36",
-                  }}
+                  style={{ fontSize: "2rem", fontWeight: 600, color: "#2E3F36" }}
                 >
                   {artisan.shopName}
                 </span>
                 <span
                   className="artisan-name"
-                  style={{
-                    fontSize: "1.15rem",
-                    fontWeight: 500,
-                    color: "#888",
-                  }}
+                  style={{ fontSize: "1.15rem", fontWeight: 500, color: "#888" }}
                 >
-                  {artisan.name}
+                  {artisan.artistName}
                 </span>
               </div>
-              {/* Category, craft type, rating */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   margin: "14px 0 0 0",
                   gap: "5px",
+                  flexWrap: "wrap",
                 }}
               >
-                <span className="artisan-category-type">
-                  {artisan.category}
-                </span>
-                <span className="artisan-craft-type">{artisan.craftType}</span>
-                {/* Move shop rating right beside tags, not pushed to edge */}
-                <span
-                  style={{
-                    color: "#AF7928",
-                    fontWeight: 600,
-                    fontSize: "1.08rem",
-                    marginLeft: "10px",
-                  }}
-                >
-                  ★ {artisan.rating}
-                </span>
+                {artisan.category && (
+                  <span className="artisan-category-type">{artisan.category}</span>
+                )}
+                {artisan.craftType && (
+                  <span className="artisan-craft-type">{artisan.craftType}</span>
+                )}
+                {computedShopRating && (
+                  <span
+                    style={{
+                      color: "#AF7928",
+                      fontWeight: 600,
+                      fontSize: "1.08rem",
+                      marginLeft: "10px",
+                    }}
+                  >
+                    ★ {computedShopRating}
+                  </span>
+                )}
               </div>
-              {/* Barangay location with icon */}
               <div
                 style={{
                   margin: "12px 0 0 0",
@@ -310,31 +221,25 @@ export default function ArtisanProfilePage() {
                   gap: "8px",
                 }}
               >
-                <FontAwesomeIcon
-                  icon={faMapMarkerAlt}
-                  className="artisan-location-icon"
-                />
-                {artisan.location}
+                <FontAwesomeIcon icon={faMapMarkerAlt} className="artisan-location-icon" />
+                {artisan.location || "Olongapo"}
               </div>
-              {/* Joined date */}
-              <div
-                style={{
-                  margin: "10px 0 0 0",
-                  color: "#888",
-                  fontSize: "0.80rem",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <FontAwesomeIcon
-                  icon={faCalendar}
-                  style={{ marginRight: "7px", color: "#AF7928" }}
-                />
-                Joined {joinedText}
-              </div>
+              {joinedText && (
+                <div
+                  style={{
+                    margin: "10px 0 0 0",
+                    color: "#888",
+                    fontSize: "0.80rem",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <FontAwesomeIcon icon={faCalendar} style={{ marginRight: "7px", color: "#AF7928" }} />
+                  Joined {joinedText}
+                </div>
+              )}
             </div>
           </div>
-          {/* Line break */}
           <hr
             style={{
               margin: "22px 0 0 0",
@@ -342,7 +247,6 @@ export default function ArtisanProfilePage() {
               borderTop: "2px solid #e0e0e0",
             }}
           />
-          {/* About section */}
           <div
             className="artisan-about-section"
             style={{
@@ -352,10 +256,12 @@ export default function ArtisanProfilePage() {
               gap: "32px",
             }}
           >
-            <img
-              src={artisan.storyImage}
+            <Image
+              src={heroImage}
               alt={artisan.storyTitle}
               className="artisan-story-image"
+              width={180}
+              height={180}
               style={{
                 width: "180px",
                 height: "180px",
@@ -384,7 +290,48 @@ export default function ArtisanProfilePage() {
           </div>
         </section>
 
-        {/* Products by [Artist Name] */}
+        {(hasContactEmail || hasContactPhone || hasSocialLinks) && (
+          <section className="artisan-contact-card">
+            <div className="artisan-contact-header">
+              <h3>Connect with {artisan.artistName}</h3>
+              <p>Reach out to learn more about custom work, workshops, or collaborations.</p>
+            </div>
+            <div className="artisan-contact-grid">
+              {hasContactEmail && (
+                <a className="artisan-contact-item" href={`mailto:${artisan.contactEmail}`}>
+                  <FaEnvelope />
+                  <span>{artisan.contactEmail}</span>
+                </a>
+              )}
+              {hasContactPhone && (
+                <a className="artisan-contact-item" href={`tel:${artisan.contactPhone}`}>
+                  <FaPhone />
+                  <span>{artisan.contactPhone}</span>
+                </a>
+              )}
+            </div>
+            {hasSocialLinks && artisan.socialMedia && (
+              <div className="artisan-social-links">
+                {artisan.socialMedia.facebook && (
+                  <a href={artisan.socialMedia.facebook} target="_blank" rel="noreferrer">
+                    <FaFacebook />
+                  </a>
+                )}
+                {artisan.socialMedia.instagram && (
+                  <a href={artisan.socialMedia.instagram} target="_blank" rel="noreferrer">
+                    <FaInstagram />
+                  </a>
+                )}
+                {artisan.socialMedia.tiktok && (
+                  <a href={artisan.socialMedia.tiktok} target="_blank" rel="noreferrer">
+                    <FaTiktok />
+                  </a>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
         <div style={{ margin: "2.5rem 0 0 0", width: "100%" }}>
           <h2
             style={{
@@ -394,73 +341,78 @@ export default function ArtisanProfilePage() {
               margin: "0 0 1.5rem 2rem",
             }}
           >
-            Products by {artisan.name}
+            Products by {artisan.artistName}
           </h2>
           <div className="artisan-product-grid">
-            {artisan.products.map((product) => (
-              <div className="artisan-product-card" key={product._id}>
-                <div className="artisan-image-container">
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="artisan-product-image"
-                  />
-                </div>
-                <div className="artisan-product-info">
-                  <div className="artisan-product-info-top">
-                    <h3 className="artisan-product-name">{product.name}</h3>
-                    <p className="artisan-product-artist">
-                      {product.artistName}
-                    </p>
-                    <div className="artisan-product-tags">
-                      <span className="artisan-product-tag craft-type">
-                        {product.craftType}
-                      </span>
-                      <span className="artisan-product-tag category">
-                        {product.category}
-                      </span>
-                    </div>
-                  </div>
-                  {/* Remove the line break (border-top) above the price by moving price/rating up */}
-                  <div
-                    className="artisan-product-info-bottom"
-                    style={{
-                      borderTop: "none",
-                      paddingTop: 0,
-                      marginTop: 0,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-start",
-                        gap: "2px",
-                      }}
-                    >
-                      <span className="artisan-product-price">
-                        ₱{product.price}
-                      </span>
-                      <span
-                        className="artisan-product-rating"
-                        style={{ marginLeft: 0, marginTop: "2px" }}
-                      >
-                        ★ {product.averageRating} ({product.totalReviews})
-                      </span>
-                    </div>
-                    <span
-                      style={{
-                        fontSize: "0.95rem",
-                        color: "#2e3f36",
-                        marginLeft: "18px",
-                      }}
-                    >
-                      Qty: {product.stock}
-                    </span>
-                  </div>
-                </div>
+            {artisan.products.length === 0 && (
+              <div className="artisan-state" style={{ width: "100%" }}>
+                No products yet. Check back soon!
               </div>
-            ))}
+            )}
+            {artisan.products.map((product) => {
+              const productImage = product.images.length > 0 ? product.images[0] : heroImage;
+              const priceLabel = product.priceLabel || `₱${product.price}`;
+              const ratingLabel = Number.isFinite(product.averageRating)
+                ? product.averageRating.toFixed(1)
+                : "0.0";
+              return (
+                <div className="artisan-product-card" key={product.id}>
+                  <div className="artisan-image-container">
+                    <Image
+                      src={productImage}
+                      alt={product.name}
+                      className="artisan-product-image"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 312px"
+                    />
+                  </div>
+                  <div className="artisan-product-info">
+                    <div className="artisan-product-info-top">
+                      <h3 className="artisan-product-name">{product.name}</h3>
+                      <p className="artisan-product-artist">{artisan.artistName}</p>
+                      <div className="artisan-product-tags">
+                        {product.craftType && (
+                          <span className="artisan-product-tag craft-type">
+                            {product.craftType}
+                          </span>
+                        )}
+                        {product.category && (
+                          <span className="artisan-product-tag category">
+                            {product.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className="artisan-product-info-bottom"
+                      style={{ borderTop: "none", paddingTop: 0, marginTop: 0 }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          gap: "2px",
+                        }}
+                      >
+                        <span className="artisan-product-price">{priceLabel}</span>
+                        <span
+                          className="artisan-product-rating"
+                          style={{ marginLeft: 0, marginTop: "2px" }}
+                        >
+                          ★ {ratingLabel} ({product.totalReviews})
+                        </span>
+                      </div>
+                      <span
+                        style={{ fontSize: "0.95rem", color: "#2e3f36", marginLeft: "18px" }}
+                      >
+                        Qty: {product.stock}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </main>
