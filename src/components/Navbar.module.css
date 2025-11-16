@@ -128,6 +128,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.subNavbar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+}
+
+.subMenuToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+  transition: all 0.3s ease;
+}
+
+.subMenuToggle:hover {
+  transform: translateY(-50%) scale(1.1);
 }
 
 .subNavLinks {
@@ -136,6 +168,9 @@
   gap: 6rem;
   margin: 0;
   padding: 0;
+  width: 100%;
+  justify-content: center;
+  z-index: 1000;
 }
 
 .subNavLinks li a {
@@ -919,25 +954,93 @@
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
+
+/* Tablets and below - show hamburger menu */
+@media (max-width: 1024px) {
+  .subMenuToggle {
+    display: flex;
+  }
+
+  .subNavbar {
+    position: relative;
+    height: auto;
+    min-height: 41px;
+  }
+
+  .subNavLinks {
+    position: absolute;
+    top: 41px;
+    left: 0;
+    right: 0;
+    background-color: var(--primary-gold);
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    width: 100%;
+    z-index: 1000;
+  }
+
+  .subNavLinks.subNavLinksOpen {
+    max-height: 300px;
+    padding: 0.5rem 0;
+    overflow-y: auto;
+  }
+
+  .subNavLinks li {
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .subNavLinks li:last-child {
+    border-bottom: none;
+  }
+
+  .subNavLinks li a {
+    display: block;
+    padding: 1rem 1.5rem;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .subNavLinks li a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    padding-left: 2rem;
+  }
+
+  .subNavLinks li a {
+    margin: 0;
+  }
+}
+
+/* Hide GROWLOKAL text on mobile (below 768px) */
 @media (max-width: 768px) {
-  .dropdownNotifications {
-    width: calc(100vw - 32px);
-    max-width: 380px;
+  .logoText {
+    display: none;
   }
-  
-  .dropdownCart {
-    width: calc(100vw - 32px);
-    max-width: 420px;
+
+  .navbar {
+    padding: 0 1rem;
   }
-  
-  .dropdownProfile {
-    width: calc(100vw - 32px);
-    max-width: 320px;
+
+  /* Make icons smaller on mobile */
+  .navIcon {
+    font-size: 1.25rem;
   }
-  
-  .dropdown {
-    right: 16px;
-    left: auto;
+
+  .rightContent {
+    gap: 1rem;
+  }
+
+  .cartBadge {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
   }
   
   .cartHeader,
@@ -960,31 +1063,35 @@
     width: 50px;
     height: 50px;
   }
+
+  .cartItemsList {
+    max-height: 25vh;
+  }
+
+  .notificationList {
+    max-height: 30vh;
+  }
 }
 
+/* Extra small mobile adjustments */
 @media (max-width: 480px) {
-  .dropdownCart {
-    min-width: 280px;
-    max-width: calc(100vw - 16px);
-    right: -8px;
+  .navbar {
+    padding: 0 0.75rem;
   }
-  
-  .cartItemsList {
-    max-height: 200px;
+
+  .logoImage {
+    width: 35px;
+    height: 35px;
   }
-  
-  .cartSelectionControls {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-xs);
+
+  .navIcon {
+    font-size: 1.15rem;
   }
-  
-  .clearSelectionBtn {
-    align-self: flex-end;
-    font-size: var(--text-xs);
-    padding: var(--space-xs) var(--space-sm);
+
+  .rightContent {
+    gap: 0.75rem;
   }
-  
+
   .cartActions {
     flex-direction: column;
   }
@@ -1002,12 +1109,158 @@
     width: 50px;
     height: 50px;
   }
-  
-  .cartItemDetails {
-    gap: 2px;
+
+  .cartItemsList {
+    max-height: 22vh;
   }
-  
-  .cartItemName {
-    font-size: var(--text-sm);
+
+  .notificationList {
+    max-height: 25vh;
+  }
+}
+
+/* Mobile Menu Toggle Button */
+.mobileMenuToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: auto;
+  max-width: none;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.mobileMenuToggle:hover {
+  background: transparent;
+  border-radius: var(--radius-md);
+}
+
+.menuToggleText {
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-align: left;
+  flex: none;
+}
+
+.menuToggleIcon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 0;
+  flex-shrink: 0;
+  width: 20px;
+  height: 16px;
+}
+
+.menuToggleIcon::before,
+.menuToggleIcon::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.menuToggleIcon {
+  position: relative;
+}
+
+.menuToggleIcon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.menuToggleIconOpen {
+  transform: none;
+}
+
+/* Desktop navigation - visible by default */
+.desktopNav {
+  display: flex;
+}
+
+/* Mobile navigation dropdown */
+.mobileNav {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--primary-gold);
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: var(--shadow-lg);
+  animation: slideDown 0.3s ease-out;
+  z-index: 999;
+}
+
+.mobileNav li {
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobileNav li:last-child {
+  border-bottom: none;
+}
+
+.mobileNav li a {
+  display: block;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.mobileNav li a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  padding-left: 2rem;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Show mobile menu toggle on tablets and mobile */
+@media (max-width: 1024px) {
+  .subNavbar {
+    position: relative;
+  }
+
+  .mobileMenuToggle {
+    display: flex;
+  }
+
+  .desktopNav {
+    display: none;
+  }
+
+  .mobileNav {
+    display: flex;
+  }
+
+  .subNavLinks {
+    gap: 0;
   }
 }

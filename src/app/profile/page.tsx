@@ -2893,11 +2893,12 @@ export default function ProfilePage() {
             try {
               const sellerStatusResponse = await fetch("/api/seller/status");
               const sellerStatusData = await sellerStatusResponse.json();
-              
+
               if (sellerStatusData.success) {
                 // Only consider them a seller if application is approved
-                const isApprovedSeller = sellerStatusData.data.isSeller && 
-                  sellerStatusData.data.applicationStatus === 'approved';
+                const isApprovedSeller =
+                  sellerStatusData.data.isSeller &&
+                  sellerStatusData.data.applicationStatus === "approved";
                 setIsSeller(isApprovedSeller);
               }
             } catch (sellerError) {
@@ -2926,17 +2927,17 @@ export default function ProfilePage() {
     try {
       const response = await fetch("/api/seller/status");
       const data = await response.json();
-      
+
       if (data.success) {
-        const isApprovedSeller = data.data.isSeller && 
-          data.data.applicationStatus === 'approved';
+        const isApprovedSeller =
+          data.data.isSeller && data.data.applicationStatus === "approved";
         setIsSeller(isApprovedSeller);
-        
+
         // If user became a seller, switch to My Shop
         if (isApprovedSeller && activeSection === "selling") {
           setActiveSection("myshop");
         }
-        
+
         return isApprovedSeller;
       }
     } catch (error) {
@@ -3003,7 +3004,7 @@ export default function ProfilePage() {
   // Check seller status periodically when on selling page
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (activeSection === "selling" && !isSeller) {
       // Check seller status every 10 seconds while on selling page
       interval = setInterval(() => {
@@ -4496,8 +4497,6 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-
-
                     {/* Craft Type */}
                     <div className="form-row">
                       <label className="form-label">
@@ -5028,8 +5027,6 @@ export default function ProfilePage() {
                         </p>
                       </div>
 
-
-
                       {craftType && (
                         <div style={{ marginBottom: "10px" }}>
                           <strong>Craft Type:</strong>
@@ -5351,54 +5348,76 @@ export default function ProfilePage() {
                         if (!isStep1Valid()) {
                           return; // Basic validation failed
                         }
-                        
+
                         // Perform OCR validation on the uploaded ID
                         if (validIdFile) {
                           try {
                             setIsValidatingId(true);
-                            console.log("Starting OCR validation for ID document...");
-                            
+                            console.log(
+                              "Starting OCR validation for ID document..."
+                            );
+
                             // Create FormData for OCR API
                             const formData = new FormData();
-                            formData.append('idDocument', validIdFile);
-                            
-                            const ocrResponse = await fetch('/api/ocr/validate-id', {
-                              method: 'POST',
-                              body: formData
-                            });
-                            
+                            formData.append("idDocument", validIdFile);
+
+                            const ocrResponse = await fetch(
+                              "/api/ocr/validate-id",
+                              {
+                                method: "POST",
+                                body: formData,
+                              }
+                            );
+
                             const ocrResult = await ocrResponse.json();
-                            
+
                             console.log("OCR validation result:", ocrResult);
-                            
-                            if (!ocrResult.success || !ocrResult.validation?.isValidId) {
+
+                            if (
+                              !ocrResult.success ||
+                              !ocrResult.validation?.isValidId
+                            ) {
                               // Show specific error message
                               let errorMessage = "ID validation failed: ";
-                              if (ocrResult.errors && ocrResult.errors.length > 0) {
+                              if (
+                                ocrResult.errors &&
+                                ocrResult.errors.length > 0
+                              ) {
                                 errorMessage += ocrResult.errors.join(", ");
                               } else {
-                                errorMessage += "The uploaded document does not appear to be a valid Philippine government ID.";
+                                errorMessage +=
+                                  "The uploaded document does not appear to be a valid Philippine government ID.";
                               }
-                              
-                              alert(errorMessage + "\\n\\nPlease upload a clear photo of a valid Philippine government-issued ID.");
+
+                              alert(
+                                errorMessage +
+                                  "\\n\\nPlease upload a clear photo of a valid Philippine government-issued ID."
+                              );
                               return; // Stop progression to Step 2
                             }
-                            
+
                             // OCR validation passed
-                            console.log(`ID validated successfully: ${ocrResult.validation?.detectedIdType || 'Government ID'} (${ocrResult.validation?.confidence || 0}% confidence)`);
-                            
+                            console.log(
+                              `ID validated successfully: ${
+                                ocrResult.validation?.detectedIdType ||
+                                "Government ID"
+                              } (${
+                                ocrResult.validation?.confidence || 0
+                              }% confidence)`
+                            );
                           } catch (error) {
                             console.error("OCR validation error:", error);
-                            alert("Unable to validate ID document. Please check your internet connection and try again.");
+                            alert(
+                              "Unable to validate ID document. Please check your internet connection and try again."
+                            );
                             return;
                           } finally {
                             setIsValidatingId(false);
                           }
                         }
-                        
+
                         // Move to Step 2 after successful validation
                         setActiveStep(1);
-                        
                       } else if (activeStep < 2) {
                         setActiveStep(activeStep + 1);
                       } else {
@@ -5413,7 +5432,11 @@ export default function ProfilePage() {
                       (activeStep === 2 && !isStep3Valid())
                     }
                   >
-                    {isValidatingId ? "Validating ID..." : (activeStep < 2 ? "Next" : "Submit")}
+                    {isValidatingId
+                      ? "Validating ID..."
+                      : activeStep < 2
+                      ? "Next"
+                      : "Submit"}
                   </button>
 
                   {activeStep > 0 && (
@@ -5560,50 +5583,228 @@ export default function ProfilePage() {
                   gap: "24px",
                 }}
               >
-                {/* Shop Card (shop picture + shop name) */}
+                {/* Shop Card - Enhanced Design (like artisan page) */}
                 <div
                   style={{
                     background: "#fff",
-                    borderRadius: 8,
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                    padding: "5px 32px",
+                    borderRadius: 18,
+                    boxShadow: "0 4px 24px rgba(46, 63, 54, 0.1)",
+                    padding: "38px 48px 32px 48px",
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: "column",
                     gap: "32px",
                   }}
                 >
-                  <img
-                    src={
-                      document
-                        .getElementById("sellerPhotoPreview")
-                        ?.getAttribute("src") ||
-                      profilePicture ||
-                      "/default-profile.jpg"
-                    }
-                    alt="Shop Image"
+                  {/* Profile Section */}
+                  <div
                     style={{
-                      width: 65,
-                      height: 65,
-                      borderRadius: "12px",
-                      objectFit: "cover",
-                      background: "#faf8f5",
-                      marginRight: 24,
-                    }}
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = DEFAULT_PROFILE_PICTURE;
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "25px",
-                      fontWeight: 700,
-                      color: "#af7928",
-                      letterSpacing: "1px",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "32px",
                     }}
                   >
-                    {shopName || "My Shop"}
-                  </span>
+                    {/* Profile Picture */}
+                    <img
+                      src={
+                        document
+                          .getElementById("sellerPhotoPreview")
+                          ?.getAttribute("src") ||
+                        profilePicture ||
+                        "/default-profile.jpg"
+                      }
+                      alt="Shop Profile Picture"
+                      style={{
+                        width: 120,
+                        height: 120,
+                        borderRadius: "50%",
+                        border: "4px solid #af7928",
+                        objectFit: "cover",
+                        background: "#fff",
+                        flexShrink: 0,
+                      }}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = DEFAULT_PROFILE_PICTURE;
+                      }}
+                    />
+
+                    {/* Shop Info */}
+                    <div
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {/* Shop Name and Artist Name */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "baseline",
+                          gap: "18px",
+                          marginBottom: "14px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "2rem",
+                            fontWeight: 600,
+                            color: "#2E3F36",
+                          }}
+                        >
+                          {shopName || "My Shop"}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "1.15rem",
+                            fontWeight: 500,
+                            color: "#888",
+                          }}
+                        >
+                          {fullName || "Artist Name"}
+                        </span>
+                      </div>
+
+                      {/* Category and Craft Type Tags */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          flexWrap: "wrap",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        {craftType && (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 14px",
+                              borderRadius: "20px",
+                              fontSize: "0.80rem",
+                              fontWeight: 500,
+                              background: "#af7928",
+                              color: "#fff",
+                              border: "1px solid #af7928",
+                            }}
+                          >
+                            {craftType}
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "4px 14px",
+                            borderRadius: "20px",
+                            fontSize: "0.80rem",
+                            fontWeight: 500,
+                            background: "#2E3F36",
+                            color: "#FFC46B",
+                            border: "2px solid #FFC46B",
+                          }}
+                        >
+                          Handmade
+                        </span>
+                      </div>
+
+                      {/* Location */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          color: "#888",
+                          fontWeight: 400,
+                          fontSize: "0.90rem",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        <span>📍</span>
+                        <span>{pickupBarangay || city || "Olongapo"}</span>
+                      </div>
+
+                      {/* Shop Status */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          color: "#888",
+                          fontSize: "0.90rem",
+                        }}
+                      >
+                        <span>✓</span>
+                        <span style={{ color: "#45956a", fontWeight: 500 }}>
+                          Shop Active
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Story Section Divider */}
+                  <hr
+                    style={{
+                      margin: "0",
+                      border: "none",
+                      borderTop: "2px solid #e0e0e0",
+                    }}
+                  />
+
+                  {/* Story Display Section */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "32px",
+                    }}
+                  >
+                    {/* Story Image */}
+                    <img
+                      src={
+                        document
+                          .getElementById("storyPhotoPreview")
+                          ?.getAttribute("src") || "/default-profile.jpg"
+                      }
+                      alt="Story"
+                      style={{
+                        width: "180px",
+                        height: "180px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 12px rgba(46,63,54,0.08)",
+                        flexShrink: 0,
+                      }}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = DEFAULT_PROFILE_PICTURE;
+                      }}
+                    />
+
+                    {/* Story Content */}
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "1.1rem",
+                          marginBottom: "8px",
+                          color: "#AF7928",
+                        }}
+                      >
+                        {sellerStoryTitle || "Your Story"}
+                      </div>
+                      <div
+                        style={{
+                          color: "#2e3f36c4",
+                          fontSize: "0.95rem",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        {sellerStory ||
+                          "Share your creative journey and inspire others"}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Order Status Card */}
@@ -5637,6 +5838,7 @@ export default function ProfilePage() {
                         style={{
                           flex: 1,
                           background: "#faf8f5",
+                          border: "1px solid rgba(175,121,40,0.3)",
                           borderRadius: 8,
                           display: "flex",
                           flexDirection: "column",
@@ -5693,7 +5895,8 @@ export default function ProfilePage() {
                       className="quick-link-card"
                       style={{
                         flex: 1,
-                        background: "#e74c3c",
+                        background: "#2E3F36",
+                        border: "2px solid #FFC46B",
                         borderRadius: 8,
                         display: "flex",
                         flexDirection: "column",
@@ -5710,7 +5913,7 @@ export default function ProfilePage() {
                       <FaBoxOpen
                         style={{
                           fontSize: 30,
-                          color: "#fff",
+                          color: "#FFC46B",
                           marginBottom: 8,
                         }}
                       />
@@ -5718,7 +5921,7 @@ export default function ProfilePage() {
                         style={{
                           fontWeight: 600,
                           fontSize: 14,
-                          color: "#fff",
+                          color: "#FFC46B",
                         }}
                       >
                         My Products
@@ -5729,7 +5932,8 @@ export default function ProfilePage() {
                       className="quick-link-card"
                       style={{
                         flex: 1,
-                        background: "#888",
+                        background: "#2E3F36",
+                        border: "2px solid #FFC46B",
                         borderRadius: 8,
                         display: "flex",
                         flexDirection: "column",
@@ -5746,7 +5950,7 @@ export default function ProfilePage() {
                       <FaStore
                         style={{
                           fontSize: 30,
-                          color: "#fff",
+                          color: "#FFC46B",
                           marginBottom: 8,
                         }}
                       />
@@ -5754,10 +5958,10 @@ export default function ProfilePage() {
                         style={{
                           fontWeight: 600,
                           fontSize: 14,
-                          color: "#fff",
+                          color: "#FFC46B",
                         }}
                       >
-                        Shop Performance
+                        Shop Analytics
                       </span>
                     </div>
                     {/* FAQ */}
@@ -5765,12 +5969,13 @@ export default function ProfilePage() {
                       className="quick-link-card"
                       style={{
                         flex: 1,
-                        background: "#45956a",
+                        background: "#2E3F36",
+                        border: "2px solid #FFC46B",
                         borderRadius: 8,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
-                        padding: "10px 0",
+                        padding: "24px 0",
                         cursor: "pointer",
                         position: "relative",
                       }}
@@ -5782,7 +5987,7 @@ export default function ProfilePage() {
                       <span
                         style={{
                           fontSize: 30,
-                          color: "#fff",
+                          color: "#FFC46B",
                           marginBottom: 8,
                         }}
                       >
@@ -5792,135 +5997,13 @@ export default function ProfilePage() {
                         style={{
                           fontWeight: 600,
                           fontSize: 14,
-                          color: "#fff",
+                          color: "#FFC46B",
                         }}
                       >
                         FAQ
                       </span>
                     </div>
                   </div>
-                </div>
-
-                <div
-                  style={{
-                    background: "#fff",
-                    borderRadius: 5,
-                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.25)",
-                    padding: "0.5rem 2rem",
-                    display: "flex",
-                    alignItems: "center",
-                    minHeight: 120,
-                    cursor: "pointer",
-                    transition: "box-shadow 0.3s ease",
-                    position: "relative",
-                  }}
-                  onClick={() =>
-                    (window.location.href = `/artiststory/${encodeURIComponent(
-                      fullName
-                    )}`)
-                  }
-                  tabIndex={0}
-                  role="button"
-                  aria-label="View Artist Story"
-                  onMouseEnter={(e) => {
-                    const arrow = e.currentTarget.querySelector(
-                      ".artist-arrow"
-                    ) as HTMLElement | null;
-                    if (arrow) arrow.style.opacity = "1";
-                  }}
-                  onMouseLeave={(e) => {
-                    const arrow = e.currentTarget.querySelector(
-                      ".artist-arrow"
-                    ) as HTMLElement | null;
-                    if (arrow) arrow.style.opacity = "0";
-                  }}
-                >
-                  <img
-                    src={
-                      document
-                        .getElementById("sellerPhotoPreview")
-                        ?.getAttribute("src") ||
-                      profilePicture ||
-                      "/default-profile.jpg"
-                    }
-                    alt="Artist"
-                    style={{
-                      width: 90,
-                      height: 90,
-                      borderRadius: 5,
-                      border: "2px solid #af7928",
-                      objectFit: "cover",
-                      marginRight: 24,
-                      background: "#faf8f5",
-                    }}
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = DEFAULT_PROFILE_PICTURE;
-                    }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color: "#2e3f36",
-                        marginBottom: 2,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {sellerStoryTitle || "Artist Story"}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: "#af7928",
-                        marginBottom: 2,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {fullName}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "#222",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        maxWidth: 400,
-                      }}
-                      title={sellerStory}
-                    >
-                      {sellerStory.length > 80
-                        ? sellerStory.slice(0, 80) + "..."
-                        : sellerStory || "No story provided yet."}
-                    </div>
-                  </div>
-                  <span
-                    className="artist-arrow"
-                    style={{
-                      fontSize: "2rem",
-                      color: "#af7928",
-                      marginLeft: 24,
-                      flexShrink: 0,
-                      opacity: 0,
-                      transition: "opacity 0.2s",
-                      position: "absolute",
-                      right: 32,
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <i
-                      className="fa-solid fa-chevron-right"
-                      style={{ fontSize: "2rem", color: "#af7928" }}
-                    ></i>
-                  </span>
                 </div>
               </div>
             </div>
@@ -5946,7 +6029,7 @@ function WishlistContent() {
       try {
         if (!session?.user?.id) {
           // For guest users, load from localStorage
-          const saved = localStorage.getItem('wishlist');
+          const saved = localStorage.getItem("wishlist");
           if (saved) {
             const ids = JSON.parse(saved);
             setWishlistIds(ids);
@@ -5957,26 +6040,32 @@ function WishlistContent() {
         setIsLoadingProducts(true);
 
         // Load wishlist IDs from API
-        const response = await fetch('/api/user/wishlist');
+        const response = await fetch("/api/user/wishlist");
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.data)) {
           // If data.data contains full product objects, extract IDs
-          const ids = data.data.map((item: any) => 
-            typeof item === 'string' ? item : item._id
+          const ids = data.data.map((item: any) =>
+            typeof item === "string" ? item : item._id
           );
           setWishlistIds(ids);
-          
+
           // If we got full product objects, use them directly
-          if (data.data.length > 0 && typeof data.data[0] === 'object' && data.data[0]._id) {
+          if (
+            data.data.length > 0 &&
+            typeof data.data[0] === "object" &&
+            data.data[0]._id
+          ) {
             setWishlistProducts(data.data);
             return;
           }
-          
+
           // If we only got IDs, fetch product details
           if (ids.length > 0) {
             const productPromises = ids.map((id: string) =>
-              fetch(`/api/products/${id}`).then((res) => res.json()).catch(() => null)
+              fetch(`/api/products/${id}`)
+                .then((res) => res.json())
+                .catch(() => null)
             );
 
             const results = await Promise.all(productPromises);
@@ -6000,7 +6089,7 @@ function WishlistContent() {
   const removeFromWishlist = (productId: string) => {
     // Use the toggleWishlist function from the hook
     toggleWishlist(productId);
-    
+
     // Update local state immediately for better UX
     setWishlistProducts((prev) => prev.filter((p) => p._id !== productId));
   };

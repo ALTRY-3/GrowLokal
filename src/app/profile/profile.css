@@ -1244,4 +1244,167 @@
   background-color: #f5f5f5;
 }
 
+/* ========== ENHANCED SHOP CARD STYLES ========== */
+
+.myshop-shop-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(46, 63, 54, 0.1);
+  padding: 38px 48px 32px 48px;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.myshop-shop-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid #af7928;
+  object-fit: cover;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.myshop-shop-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.myshop-shop-header {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+
+.myshop-shop-name {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2E3F36;
+  margin: 0;
+}
+
+.myshop-artist-name {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #888;
+}
+
+.myshop-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.myshop-tag {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.80rem;
+  font-weight: 500;
+}
+
+.myshop-tag.business-type {
+  background: #af7928;
+  color: #fff;
+  border: 1px solid #af7928;
+}
+
+.myshop-tag.craft-type {
+  background: #2E3F36;
+  color: #FFC46B;
+  border: 2px solid #FFC46B;
+}
+
+.myshop-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-weight: 400;
+  font-size: 0.90rem;
+  margin-bottom: 8px;
+}
+
+.myshop-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-size: 0.90rem;
+}
+
+.myshop-status.active {
+  color: #45956a;
+  font-weight: 500;
+}
+
+/* Responsive Design for Shop Card */
+@media (max-width: 1000px) {
+  .myshop-shop-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .myshop-shop-avatar {
+    margin-bottom: 12px;
+  }
+
+  .myshop-shop-name {
+    font-size: 1.75rem;
+  }
+
+  .myshop-artist-name {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .myshop-shop-card {
+    padding: 16px;
+  }
+
+  .myshop-shop-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .myshop-shop-name {
+    font-size: 1.5rem;
+  }
+
+  .myshop-artist-name {
+    font-size: 0.95rem;
+  }
+
+  .myshop-tag {
+    font-size: 0.75rem;
+    padding: 3px 10px;
+  }
+}
+
+/* ========== QUICK LINKS CARD STYLES ========== */
+
+.quick-link-card {
+  transition: all 0.3s ease !important;
+  transform: translateY(0) !important;
+}
+
+.quick-link-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+.quick-link-card:active {
+  transform: translateY(-2px) !important;
+}
+
 

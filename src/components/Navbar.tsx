@@ -11,6 +11,8 @@ import {
   FaSignOutAlt,
   FaChevronRight,
   FaTrash,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -25,6 +27,7 @@ export default function Navbar() {
   const [showCart, setShowCart] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showSubMenu, setShowSubMenu] = useState(false);
   const [notificationTab, setNotificationTab] = useState<
     "all" | "orders" | "messages"
   >("all");
@@ -34,10 +37,21 @@ export default function Navbar() {
 
   const { data: session } = useSession();
   const router = useRouter();
-  const { items, subtotal, itemCount, fetchCart, removeItem, clearLocalCart, 
-          selectedItems, toggleSelectItem, selectAllItems, clearSelection, 
-          getSelectedItems, getSelectedSubtotal, getSelectedCount } =
-    useCartStore();
+  const {
+    items,
+    subtotal,
+    itemCount,
+    fetchCart,
+    removeItem,
+    clearLocalCart,
+    selectedItems,
+    toggleSelectItem,
+    selectAllItems,
+    clearSelection,
+    getSelectedItems,
+    getSelectedSubtotal,
+    getSelectedCount,
+  } = useCartStore();
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const cartRef = useRef<HTMLDivElement>(null);
@@ -103,6 +117,11 @@ export default function Navbar() {
       }
       if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
         setShowCart(false);
+      }
+      // Close hamburger menu when clicking outside
+      const subNavbar = document.querySelector(`.${styles.subNavbar}`);
+      if (subNavbar && !subNavbar.contains(event.target as Node)) {
+        setShowSubMenu(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -273,53 +292,57 @@ export default function Navbar() {
                       {items.map((item) => {
                         const isSelected = selectedItems.has(item.productId);
                         return (
-                        <div
-                          key={item.productId}
-                          className={`${styles.cartItemCard} ${isSelected ? styles.cartItemSelected : ''}`}
-                        >
-                          <div className={styles.cartItemCheckboxWrapper}>
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => toggleSelectItem(item.productId)}
-                              className={styles.cartItemCheckbox}
-                            />
-                          </div>
-                          <div className={styles.cartItemImageWrapper}>
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className={styles.cartItemImage}
-                            />
-                            <span className={styles.cartItemQuantityBadge}>
-                              {item.quantity}
-                            </span>
-                          </div>
-                          <div className={styles.cartItemDetails}>
-                            <p className={styles.cartItemName}>{item.name}</p>
-                            <div className={styles.cartItemMeta}>
-                              <span className={styles.cartItemPrice}>
-                                ₱{item.price.toFixed(2)}
-                              </span>
-                              <span className={styles.cartItemSeparator}>
-                                ×
-                              </span>
-                              <span className={styles.cartItemQty}>
+                          <div
+                            key={item.productId}
+                            className={`${styles.cartItemCard} ${
+                              isSelected ? styles.cartItemSelected : ""
+                            }`}
+                          >
+                            <div className={styles.cartItemCheckboxWrapper}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() =>
+                                  toggleSelectItem(item.productId)
+                                }
+                                className={styles.cartItemCheckbox}
+                              />
+                            </div>
+                            <div className={styles.cartItemImageWrapper}>
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className={styles.cartItemImage}
+                              />
+                              <span className={styles.cartItemQuantityBadge}>
                                 {item.quantity}
                               </span>
                             </div>
-                            <p className={styles.cartItemTotal}>
-                              ₱{(item.price * item.quantity).toFixed(2)}
-                            </p>
+                            <div className={styles.cartItemDetails}>
+                              <p className={styles.cartItemName}>{item.name}</p>
+                              <div className={styles.cartItemMeta}>
+                                <span className={styles.cartItemPrice}>
+                                  ₱{item.price.toFixed(2)}
+                                </span>
+                                <span className={styles.cartItemSeparator}>
+                                  ×
+                                </span>
+                                <span className={styles.cartItemQty}>
+                                  {item.quantity}
+                                </span>
+                              </div>
+                              <p className={styles.cartItemTotal}>
+                                ₱{(item.price * item.quantity).toFixed(2)}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => removeItem(item.productId)}
+                              className={styles.cartItemRemoveBtn}
+                              title="Remove item"
+                            >
+                              <FaTrash />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => removeItem(item.productId)}
-                            className={styles.cartItemRemoveBtn}
-                            title="Remove item"
-                          >
-                            <FaTrash />
-                          </button>
-                        </div>
                         );
                       })}
                     </div>
@@ -373,18 +396,23 @@ export default function Navbar() {
                           e.preventDefault();
                           e.stopPropagation();
                           if (selectedCount === 0) {
-                            alert('Please select items to checkout');
+                            alert("Please select items to checkout");
                             return;
                           }
-                          
+
                           // Store selected items for checkout
-                          const selectedItemsData = selectedCartItems.map(item => ({
-                            productId: item.productId,
-                            quantity: item.quantity,
-                            price: item.price
-                          }));
-                          
-                          sessionStorage.setItem('checkoutItems', JSON.stringify(selectedItemsData));
+                          const selectedItemsData = selectedCartItems.map(
+                            (item) => ({
+                              productId: item.productId,
+                              quantity: item.quantity,
+                              price: item.price,
+                            })
+                          );
+
+                          sessionStorage.setItem(
+                            "checkoutItems",
+                            JSON.stringify(selectedItemsData)
+                          );
                           setShowCart(false);
                           setTimeout(() => {
                             router.push("/checkout");
@@ -483,21 +511,42 @@ export default function Navbar() {
       </header>
 
       <nav className={styles.subNavbar}>
-        <ul className={styles.subNavLinks}>
+        <button
+          className={styles.subMenuToggle}
+          onClick={() => setShowSubMenu(!showSubMenu)}
+          aria-label="Toggle menu"
+        >
+          {showSubMenu ? <FaTimes /> : <FaBars />}
+        </button>
+        <ul
+          className={`${styles.subNavLinks} ${
+            showSubMenu ? styles.subNavLinksOpen : ""
+          }`}
+        >
           <li>
-            <Link href="/home">Home</Link>
+            <Link href="/home" onClick={() => setShowSubMenu(false)}>
+              Home
+            </Link>
           </li>
           <li>
-            <Link href="/marketplace">Marketplace</Link>
+            <Link href="/marketplace" onClick={() => setShowSubMenu(false)}>
+              Marketplace
+            </Link>
           </li>
           <li>
-            <Link href="/stories">Stories</Link>
+            <Link href="/stories" onClick={() => setShowSubMenu(false)}>
+              Stories
+            </Link>
           </li>
           <li>
-            <Link href="/events">Events</Link>
+            <Link href="/events" onClick={() => setShowSubMenu(false)}>
+              Events
+            </Link>
           </li>
           <li>
-            <Link href="/map">Map</Link>
+            <Link href="/map" onClick={() => setShowSubMenu(false)}>
+              Map
+            </Link>
           </li>
         </ul>
       </nav>
