@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductModal from "@/components/ProductModal";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlist } from "@/lib/useWishlist";
 import "./marketplace.css";
 
 const craftTypes = [
@@ -94,8 +95,8 @@ export default function Marketplace() {
   const [selectedBarangay, setSelectedBarangay] = useState("");
   const [selectedCraftType, setSelectedCraftType] = useState("");
 
-  // Wishlist state
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  // Use wishlist hook instead of local state
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
   // Product state by category
   const [handicrafts, setHandicrafts] = useState<Product[]>([]);
@@ -108,14 +109,6 @@ export default function Marketplace() {
   const [filterModalState, setFilterModalState] = useState<
     "closed" | "entering" | "entered" | "exiting"
   >("closed");
-
-  // Load wishlist from localStorage on mount
-  useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist");
-    if (savedWishlist) {
-      setWishlist(new Set(JSON.parse(savedWishlist)));
-    }
-  }, []);
 
   // Fetch products on mount
   useEffect(() => {
@@ -253,21 +246,6 @@ export default function Marketplace() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Toggle wishlist
-  const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      const newWishlist = new Set(prev);
-      if (newWishlist.has(productId)) {
-        newWishlist.delete(productId);
-      } else {
-        newWishlist.add(productId);
-      }
-      // Save to localStorage
-      localStorage.setItem("wishlist", JSON.stringify(Array.from(newWishlist)));
-      return newWishlist;
-    });
   };
 
   // Handle search (now mainly for Enter key to close suggestions)
@@ -831,16 +809,6 @@ export default function Marketplace() {
         <ProductModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
-          isInWishlist={
-            selectedProduct.productId
-              ? wishlist.has(selectedProduct.productId)
-              : false
-          }
-          onToggleWishlist={
-            selectedProduct.productId
-              ? () => toggleWishlist(selectedProduct.productId!)
-              : undefined
-          }
           onProductChange={(newProduct) => {
             setSelectedProduct(newProduct);
           }}

@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlist } from "@/lib/useWishlist";
 
 interface Product {
   img: string;
@@ -76,14 +77,10 @@ const dummyRecommendations = [
 export default function ProductModal({
   product,
   onClose,
-  isInWishlist = false,
-  onToggleWishlist,
   onProductChange,
 }: {
   product: Product;
   onClose: () => void;
-  isInWishlist?: boolean;
-  onToggleWishlist?: () => void;
   onProductChange: (product: Product) => void;
 }) {
   const [mainImage, setMainImage] = useState(product.img);
@@ -103,6 +100,46 @@ export default function ProductModal({
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const modalBoxRef = useRef<HTMLDivElement>(null);
+
+  // Use the wishlist hook
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  
+  // Local state to track wishlist status for this modal instance
+  const [localWishlistState, setLocalWishlistState] = useState<boolean | null>(null);
+  
+  // Initialize local wishlist state when modal opens
+  useEffect(() => {
+    if (product.productId) {
+      setLocalWishlistState(isInWishlist(product.productId));
+    }
+  }, [product.productId, isInWishlist]);
+  
+  // Prevent rapid clicking
+  const [isWishlistUpdating, setIsWishlistUpdating] = useState(false);
+  
+  const handleWishlistToggle = async (productId: string) => {
+    if (isWishlistUpdating) return; // Prevent double clicks
+    
+    setIsWishlistUpdating(true);
+    
+    // Optimistically update local state immediately
+    setLocalWishlistState(!localWishlistState);
+    
+    try {
+      await toggleWishlist(productId);
+      // Update local state with the actual result after toggle
+      setLocalWishlistState(isInWishlist(productId));
+    } catch (error) {
+      // Revert optimistic update on error
+      setLocalWishlistState(!localWishlistState);
+    } finally {
+      // Small delay to prevent rapid clicking
+      setTimeout(() => setIsWishlistUpdating(false), 300);
+    }
+  };
+
+  // Use local state if available, otherwise fall back to hook state
+  const currentWishlistState = localWishlistState !== null ? localWishlistState : (product.productId ? isInWishlist(product.productId) : false);
 
   // Dummy reviews for demonstration
   const allReviews = [
@@ -293,15 +330,20 @@ export default function ProductModal({
                 {product.soldCount !== undefined && (
                   <span className="sold-count">{product.soldCount} sold</span>
                 )}
-                {onToggleWishlist && (
+                {product.productId && (
                   <button
                     className="modal-wishlist-btn"
-                    onClick={onToggleWishlist}
+                    onClick={() => handleWishlistToggle(product.productId!)}
+                    disabled={isWishlistUpdating}
                     aria-label={
-                      isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+                      currentWishlistState ? "Remove from wishlist" : "Add to wishlist"
                     }
+                    style={{
+                      opacity: isWishlistUpdating ? 0.6 : 1,
+                      cursor: isWishlistUpdating ? 'not-allowed' : 'pointer'
+                    }}
                   >
-                    {isInWishlist ? (
+                    {currentWishlistState ? (
                       <FaHeart className="heart-icon active" />
                     ) : (
                       <FaRegHeart className="heart-icon" />

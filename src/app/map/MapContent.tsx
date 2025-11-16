@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -28,22 +28,24 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 import toast, { Toaster } from "react-hot-toast";
-import { LatLngExpression } from "leaflet";
 import { useRouter } from "next/navigation";
+import { OLONGAPO_MAP_CENTER } from "@/lib/map/constants";
 
 // Update artist type to include missing properties
 interface Artist {
+  id: string;
   name: string;
+  shopName: string;
   avatar: string;
   location: string;
   lat: number;
   lng: number;
   craftType: string;
-  image: string;
-  shopName?: string;
-  category?: string;
-  ratingCount?: number;
-  productCount?: number;
+  category: string;
+  ratingCount: number;
+  productCount: number;
+  averageRating: number;
+  shopUrl: string;
 }
 
 // --- Helper for recenter button ---
@@ -169,36 +171,6 @@ export default function MapContent() {
     },
   ];
 
-  const artists: Artist[] = [
-    {
-      name: "Aba Dela Cruz",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aba",
-      location: "Asinan",
-      lat: 14.83,
-      lng: 120.28,
-      craftType: "Weaving",
-      image: "/artist-header.jpg",
-      shopName: "Aba's Weaving Shop",
-      category: "Handicrafts",
-      ratingCount: 42,
-      productCount: 12,
-    },
-    {
-      name: "Ben Yap",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ben",
-      location: "Banicain",
-      lat: 14.835,
-      lng: 120.285,
-      craftType: "Woodwork",
-      image: "/artist-header.jpg",
-      shopName: "Ben's Woodcraft",
-      category: "Handicrafts",
-      ratingCount: 38,
-      productCount: 15,
-    },
-    // ... other artists
-  ];
-
   // --- State ---
   const [tab, setTab] = useState<"events" | "artists">("events");
   const [reminders, setReminders] = useState<number[]>([]);
@@ -210,8 +182,59 @@ export default function MapContent() {
   const [craftType, setCraftType] = useState("");
   const [artistRadius, setArtistRadius] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [artistsLoading, setArtistsLoading] = useState(true);
+  const [artistsError, setArtistsError] = useState<string | null>(null);
 
-  const center: [number, number] = [14.8333, 120.2828];
+  const center: [number, number] = OLONGAPO_MAP_CENTER;
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    const loadArtists = async () => {
+      try {
+        setArtistsLoading(true);
+        const response = await fetch("/api/map/sellers", {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load artisan map data");
+        }
+
+        const payload = await response.json();
+        if (!payload.success || !Array.isArray(payload.data)) {
+          throw new Error(payload.message || "Failed to load artisan map data");
+        }
+
+        if (isMounted) {
+          setArtists(payload.data);
+          setArtistsError(null);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const message =
+          error instanceof Error ? error.message : "Failed to load artisans";
+        if (isMounted) {
+          setArtistsError(message);
+          toast.error(message);
+        }
+      } finally {
+        if (isMounted) {
+          setArtistsLoading(false);
+        }
+      }
+    };
+
+    loadArtists();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []);
 
   // --- Filtering ---
   const getDistance = (
@@ -245,9 +268,9 @@ export default function MapContent() {
   });
 
   const filteredArtists = artists.filter((artist) => {
-    const matchesSearch = artist.name
-      .toLowerCase()
-      .includes(artistSearch.toLowerCase());
+    const needle = artistSearch.toLowerCase();
+    const haystack = `${artist.name} ${artist.shopName}`.toLowerCase();
+    const matchesSearch = haystack.includes(needle);
     const matchesCraft = craftType ? artist.craftType === craftType : true;
     const matchesRadius =
       artistRadius > 0
@@ -321,7 +344,9 @@ export default function MapContent() {
   const filterCardRef = useRef<HTMLDivElement>(null);
 
   // --- Craft types for dropdown ---
-  const craftTypes = Array.from(new Set(artists.map((a) => a.craftType)));
+  const craftTypes = Array.from(
+    new Set(artists.map((a) => a.craftType).filter((type) => !!type))
+  );
 
   return (
     <>
@@ -462,6 +487,24 @@ export default function MapContent() {
             </div>
           )}
         </div>
+        {tab === "artists" && (
+          <div
+            style={{
+              fontSize: "0.8rem",
+              color: artistsError ? "#c0392b" : "#2E3F36",
+              fontWeight: 500,
+              marginBottom: filtersOpen ? 0 : "0.5rem",
+            }}
+          >
+            {artistsLoading
+              ? "Loading artisan pins..."
+              : artistsError
+              ? artistsError
+              : `${filteredArtists.length} artisan${
+                  filteredArtists.length === 1 ? "" : "s"
+                } on the map`}
+          </div>
+        )}
       </div>
 
       {/* Map */}
@@ -808,6 +851,7 @@ export default function MapContent() {
                       display: "flex",
                       fontFamily: "Poppins, sans-serif",
                     }}
+                    onClick={() => router.push(artist.shopUrl)}
                   >
                     Visit Shop
                   </button>

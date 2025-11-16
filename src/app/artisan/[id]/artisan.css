@@ -244,3 +244,88 @@
   font-size: 1.1rem;
   vertical-align: middle;
 }
+
+.artisan-state {
+  width: 100%;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 12px;
+  background: #fffef8;
+  border: 1px dashed rgba(175, 121, 40, 0.4);
+  color: #2e3f36;
+  font-weight: 600;
+}
+
+.artisan-state-error {
+  border-color: rgba(180, 35, 24, 0.3);
+  background: #fff5f5;
+  color: #b42318;
+}
+
+.artisan-contact-card {
+  width: calc(100vw - 4rem);
+  max-width: calc(100vw - 4rem);
+  margin: 1.5rem 2rem 0;
+  padding: 24px 32px;
+  border-radius: 16px;
+  background: #fffef8;
+  border: 1px solid rgba(175, 121, 40, 0.2);
+  box-shadow: 0 2px 16px rgba(46, 63, 54, 0.08);
+}
+
+.artisan-contact-header h3 {
+  margin: 0;
+  color: #2e3f36;
+}
+
+.artisan-contact-header p {
+  margin: 4px 0 0;
+  color: #405249;
+  font-size: 0.9rem;
+}
+
+.artisan-contact-grid {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.artisan-contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(47, 63, 54, 0.2);
+  color: #2e3f36;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.artisan-contact-item svg {
+  color: #af7928;
+}
+
+.artisan-social-links {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.artisan-social-links a {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #2e3f36;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.artisan-social-links a:hover {
+  background: #af7928;
+}

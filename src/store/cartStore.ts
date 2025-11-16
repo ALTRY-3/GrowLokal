@@ -19,6 +19,7 @@ interface CartStore {
   itemCount: number;
   isLoading: boolean;
   error: string | null;
+  selectedItems: Set<string>;
   
   // Actions
   fetchCart: () => Promise<void>;
@@ -29,6 +30,14 @@ interface CartStore {
   clearLocalCart: () => void;
   calculateTotals: () => void;
   mergeCart: () => Promise<void>;
+  
+  // Selection actions
+  toggleSelectItem: (productId: string) => void;
+  selectAllItems: (selected: boolean) => void;
+  clearSelection: () => void;
+  getSelectedItems: () => CartItem[];
+  getSelectedSubtotal: () => number;
+  getSelectedCount: () => number;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -39,6 +48,7 @@ export const useCartStore = create<CartStore>()(
       itemCount: 0,
       isLoading: false,
       error: null,
+      selectedItems: new Set<string>(),
 
       // Calculate subtotal and item count
       calculateTotals: () => {
@@ -224,11 +234,48 @@ export const useCartStore = create<CartStore>()(
           await get().fetchCart();
         }
       },
+
+      // Selection management
+      toggleSelectItem: (productId: string) => {
+        set((state) => {
+          const newSelectedItems = new Set(state.selectedItems);
+          if (newSelectedItems.has(productId)) {
+            newSelectedItems.delete(productId);
+          } else {
+            newSelectedItems.add(productId);
+          }
+          return { selectedItems: newSelectedItems };
+        });
+      },
+
+      selectAllItems: (selected: boolean) => {
+        set((state) => ({
+          selectedItems: selected ? new Set(state.items.map(item => item.productId)) : new Set<string>()
+        }));
+      },
+
+      clearSelection: () => {
+        set({ selectedItems: new Set<string>() });
+      },
+
+      getSelectedItems: () => {
+        const { items, selectedItems } = get();
+        return items.filter(item => selectedItems.has(item.productId));
+      },
+
+      getSelectedSubtotal: () => {
+        const selectedItems = get().getSelectedItems();
+        return selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+      },
+
+      getSelectedCount: () => {
+        return get().selectedItems.size;
+      },
     }),
     {
       name: 'cart-storage', // localStorage key
       partialize: (state) => ({
-        // Only persist items and subtotal
+        // Only persist items and subtotal, not selectedItems
         items: state.items,
         subtotal: state.subtotal,
         itemCount: state.itemCount,

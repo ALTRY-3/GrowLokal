@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ImageCarousel from "@/components/ImageCarousel1";
 import ProductModal from "@/components/ProductModal"; // Add this import
+import { useWishlist } from "@/lib/useWishlist";
 import { FaStar } from "react-icons/fa";
 import { MapPin } from "lucide-react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -316,7 +317,10 @@ export default function HomePage() {
   const [eventReminders, setEventReminders] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Change this
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set()); // Add wishlist state
+  
+  // Use wishlist hook instead of local state
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  
   const router = useRouter();
 
   // Add state to track scroll positions for each carousel
@@ -356,14 +360,6 @@ export default function HomePage() {
       setSelectedProduct(JSON.parse(selectedProductFromHome));
       // Clear the stored product
       localStorage.removeItem("selectedProduct");
-    }
-  }, []);
-
-  // Load wishlist from localStorage
-  useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist");
-    if (savedWishlist) {
-      setWishlist(new Set(JSON.parse(savedWishlist)));
     }
   }, []);
 
@@ -430,19 +426,6 @@ export default function HomePage() {
       soldCount: 0,
     };
     setSelectedProduct(modalProduct);
-  };
-
-  const toggleWishlist = (productId: string) => {
-    setWishlist((prev) => {
-      const newWishlist = new Set(prev);
-      if (newWishlist.has(productId)) {
-        newWishlist.delete(productId);
-      } else {
-        newWishlist.add(productId);
-      }
-      localStorage.setItem("wishlist", JSON.stringify(Array.from(newWishlist)));
-      return newWishlist;
-    });
   };
 
   const handleViewDetails = (eventTitle: string) => {
@@ -927,16 +910,6 @@ export default function HomePage() {
         <ProductModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
-          isInWishlist={
-            selectedProduct.productId
-              ? wishlist.has(selectedProduct.productId)
-              : false
-          }
-          onToggleWishlist={
-            selectedProduct.productId
-              ? () => toggleWishlist(selectedProduct.productId)
-              : undefined
-          }
           onProductChange={(newProduct) => {
             setSelectedProduct(newProduct);
           }}

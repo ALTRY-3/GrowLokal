@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
+import { useWishlist } from "@/lib/useWishlist";
 
 // Default profile picture SVG as data URL
 const DEFAULT_PROFILE_PICTURE =
@@ -2881,7 +2882,27 @@ export default function ProfilePage() {
             setIsProfilePictureLoaded(true);
           }
 
-          setIsSeller(data.data.isSeller || false);
+          // Check seller status more thoroughly
+          const userIsSeller = data.data.isSeller || false;
+          setIsSeller(userIsSeller);
+
+          // If user claims to be a seller, verify their status
+          if (userIsSeller) {
+            try {
+              const sellerStatusResponse = await fetch("/api/seller/status");
+              const sellerStatusData = await sellerStatusResponse.json();
+              
+              if (sellerStatusData.success) {
+                // Only consider them a seller if application is approved
+                const isApprovedSeller = sellerStatusData.data.isSeller && 
+                  sellerStatusData.data.applicationStatus === 'approved';
+                setIsSeller(isApprovedSeller);
+              }
+            } catch (sellerError) {
+              console.error("Error fetching seller status:", sellerError);
+              // Fall back to the original isSeller value
+            }
+          }
         } else {
           setProfileError(data.message || "Failed to load profile");
           setIsProfilePictureLoaded(true);
@@ -2897,6 +2918,30 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [session]);
+
+  // Refresh seller status from server
+  const refreshSellerStatus = async () => {
+    try {
+      const response = await fetch("/api/seller/status");
+      const data = await response.json();
+      
+      if (data.success) {
+        const isApprovedSeller = data.data.isSeller && 
+          data.data.applicationStatus === 'approved';
+        setIsSeller(isApprovedSeller);
+        
+        // If user became a seller, switch to My Shop
+        if (isApprovedSeller && activeSection === "selling") {
+          setActiveSection("myshop");
+        }
+        
+        return isApprovedSeller;
+      }
+    } catch (error) {
+      console.error("Error refreshing seller status:", error);
+    }
+    return false;
+  };
 
   // Fetch seller profile if user is a seller
   const fetchSellerProfile = async () => {
@@ -2916,7 +2961,6 @@ export default function ProfilePage() {
 
         // Update all seller-related state
         setShopName(data.data.shopName || "");
-        setBusinessType(data.data.businessType || "");
         setShopDescription(data.data.shopDescription || "");
         setPickupBarangay(data.data.pickupAddress?.barangay || "");
         setPickupAddress(data.data.pickupAddress?.otherDetails || "");
@@ -2937,9 +2981,13 @@ export default function ProfilePage() {
         }
       } else {
         console.log("Failed to fetch seller profile:", data.message);
+        // If profile fetch fails, verify seller status
+        await refreshSellerStatus();
       }
     } catch (error) {
       console.error("Error fetching seller profile:", error);
+      // If there's an error, verify seller status
+      await refreshSellerStatus();
     }
   };
 
@@ -2949,6 +2997,24 @@ export default function ProfilePage() {
       fetchSellerProfile();
     }
   }, [isSeller, session?.user]);
+
+  // Check seller status periodically when on selling page
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (activeSection === "selling" && !isSeller) {
+      // Check seller status every 10 seconds while on selling page
+      interval = setInterval(() => {
+        refreshSellerStatus();
+      }, 10000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [activeSection, isSeller]);
 
   // Also fetch when navigating to myshop section
   useEffect(() => {
@@ -2979,17 +3045,34 @@ export default function ProfilePage() {
         validIdFileUrl = uploadData.data.url;
       }
 
-      // Get seller photo URL
-      const sellerPhotoEl = document.getElementById(
-        "sellerPhotoPreview"
-      ) as HTMLImageElement;
-      const sellerPhotoUrl = sellerPhotoEl?.src || "";
+      // Upload seller photo if provided
+      let sellerPhotoUrl = "";
+      if (sellerPhotos.length > 0) {
+        const sellerPhotoFormData = new FormData();
+        sellerPhotoFormData.append("file", sellerPhotos[0]);
+        sellerPhotoFormData.append("folder", "profiles");
+
+        const sellerPhotoResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: sellerPhotoFormData,
+        });
+
+        const sellerPhotoData = await sellerPhotoResponse.json();
+        if (!sellerPhotoData.success) {
+          alert(sellerPhotoData.message || "Failed to upload story photo");
+          return false;
+        }
+        sellerPhotoUrl = sellerPhotoData.data.url;
+      } else {
+        const sellerPhotoEl = document.getElementById(
+          "sellerPhotoPreview"
+        ) as HTMLImageElement;
+        sellerPhotoUrl = sellerPhotoEl?.src || "";
+      }
 
       // Prepare application data
       const applicationData = {
         shopName,
-        category: businessType, // Rename to category in the data
-        craftType, // Add craft type
         shopDescription: "", // Empty string since field was removed
         pickupAddress: {
           city: city,
@@ -3023,13 +3106,18 @@ export default function ProfilePage() {
         // Update seller status immediately
         setIsSeller(true);
 
+        // Fetch the updated seller profile
+        await fetchSellerProfile();
+
+        // Switch to My Shop section
+        setActiveSection("myshop");
+
         // Show success modal
         setShowSubmitModal(true);
 
-        // Reload the page to update all UI elements
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500); // Wait 1.5 seconds to let user see success modal
+        // Reset form state
+        setActiveStep(0);
+        setSellerPhotos([]);
 
         return true;
       } else {
@@ -3400,11 +3488,11 @@ export default function ProfilePage() {
   const [pickupBarangay, setPickupBarangay] = useState("");
 
   const [validIdFile, setValidIdFile] = useState<File | null>(null);
+  const [isValidatingId, setIsValidatingId] = useState(false);
 
   const [sellerStoryTitle, setSellerStoryTitle] = useState("");
 
   // New enhanced fields
-  const [businessType, setBusinessType] = useState("");
   const [shopDescription, setShopDescription] = useState("");
   const [businessHours, setBusinessHours] = useState({
     monday: { open: "09:00", close: "17:00", enabled: true },
@@ -3453,7 +3541,6 @@ export default function ProfilePage() {
   const isStep1Valid = () => {
     const validations = {
       shopName: shopName.trim().length >= 3 && shopName.trim().length <= 50,
-      businessType: businessType.trim() !== "",
       craftType: craftType.trim() !== "",
       city: city.trim() !== "",
       pickupBarangay: pickupBarangay.trim() !== "",
@@ -3519,7 +3606,6 @@ export default function ProfilePage() {
     const complete =
       shopName.trim().length >= 3 &&
       shopName.trim().length <= 50 &&
-      businessType.trim() !== "" &&
       craftType.trim() !== "" &&
       city.trim() !== "" &&
       pickupBarangay.trim() !== "" &&
@@ -3532,7 +3618,7 @@ export default function ProfilePage() {
     if (!complete) {
       console.log("Shop info incomplete. Current state:", {
         shopName: `${shopName.length} chars (need 3-50)`,
-        category: businessType || "EMPTY",
+        category: craftType || "EMPTY",
         craftType: craftType || "EMPTY",
         pickupBarangay: pickupBarangay || "EMPTY",
         pickupAddress: pickupAddress || "EMPTY",
@@ -4396,25 +4482,7 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-                    {/* Category */}
-                    <div className="form-row">
-                      <label className="form-label">
-                        Category <span style={{ color: "red" }}>*</span>
-                      </label>
-                      <select
-                        className="form-input"
-                        value={businessType}
-                        onChange={(e) => setBusinessType(e.target.value)}
-                        required
-                      >
-                        <option value="">Select your primary category</option>
-                        <option value="Handicrafts">Handicrafts</option>
-                        <option value="Fashion">Fashion</option>
-                        <option value="Home">Home</option>
-                        <option value="Beauty">Beauty & Wellness</option>
-                        <option value="Food">Food</option>
-                      </select>
-                    </div>
+
 
                     {/* Craft Type */}
                     <div className="form-row">
@@ -4699,6 +4767,7 @@ export default function ProfilePage() {
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) {
+                              setSellerPhotos([file]);
                               const reader = new FileReader();
                               reader.onload = (event) => {
                                 const preview = document.getElementById(
@@ -4945,14 +5014,7 @@ export default function ProfilePage() {
                         </p>
                       </div>
 
-                      {businessType && (
-                        <div style={{ marginBottom: "10px" }}>
-                          <strong>Category:</strong>
-                          <p style={{ margin: "4px 0 0 0", color: "#333" }}>
-                            {businessType}
-                          </p>
-                        </div>
-                      )}
+
 
                       {craftType && (
                         <div style={{ marginBottom: "10px" }}>
@@ -5249,7 +5311,7 @@ export default function ProfilePage() {
                       {shopName.trim().length < 3 && (
                         <li>Shop Name (at least 3 characters)</li>
                       )}
-                      {!businessType && <li>Category</li>}
+
                       {!craftType && <li>Craft Type</li>}
                       {!city && <li>Pickup City</li>}
                       {!pickupBarangay && <li>Pickup Barangay</li>}
@@ -5269,8 +5331,61 @@ export default function ProfilePage() {
                 <div className="selling-buttons" style={{ marginTop: "24px" }}>
                   <button
                     className="order-btn primary"
-                    onClick={() => {
-                      if (activeStep < 2) {
+                    onClick={async () => {
+                      if (activeStep === 0) {
+                        // Validate Step 1 including OCR validation for ID
+                        if (!isStep1Valid()) {
+                          return; // Basic validation failed
+                        }
+                        
+                        // Perform OCR validation on the uploaded ID
+                        if (validIdFile) {
+                          try {
+                            setIsValidatingId(true);
+                            console.log("Starting OCR validation for ID document...");
+                            
+                            // Create FormData for OCR API
+                            const formData = new FormData();
+                            formData.append('idDocument', validIdFile);
+                            
+                            const ocrResponse = await fetch('/api/ocr/validate-id', {
+                              method: 'POST',
+                              body: formData
+                            });
+                            
+                            const ocrResult = await ocrResponse.json();
+                            
+                            console.log("OCR validation result:", ocrResult);
+                            
+                            if (!ocrResult.success || !ocrResult.validation?.isValidId) {
+                              // Show specific error message
+                              let errorMessage = "ID validation failed: ";
+                              if (ocrResult.errors && ocrResult.errors.length > 0) {
+                                errorMessage += ocrResult.errors.join(", ");
+                              } else {
+                                errorMessage += "The uploaded document does not appear to be a valid Philippine government ID.";
+                              }
+                              
+                              alert(errorMessage + "\\n\\nPlease upload a clear photo of a valid Philippine government-issued ID.");
+                              return; // Stop progression to Step 2
+                            }
+                            
+                            // OCR validation passed
+                            console.log(`ID validated successfully: ${ocrResult.validation?.detectedIdType || 'Government ID'} (${ocrResult.validation?.confidence || 0}% confidence)`);
+                            
+                          } catch (error) {
+                            console.error("OCR validation error:", error);
+                            alert("Unable to validate ID document. Please check your internet connection and try again.");
+                            return;
+                          } finally {
+                            setIsValidatingId(false);
+                          }
+                        }
+                        
+                        // Move to Step 2 after successful validation
+                        setActiveStep(1);
+                        
+                      } else if (activeStep < 2) {
                         setActiveStep(activeStep + 1);
                       } else {
                         // Submit the application
@@ -5278,12 +5393,13 @@ export default function ProfilePage() {
                       }
                     }}
                     disabled={
+                      isValidatingId ||
                       (activeStep === 0 && !isStep1Valid()) ||
                       (activeStep === 1 && !isStep2Valid()) ||
                       (activeStep === 2 && !isStep3Valid())
                     }
                   >
-                    {activeStep < 2 ? "Next" : "Submit"}
+                    {isValidatingId ? "Validating ID..." : (activeStep < 2 ? "Next" : "Submit")}
                   </button>
 
                   {activeStep > 0 && (
@@ -5805,55 +5921,77 @@ export default function ProfilePage() {
 // Wishlist Content Component
 function WishlistContent() {
   const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { data: session } = useSession();
 
+  // Load wishlist directly from API
   useEffect(() => {
     const loadWishlist = async () => {
-      setLoading(true);
       try {
-        // Get wishlist from localStorage
-        const savedWishlist = localStorage.getItem("wishlist");
-        const wishlistIds = savedWishlist ? JSON.parse(savedWishlist) : [];
-
-        if (wishlistIds.length === 0) {
-          setWishlistProducts([]);
-          setLoading(false);
+        if (!session?.user?.id) {
+          // For guest users, load from localStorage
+          const saved = localStorage.getItem('wishlist');
+          if (saved) {
+            const ids = JSON.parse(saved);
+            setWishlistIds(ids);
+          }
           return;
         }
 
-        // Fetch product details for each wishlist item
-        const productPromises = wishlistIds.map((id: string) =>
-          fetch(`/api/products/${id}`).then((res) => res.json())
-        );
+        setIsLoadingProducts(true);
 
-        const results = await Promise.all(productPromises);
-        const products = results
-          .filter((result) => result.success)
-          .map((result) => result.data);
+        // Load wishlist IDs from API
+        const response = await fetch('/api/user/wishlist');
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.data)) {
+          // If data.data contains full product objects, extract IDs
+          const ids = data.data.map((item: any) => 
+            typeof item === 'string' ? item : item._id
+          );
+          setWishlistIds(ids);
+          
+          // If we got full product objects, use them directly
+          if (data.data.length > 0 && typeof data.data[0] === 'object' && data.data[0]._id) {
+            setWishlistProducts(data.data);
+            return;
+          }
+          
+          // If we only got IDs, fetch product details
+          if (ids.length > 0) {
+            const productPromises = ids.map((id: string) =>
+              fetch(`/api/products/${id}`).then((res) => res.json()).catch(() => null)
+            );
 
-        setWishlistProducts(products);
+            const results = await Promise.all(productPromises);
+            const products = results
+              .filter((result) => result && result.success)
+              .map((result) => result.data);
+
+            setWishlistProducts(products);
+          }
+        }
       } catch (error) {
         console.error("Error loading wishlist:", error);
       } finally {
-        setLoading(false);
+        setIsLoadingProducts(false);
       }
     };
 
     loadWishlist();
-  }, []);
+  }, [session?.user?.id]); // Only depend on session
 
   const removeFromWishlist = (productId: string) => {
-    // Remove from localStorage
-    const savedWishlist = localStorage.getItem("wishlist");
-    const wishlistIds = savedWishlist ? JSON.parse(savedWishlist) : [];
-    const updated = wishlistIds.filter((id: string) => id !== productId);
-    localStorage.setItem("wishlist", JSON.stringify(updated));
-
-    // Update state
+    // Use the toggleWishlist function from the hook
+    toggleWishlist(productId);
+    
+    // Update local state immediately for better UX
     setWishlistProducts((prev) => prev.filter((p) => p._id !== productId));
   };
 
-  if (loading) {
+  if (isLoadingProducts) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
         <i

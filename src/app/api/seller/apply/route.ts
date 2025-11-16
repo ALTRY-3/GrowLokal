@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import { IDOCRValidator } from "@/lib/ocrValidation";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,17 +36,15 @@ export async function POST(req: NextRequest) {
       agreedToShipping
     } = body;
 
+    const normalizedBusinessType =
+      businessType && typeof businessType === "string"
+        ? businessType.trim().slice(0, 80)
+        : "Handicrafts";
+
     // Validation
     if (!shopName || shopName.length < 3 || shopName.length > 50) {
       return NextResponse.json(
         { success: false, message: "Shop name must be 3-50 characters" },
-        { status: 400 }
-      );
-    }
-
-    if (!businessType) {
-      return NextResponse.json(
-        { success: false, message: "Business type is required" },
         { status: 400 }
       );
     }
@@ -84,6 +83,67 @@ export async function POST(req: NextRequest) {
         { success: false, message: "Valid ID upload is required" },
         { status: 400 }
       );
+    }
+
+    // OCR Validation for ID document
+    try {
+      console.log("Starting OCR validation for uploaded ID...");
+      
+      // Get user information for name matching
+      const user = await User.findOne({ email: session.user.email });
+      const userName = user?.name || user?.fullName;
+      
+      // Extract file data from validIdUrl (assuming it's a data URL or file path)
+      // In production, you might need to fetch the file from storage
+      if (validIdUrl.startsWith('data:')) {
+        // Handle base64 data URL
+        const base64Data = validIdUrl.split(',')[1];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filename = 'uploaded-id.jpg'; // Default filename
+        
+        const ocrResult = await IDOCRValidator.validateIDDocument(buffer, filename, userName);
+        
+        console.log("OCR Validation Result:", {
+          success: ocrResult.success,
+          confidence: ocrResult.confidence,
+          isValidId: ocrResult.isValidId,
+          detectedIdType: ocrResult.detectedIdType,
+          errorsCount: ocrResult.errors.length
+        });
+        
+        if (!ocrResult.success) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              message: "ID validation failed: " + ocrResult.errors.join(', '),
+              ocrErrors: ocrResult.errors
+            },
+            { status: 400 }
+          );
+        }
+        
+        if (!ocrResult.isValidId) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              message: "Uploaded document does not appear to be a valid Philippine government ID",
+              ocrWarnings: ocrResult.warnings
+            },
+            { status: 400 }
+          );
+        }
+        
+        // Log successful validation
+        console.log(`ID validation successful. Detected: ${ocrResult.detectedIdType || 'Government ID'} with ${ocrResult.confidence}% confidence`);
+        
+      } else {
+        console.log("Skipping OCR validation - file not in expected format");
+      }
+      
+    } catch (ocrError) {
+      console.error("OCR validation error:", ocrError);
+      // Don't fail the application for OCR errors, but log them
+      console.log("Proceeding with application despite OCR error");
     }
 
     if (!agreedToTerms || !agreedToCommission || !agreedToShipping) {
@@ -146,6 +206,7 @@ export async function POST(req: NextRequest) {
             shopName,
             businessType,
             shopDescription,
+            businessType: normalizedBusinessType,
             pickupAddress,
             shopEmail,
             shopPhone,

@@ -17,6 +17,22 @@
 }
 
 .stories-carousel-text {
+
+.stories-state {
+  text-align: center;
+  padding: 1.5rem;
+  border: 1px dashed rgba(175, 121, 40, 0.4);
+  border-radius: 12px;
+  background: #fff8f0;
+  color: #2e3f36;
+  font-weight: 500;
+}
+
+.stories-state-error {
+  border-color: rgba(180, 35, 24, 0.3);
+  color: #b42318;
+  background: #fff5f5;
+}
   position: absolute;
   top: 50%;
   left: 50%;

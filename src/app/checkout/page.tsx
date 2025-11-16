@@ -298,23 +298,25 @@ export default function CheckoutPage() {
             <span>Item Subtotal</span>
           </div>
 
-          {checkoutItems.map((item) => (
-            <div className="checkout-item-row" key={item.productId}>
-              <div className="product-info">
-                <img src={item.image} alt={item.name} />
-                <div className="product-details">
-                  <div className="seller-name">{item.artistName}</div>
-                  <div className="product-name">{item.name}</div>
+          <div className="checkout-items-scroll">
+            {checkoutItems.map((item) => (
+              <div className="checkout-item-row" key={item.productId}>
+                <div className="product-info">
+                  <img src={item.image} alt={item.name} />
+                  <div className="product-details">
+                    <div className="seller-name">{item.artistName}</div>
+                    <div className="product-name">{item.name}</div>
+                  </div>
+                </div>
+
+                <div className="product-price">₱{item.price.toFixed(2)}</div>
+                <div className="product-quantity">{item.quantity}</div>
+                <div className="product-subtotal">
+                  ₱{(item.price * item.quantity).toFixed(2)}
                 </div>
               </div>
-
-              <div className="product-price">₱{item.price.toFixed(2)}</div>
-              <div className="product-quantity">{item.quantity}</div>
-              <div className="product-subtotal">
-                ₱{(item.price * item.quantity).toFixed(2)}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           <hr className="checkout-divider" />
 

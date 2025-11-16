@@ -42,6 +42,7 @@ export async function GET(request: Request) {
         },
         gender: user.gender || "",
         isSeller: user.isSeller || false,
+        sellerApplicationStatus: user.sellerProfile?.applicationStatus || null,
       },
     });
   } catch (error: any) {
