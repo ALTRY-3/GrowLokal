@@ -21,7 +21,7 @@ interface Message {
 
 interface QuickAction {
   label: string;
-  action: 'navigate' | 'view_product' | 'view_order' | 'search';
+  action: "navigate" | "view_product" | "view_order" | "search";
   path?: string;
   productId?: string;
   orderId?: string;
@@ -64,10 +64,26 @@ export default function Chatbot() {
           text: "Kumusta! 👋 I'm KaLokal, your friendly shopping assistant! 😊\n\nI'm here to help you discover amazing handmade products from local Filipino artisans. Whether you're looking for unique gifts, home decor, or something special, I've got you covered!\n\nHow can I help you today?",
           time: formatTime(new Date()),
           quickActions: [
-            { label: "🛍️ Browse Products", action: "navigate", path: "/marketplace" },
-            { label: "📦 Track My Orders", action: "navigate", path: "/orders" },
-            { label: "❤️ View Wishlist", action: "navigate", path: "/wishlist" },
-            { label: "🎨 Become a Seller", action: "navigate", path: "/profile?tab=seller" },
+            {
+              label: "🛍️ Browse Products",
+              action: "navigate",
+              path: "/marketplace",
+            },
+            {
+              label: "📦 Track My Orders",
+              action: "navigate",
+              path: "/orders",
+            },
+            {
+              label: "❤️ View Wishlist",
+              action: "navigate",
+              path: "/wishlist",
+            },
+            {
+              label: "🎨 Become a Seller",
+              action: "navigate",
+              path: "/profile?tab=seller",
+            },
           ],
         },
       ]);
@@ -80,16 +96,16 @@ export default function Chatbot() {
 
   // Handle quick action clicks
   const handleQuickAction = (action: QuickAction) => {
-    if (action.action === 'navigate' && action.path) {
+    if (action.action === "navigate" && action.path) {
       router.push(action.path);
       setIsOpen(false);
-    } else if (action.action === 'view_product' && action.productId) {
+    } else if (action.action === "view_product" && action.productId) {
       router.push(`/marketplace?product=${action.productId}`);
       setIsOpen(false);
-    } else if (action.action === 'view_order' && action.orderId) {
+    } else if (action.action === "view_order" && action.orderId) {
       router.push(`/orders`);
       setIsOpen(false);
-    } else if (action.action === 'search' && action.query) {
+    } else if (action.action === "search" && action.query) {
       setInput(action.query);
     }
   };
@@ -97,7 +113,7 @@ export default function Chatbot() {
   // Handle sending user message with AI
   const handleSend = async () => {
     if (!input.trim()) return;
-    
+
     const now = formatTime(new Date());
     const newMessage: Message = { sender: "user", text: input, time: now };
     setMessages((prev) => [...prev, newMessage]);
@@ -108,9 +124,9 @@ export default function Chatbot() {
 
     try {
       // Call chatbot API
-      const response = await fetch('/api/chatbot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
           conversationHistory: messages,
@@ -119,7 +135,8 @@ export default function Chatbot() {
 
       const data = await response.json();
 
-      if (data.success) {
+      // Handle both success and error responses
+      if (data.success || data.data) {
         const botMessage: Message = {
           sender: "bot",
           text: data.data.response,
@@ -130,11 +147,11 @@ export default function Chatbot() {
         };
         setMessages((prev) => [...prev, botMessage]);
       } else {
-        throw new Error(data.message || 'Failed to get response');
+        throw new Error(data.message || "Failed to get response");
       }
     } catch (error: any) {
-      console.error('Chatbot error:', error);
-      setError('Sorry, I encountered an error. Please try again.');
+      console.error("Chatbot error:", error);
+      setError("Sorry, I encountered an error. Please try again.");
       setMessages((prev) => [
         ...prev,
         {
@@ -142,7 +159,11 @@ export default function Chatbot() {
           text: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment, or browse our marketplace directly!",
           time: formatTime(new Date()),
           quickActions: [
-            { label: "Browse Marketplace", action: "navigate", path: "/marketplace" },
+            {
+              label: "Browse Marketplace",
+              action: "navigate",
+              path: "/marketplace",
+            },
           ],
         },
       ]);
@@ -202,9 +223,14 @@ export default function Chatbot() {
                 <div
                   className={`chatbot-message ${msg.sender}`}
                   tabIndex={0}
-                  aria-label={`${msg.sender === "user" ? "You" : "KaLokal"}: ${msg.text}`}
+                  aria-label={`${msg.sender === "user" ? "You" : "KaLokal"}: ${
+                    msg.text
+                  }`}
                 >
-                  <span className="chatbot-message-text" style={{ whiteSpace: 'pre-line' }}>
+                  <span
+                    className="chatbot-message-text"
+                    style={{ whiteSpace: "pre-line" }}
+                  >
                     {msg.text}
                   </span>
                   <span className="chatbot-message-time">{msg.time}</span>
@@ -217,16 +243,52 @@ export default function Chatbot() {
                       <div
                         key={pidx}
                         className="chatbot-product-card"
-                        onClick={() => handleQuickAction({ action: 'view_product', productId: product._id, label: '' })}
+                        onClick={() =>
+                          handleQuickAction({
+                            action: "view_product",
+                            productId: product._id,
+                            label: "",
+                          })
+                        }
+                        aria-label={`View ${product.name} by ${product.artistName}`}
                       >
-                        <img src={product.thumbnailUrl || product.images[0]} alt={product.name} />
-                        <div className="product-info">
-                          <h4>{product.name}</h4>
-                          <p className="product-artist">{product.artistName}</p>
-                          <p className="product-price">₱{product.price.toFixed(2)}</p>
+                        <div className="product-thumb">
+                          <img
+                            src={product.thumbnailUrl || product.images?.[0]}
+                            alt={product.name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://via.placeholder.com/78?text=No+Image";
+                            }}
+                          />
+                          <span className="price-badge">
+                            ₱{Math.round(product.price).toLocaleString()}
+                          </span>
                           {product.averageRating > 0 && (
-                            <p className="product-rating">★ {product.averageRating.toFixed(1)}</p>
+                            <span className="rating-badge">
+                              ★ {Number(product.averageRating).toFixed(1)}
+                            </span>
                           )}
+                        </div>
+                        <div className="product-info">
+                          <h4 title={product.name}>{product.name}</h4>
+                          <p
+                            className="product-artist"
+                            title={product.artistName}
+                          >
+                            by {product.artistName}
+                          </p>
+                          <div className="product-meta">
+                            {product.category && (
+                              <span className="product-category">
+                                {String(product.category)
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                  String(product.category).slice(1)}
+                              </span>
+                            )}
+                            <span className="product-view">View</span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -240,13 +302,23 @@ export default function Chatbot() {
                       <div
                         key={oidx}
                         className="chatbot-order-card"
-                        onClick={() => handleQuickAction({ action: 'view_order', orderId: order._id, label: '' })}
+                        onClick={() =>
+                          handleQuickAction({
+                            action: "view_order",
+                            orderId: order._id,
+                            label: "",
+                          })
+                        }
                       >
                         <div className="order-info">
                           <h4>Order {order.orderId}</h4>
                           <p className="order-status">{order.status}</p>
-                          <p className="order-total">₱{order.total.toFixed(2)}</p>
-                          <p className="order-date">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          <p className="order-total">
+                            ₱{order.total.toFixed(2)}
+                          </p>
+                          <p className="order-date">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -285,11 +357,7 @@ export default function Chatbot() {
             )}
 
             {/* Error message */}
-            {error && (
-              <div className="chatbot-error">
-                {error}
-              </div>
-            )}
+            {error && <div className="chatbot-error">{error}</div>}
 
             <div ref={messagesEndRef} />
           </div>
@@ -301,7 +369,9 @@ export default function Chatbot() {
               placeholder="Type your message..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              onKeyDown={(e) =>
+                e.key === "Enter" && !e.shiftKey && handleSend()
+              }
               aria-label="Type your message"
             />
             <button

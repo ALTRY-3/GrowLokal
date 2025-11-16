@@ -298,6 +298,7 @@
 }
 
 /* --- Responsive --- */
+
 @media (max-width: 768px) {
   .chatbot-container {
     bottom: 0;
@@ -613,69 +614,133 @@
 .chatbot-products {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin: 8px 0 8px 12px;
+  gap: 10px;
+  margin: 12px 0 12px 12px;
   max-width: 85%;
 }
 
 .chatbot-product-card {
   display: flex;
-  gap: 10px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 10px;
+  gap: 2px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border-radius: 14px;
+  padding: 8px;
   cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #e9ecef;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid #f0e6d2;
+  box-shadow: 0 2px 8px rgba(46, 63, 54, 0.08), 0 0 0 1px rgba(255, 196, 107, 0.1);
+  position: relative;
+  overflow: hidden;
+  height: 7rem;
+}
+
+.chatbot-product-card::before {
+  display: none;
 }
 
 .chatbot-product-card:hover {
-  background: #e9ecef;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbf5 100%);
+  border-color: #ffc46b;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 16px rgba(255, 196, 107, 0.2), 0 0 0 1.5px rgba(255, 196, 107, 0.25);
 }
 
-.chatbot-product-card img {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
+.product-thumb {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2e3f36 0%, #4a5d52 100%);
+  border: 1.5px solid #ffc46b;
+  box-shadow: 0 2px 6px rgba(46, 63, 54, 0.15), inset 0 0 0 1px rgba(255, 196, 107, 0.3);
+}
+.product-thumb img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  background: linear-gradient(135deg, #e8dcc8 0%, #f5f0e8 100%);
+}
+.price-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #2e3f36;
+  background: linear-gradient(135deg, #ffc46b 0%, #ffe7b0 100%);
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(255, 196, 107, 0.35), 0 0 0 1px rgba(46, 63, 54, 0.1);
+  letter-spacing: 0.3px;
+}
+.rating-badge {
+  display: none;
 }
 
 .chatbot-product-card .product-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  min-width: 0;
+  gap: 1px;
+  background-color: transparent;
 }
 
 .chatbot-product-card h4 {
   margin: 0;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: #2e3f36;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.3;
+  letter-spacing: 0.3px;
 }
 
 .chatbot-product-card .product-artist {
-  margin: 2px 0;
+  margin: 0;
   font-size: 11px;
-  color: #6c757d;
+  color: #7a8a82;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
-.chatbot-product-card .product-price {
-  margin: 2px 0 0 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffc46b;
+.chatbot-product-card .product-artist::before {
+  content: "✨";
+  font-size: 10px;
 }
 
-.chatbot-product-card .product-rating {
-  margin: 2px 0 0 0;
-  font-size: 11px;
-  color: #ffc107;
+.chatbot-product-card .product-meta {
+  margin-top: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+  
+.product-category {
+  background: linear-gradient(135deg, #f5ede0 0%, #fffbf5 100%);
+  color: #2e3f36;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1.2px solid #ffc46b;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  box-shadow: 0 1px 3px rgba(255, 196, 107, 0.15);
+}
+.product-view {
+  display: none;
 }
 
 /* --- Order Cards --- */
@@ -706,7 +771,7 @@
   margin: 0 0 6px 0;
   font-size: 13px;
   font-weight: 600;
-  color: #2e3f36;
+  color: #fff;
 }
 
 .chatbot-order-card .order-status {
