@@ -1,0 +1,395 @@
+/* App Container */
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Poppins';
+}
+
+/* Left Panel */
+.left-panel {
+  flex: 1;
+  background: linear-gradient(135deg, #2E3F36 0%, #3a4a40 50%, #2E3F36 100%);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  border-top-right-radius: 22px;
+  border-bottom-right-radius: 22px;
+}
+
+.pattern-overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+.left-pattern {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: left center;
+}
+
+.left-content {
+  max-width: 400px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 6rem;
+}
+
+.logo-icon {
+  background: rgba(175, 121, 40, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #AF7928;
+  overflow: hidden;
+  position: relative;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+.hero-section {
+  margin-bottom: 1.5rem;
+}
+
+.hero-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.8rem;
+  color: white;
+}
+
+.hero-subtitle {
+  font-size: 0.9rem;
+  color: #AF7928;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.hero-image {
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 100%;
+  height: 200px;
+}
+
+.craft-image {
+  object-fit: cover;
+  display: block;
+}
+
+.dots-indicator {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.dot.active {
+  background: white;
+}
+
+/* Right Panel */
+.right-panel {
+  flex: 1;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.verify-container {
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.verify-header {
+  margin-bottom: 3rem;
+}
+
+.status-icon {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 2rem auto;
+  font-size: 2.5rem;
+  transition: all 0.3s ease;
+}
+
+.status-icon.verifying {
+  background: rgba(108, 117, 125, 0.1);
+  color: #6c757d;
+}
+
+.status-icon.success {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  animation: successPulse 2s ease-in-out;
+}
+
+.status-icon.error {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.verify-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2E3F36;
+  margin-bottom: 1rem;
+}
+
+.status-message {
+  color: #666;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.action-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.redirect-notice {
+  color: #AF7928;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.continue-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: #2E3F36;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.continue-button:hover {
+  background: #3a4a40;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(46, 63, 54, 0.3);
+}
+
+.continue-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0.0) 0%,
+    rgba(255,255,255,0.1) 50%,
+    rgba(255,255,255,0.0) 70%
+  );
+  transform: skewX(-20deg);
+  transition: left 1.2s;
+  pointer-events: none;
+}
+
+.continue-button:hover::after {
+  left: 120%;
+}
+
+.error-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.resend-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: #AF7928;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.resend-button:hover {
+  background: #8d6020;
+  transform: translateY(-1px);
+}
+
+.signup-link {
+  color: #AF7928;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.signup-link:hover {
+  color: #8d6020;
+  text-decoration: underline;
+}
+
+.verifying-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #AF7928;
+  animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  } 
+  40% { 
+    transform: scale(1);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+  
+  .left-panel {
+    flex: none;
+    min-height: 60vh;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .right-panel {
+    padding: 1rem;
+  }
+
+  .status-icon {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+
+  .verify-header h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .left-panel {
+    padding: 1rem;
+  }
+  
+  .hero-title {
+    font-size: 1.8rem;
+  }
+  
+  .verify-container {
+    max-width: 100%;
+  }
+
+  .status-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+}

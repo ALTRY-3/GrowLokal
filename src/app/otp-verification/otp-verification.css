@@ -1,0 +1,141 @@
+.forgot-app-container {
+  background-color: #354B3F;
+  min-height: 100vh; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.right-panel,
+.login-container {
+  background: transparent; 
+  box-shadow: none;        
+}
+
+.forgot-container {
+  background-color: #ffffff;      
+  width: 640px;
+  height: 440px;
+  border-radius: 22px;            
+  border: 2px solid #AF7928;       
+  padding-top: 1rem;               
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.forgot-header h2 {
+  color: #2E3F36;                 
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.forgot-header p {
+  color: #0000007e;
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.forgot-form-input {
+  width: 100%;
+  padding: 0.8rem 3rem 0.8rem 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.forgot-form-input:focus {
+  border-color: #354B3F;
+}
+
+.forgot-form-input::placeholder {
+  color: #999;
+}
+
+.forgot-button {
+  width: 490px;
+  height: 50px;
+  background-color: #af6928;      
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: -0.9rem;
+}
+
+.forgot-button:active,
+.forgot-button:focus {
+  outline: none;
+  border: none;
+  box-shadow: 0 0 0 3px rgba(175, 121, 40, 0.5);
+}
+
+.forgot-button:hover {
+  background-color: #8d6020; 
+}
+
+.fa-shield {
+  display: block;          
+  margin: 0 auto 1rem;    
+  font-size: 3rem;        
+  color: #AF7928;
+  text-align: center;
+}
+
+.otp-inputs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.1rem;
+}
+
+.otp-box {
+  width: 60px;
+  height: 60px;
+  text-align: center;
+  font-size: 1.4rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.otp-box:focus {
+  border-color: #354B3F;
+}
+
+.otp-box::placeholder {
+  color: #999;
+}
+
+.resend-button {
+  background: none;
+  border: none;
+  color: #af2828;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: -0.8rem;
+  margin-bottom: 0.1rem;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.resend-button:hover {
+  color: #661919;
+}
+
+.resend-button:focus {
+  outline: none;
+}
