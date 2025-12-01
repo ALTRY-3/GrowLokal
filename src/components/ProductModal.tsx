@@ -1,11 +1,14 @@
 "use client";
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import {
   FaTimes,
   FaStar,
   FaHeart,
   FaRegHeart,
   FaChevronDown,
+  FaShoppingCart,
+  FaSpinner,
+  FaCheck,
 } from "react-icons/fa";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
@@ -44,50 +47,31 @@ interface RecommendedProduct {
   category: string;
   craftType: string;
   barangay?: string;
+  artistName?: string;
+  averageRating?: number;
+  totalReviews?: number;
+  isAvailable?: boolean;
+  stock?: number;
+  recommendationReason?: string;
 }
 
-const dummyRecommendations = [
-  {
-    _id: "1",
-    name: "Handwoven Buri Bag",
-    price: 799,
-    images: ["/box7.png"],
-    thumbnailUrl: "/box7.png",
-    category: "Handicrafts",
-    craftType: "Weaving",
-    barangay: "Asinan",
-  },
-  {
-    _id: "2",
-    name: "Embroidered Shawl",
-    price: 699,
-    images: ["/fashion5.png"],
-    thumbnailUrl: "/fashion5.png",
-    category: "Fashion",
-    craftType: "Embroidery",
-    barangay: "Banicain",
-  },
-  {
-    _id: "3",
-    name: "Wooden Kuksa Mug",
-    price: 449,
-    images: ["/home6.png"],
-    thumbnailUrl: "/home6.png",
-    category: "Home",
-    craftType: "Woodwork",
-    barangay: "Barretto",
-  },
-  {
-    _id: "4",
-    name: "Pure Honey",
-    price: 369,
-    images: ["/food6.png"],
-    thumbnailUrl: "/food6.png",
-    category: "Food",
-    craftType: "Cooking",
-    barangay: "East Bajac-Bajac",
-  },
-];
+// Storage keys for personalization
+const PERSONALIZATION_KEYS = {
+  recentViews: 'recentProductViews',
+  recentSearches: 'recentSearches',
+  interests: 'userInterests',
+};
+
+// Helper to get localStorage data
+function getStorageItem<T>(key: string, defaultValue: T): T {
+  if (typeof window === 'undefined') return defaultValue;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
+}
 
 export default function ProductModal({
   product,
@@ -275,9 +259,125 @@ export default function ProductModal({
 
   const { addItem } = useCartStore();
 
-  const [recommendations, setRecommendations] = useState<RecommendedProduct[]>(
-    []
-  );
+  const [recommendations, setRecommendations] = useState<RecommendedProduct[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [addingRecommendation, setAddingRecommendation] = useState<string | null>(null);
+  const [successRecommendation, setSuccessRecommendation] = useState<string | null>(null);
+
+  // Fetch personalized recommendations
+  const fetchRecommendations = useCallback(async () => {
+    if (!product.productId) return;
+    
+    setRecommendationsLoading(true);
+    try {
+      // Get user behavior from localStorage
+      const recentViews = getStorageItem<string[]>(PERSONALIZATION_KEYS.recentViews, []);
+      const recentSearches = getStorageItem<string[]>(PERSONALIZATION_KEYS.recentSearches, []);
+      const interests = getStorageItem<string[]>(PERSONALIZATION_KEYS.interests, []);
+      
+      // Build query params
+      const params = new URLSearchParams();
+      params.set('limit', '6');
+      params.set('excludeIds', product.productId); // Exclude current product
+      
+      // Add current product's category/craftType as interest for better recommendations
+      if (product.category) {
+        const combinedInterests = [...new Set([product.category, ...interests])];
+        params.set('interests', combinedInterests.slice(0, 5).join(','));
+      } else if (interests.length > 0) {
+        params.set('interests', interests.slice(0, 5).join(','));
+      }
+      
+      if (recentViews.length > 0) {
+        params.set('recentViews', recentViews.slice(0, 10).join(','));
+      }
+      
+      if (recentSearches.length > 0) {
+        params.set('recentSearches', recentSearches.slice(0, 5).join(','));
+      }
+
+      const response = await fetch(`/api/products/personalized?${params.toString()}`);
+      const data = await response.json();
+
+      if (data.success && data.data?.length > 0) {
+        // Filter out current product just in case
+        const filtered = data.data.filter((p: RecommendedProduct) => p._id !== product.productId);
+        setRecommendations(filtered.slice(0, 4));
+      } else {
+        // Fallback: fetch similar products by category
+        const fallbackParams = new URLSearchParams();
+        fallbackParams.set('limit', '4');
+        if (product.category) {
+          fallbackParams.set('category', product.category);
+        }
+        
+        const fallbackResponse = await fetch(`/api/products?${fallbackParams.toString()}`);
+        const fallbackData = await fallbackResponse.json();
+        
+        if (fallbackData.success) {
+          const filtered = (fallbackData.data || []).filter(
+            (p: RecommendedProduct) => p._id !== product.productId
+          );
+          setRecommendations(filtered.slice(0, 4));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch recommendations:', error);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, [product.productId, product.category]);
+
+  // Fetch recommendations when product changes
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
+
+  // Handle adding recommendation to cart
+  const handleAddRecommendationToCart = async (rec: RecommendedProduct, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    if (!rec._id || rec.stock === 0 || !rec.isAvailable) return;
+    if (addingRecommendation === rec._id) return;
+    
+    try {
+      setAddingRecommendation(rec._id);
+      await addItem(rec._id, 1);
+      setAddingRecommendation(null);
+      setSuccessRecommendation(rec._id);
+      setTimeout(() => setSuccessRecommendation(null), 1500);
+    } catch (error) {
+      console.error('Failed to add recommendation to cart:', error);
+      setAddingRecommendation(null);
+    }
+  };
+
+  // Handle clicking on a recommendation
+  const handleRecommendationClick = useCallback((rec: RecommendedProduct) => {
+    // Convert to legacy product format
+    const legacyProduct: Product = {
+      img: rec.images?.[0] || rec.thumbnailUrl || '/placeholder.png',
+      hoverImg: rec.images?.[1] || rec.images?.[0] || rec.thumbnailUrl || '/placeholder.png',
+      name: rec.name,
+      artist: rec.artistName || 'Local Artisan',
+      price: `₱${rec.price.toFixed(2)}`,
+      productId: rec._id,
+      maxStock: rec.stock || 99,
+      craftType: rec.craftType,
+      category: rec.category,
+      barangay: rec.barangay,
+      soldCount: 0,
+    };
+    
+    // Update main image and product
+    setMainImage(legacyProduct.img);
+    onProductChange(legacyProduct);
+    
+    // Scroll modal to top smoothly
+    if (modalBoxRef.current) {
+      modalBoxRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [onProductChange]);
 
   const handleRating = (rate: number) => {
     setRating(rate);
@@ -373,12 +473,6 @@ export default function ProductModal({
 
   const maxStock = product.maxStock || 99;
 
-  // Add effect to fetch recommendations
-  useEffect(() => {
-    // Using dummy data instead of API call
-    setRecommendations(dummyRecommendations);
-  }, []);
-
   return (
     <div className="modal-overlay">
       <div className="modal-box" ref={modalBoxRef}>
@@ -411,12 +505,12 @@ export default function ProductModal({
             <h3 className="modal-product-name">{product.name}</h3>
 
             <div className="modal-tags">
-              {product.craftType && (
+              {product.craftType && product.craftType !== "Unspecified" && (
                 <span className="modal-tag craft-type">
                   {product.craftType}
                 </span>
               )}
-              {product.category && (
+              {product.category && product.category !== "Unspecified" && (
                 <span className="modal-tag category">{product.category}</span>
               )}
             </div>
@@ -572,6 +666,12 @@ export default function ProductModal({
                   <div className="description-item">
                     <span className="label">Made In Barangay:</span>
                     <span className="value">{product.barangay || "N/A"}</span>
+                  </div>
+                  <div className="description-item">
+                    <span className="label">Stock:</span>
+                    <span className={`value ${maxStock <= 5 && maxStock > 0 ? 'low-stock' : ''}`}>
+                      {maxStock > 0 ? `${maxStock} ${maxStock === 1 ? 'item' : 'items'} available` : 'Out of stock'}
+                    </span>
                   </div>
                   <br />
                   <div className="description-text">
@@ -750,43 +850,104 @@ export default function ProductModal({
 
           <div className="modal-section-gap"></div>
 
-          {/* You May Also Like Section */}
+          {/* You May Also Like Section - Personalized */}
           <div className="recommendations-section">
-            <h3 className="recommendations-title">You May Also Like</h3>
-            <div className="recommendations-grid">
-              {dummyRecommendations.map((rec) => (
-                <div
-                  key={rec._id}
-                  className="recommendation-card"
-                  onClick={() => {
-                    const legacyProduct = {
-                      img: rec.images[0],
-                      hoverImg: rec.images[0],
-                      name: rec.name,
-                      artist: "Local Artisan",
-                      price: `₱${rec.price.toFixed(2)}`,
-                      productId: rec._id,
-                      maxStock: 10,
-                      craftType: rec.craftType,
-                      category: rec.category,
-                      soldCount: 0,
-                    };
-                    setMainImage(legacyProduct.img);
-                    onProductChange(legacyProduct);
-                  }}
-                >
-                  <div className="recommendation-image">
-                    <img src={rec.images[0]} alt={rec.name} />
+            <h3 className="recommendations-title">
+              <span>You May Also Like</span>
+              {recommendations.length > 0 && (
+                <span className="recommendations-subtitle">Based on your interests</span>
+              )}
+            </h3>
+            
+            {recommendationsLoading ? (
+              <div className="recommendations-loading">
+                <FaSpinner className="loading-spinner" />
+                <span>Finding products for you...</span>
+              </div>
+            ) : recommendations.length > 0 ? (
+              <div className="recommendations-grid">
+                {recommendations.map((rec) => (
+                  <div
+                    key={rec._id}
+                    className="recommendation-card"
+                    onClick={() => handleRecommendationClick(rec)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleRecommendationClick(rec);
+                      }
+                    }}
+                  >
+                    <div className="recommendation-image">
+                      <img 
+                        src={rec.images?.[0] || rec.thumbnailUrl || '/placeholder.png'} 
+                        alt={rec.name}
+                        loading="lazy"
+                      />
+                      
+                      {/* Quick add to cart button */}
+                      <button
+                        className={`recommendation-cart-btn ${
+                          addingRecommendation === rec._id ? 'loading' : ''
+                        } ${successRecommendation === rec._id ? 'success' : ''}`}
+                        onClick={(e) => handleAddRecommendationToCart(rec, e)}
+                        disabled={
+                          !rec.isAvailable || 
+                          rec.stock === 0 || 
+                          addingRecommendation === rec._id
+                        }
+                        aria-label="Add to cart"
+                      >
+                        {addingRecommendation === rec._id ? (
+                          <FaSpinner className="spin" />
+                        ) : successRecommendation === rec._id ? (
+                          <FaCheck />
+                        ) : (
+                          <FaShoppingCart />
+                        )}
+                      </button>
+                      
+                      {/* Recommendation reason badge */}
+                      {rec.recommendationReason && (
+                        <span className="recommendation-reason">
+                          {rec.recommendationReason}
+                        </span>
+                      )}
+                      
+                      {/* Out of stock overlay */}
+                      {(!rec.isAvailable || rec.stock === 0) && (
+                        <div className="recommendation-unavailable">
+                          Out of Stock
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="recommendation-info">
+                      <h4 className="recommendation-name">{rec.name}</h4>
+                      {rec.artistName && (
+                        <span className="recommendation-artist">{rec.artistName}</span>
+                      )}
+                      <div className="recommendation-meta">
+                        <span className="recommendation-price">
+                          ₱{rec.price.toFixed(2)}
+                        </span>
+                        {rec.averageRating && rec.averageRating > 0 && (
+                          <span className="recommendation-rating">
+                            <FaStar /> {rec.averageRating.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="recommendation-info">
-                    <h4>{rec.name}</h4>
-                    <span className="recommendation-price">
-                      ₱{rec.price.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="recommendations-empty">
+                <p>No recommendations available</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -575,6 +575,8 @@ function ManageBookingModal({
 export default function EventsPage() {
   const [date, setDate] = useState<Date>(new Date());
   const [reminders, setReminders] = useState<string[]>([]);
+  const [subscribedEventIds, setSubscribedEventIds] = useState<Set<number>>(new Set());
+  const [subscriptionLoading, setSubscriptionLoading] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [, setSuggestions] = useState<typeof events>([]);
   const [calendarReminder, setCalendarReminder] = useState(false);
@@ -615,13 +617,46 @@ export default function EventsPage() {
   const searchParams = useSearchParams();
   const { status: authStatus } = useSession();
 
-  // Load reminders from localStorage on mount
+  // Load reminders from localStorage on mount and fetch subscriptions
   useEffect(() => {
     const savedReminders = localStorage.getItem("eventReminders");
     if (savedReminders) {
       setReminders(JSON.parse(savedReminders));
     }
   }, []);
+
+  // Fetch user's event subscriptions when authenticated
+  const fetchSubscriptions = useCallback(async () => {
+    if (authStatus !== "authenticated") {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/events/subscriptions", {
+        method: "GET",
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      if (data.success && Array.isArray(data.data)) {
+        const subscribedIds = new Set<number>(
+          data.data.map((sub: { eventId: number }) => sub.eventId)
+        );
+        setSubscribedEventIds(subscribedIds);
+        
+        // Also sync with localStorage reminders for backward compatibility
+        const subscribedDates = data.data.map((sub: { eventDate: string }) => sub.eventDate);
+        setReminders(subscribedDates);
+        localStorage.setItem("eventReminders", JSON.stringify(subscribedDates));
+      }
+    } catch (error) {
+      console.error("Failed to fetch subscriptions:", error);
+    }
+  }, [authStatus]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
 
   const fetchBookings = useCallback(async () => {
     if (authStatus !== "authenticated") {
@@ -760,17 +795,79 @@ export default function EventsPage() {
     }
   };
 
-  const toggleReminder = (idx: number) => {
-    const eventDate = events[idx].date;
-    setReminders((prev) => {
-      const newReminders = prev.includes(eventDate)
-        ? prev.filter((d) => d !== eventDate)
-        : [...prev, eventDate];
+  const toggleReminder = async (idx: number) => {
+    const event = events[idx];
+    const eventId = event.id;
+    const eventDate = event.date;
+    const eventTitle = event.title;
+    const isSubscribed = subscribedEventIds.has(eventId);
 
-      // Save to localStorage to sync with home page
-      localStorage.setItem("eventReminders", JSON.stringify(newReminders));
-      return newReminders;
-    });
+    // If not logged in, just use localStorage (backward compatibility)
+    if (authStatus !== "authenticated") {
+      setReminders((prev) => {
+        const newReminders = prev.includes(eventDate)
+          ? prev.filter((d) => d !== eventDate)
+          : [...prev, eventDate];
+        localStorage.setItem("eventReminders", JSON.stringify(newReminders));
+        return newReminders;
+      });
+      return;
+    }
+
+    // Set loading state
+    setSubscriptionLoading(eventId);
+
+    try {
+      if (isSubscribed) {
+        // Unsubscribe
+        const response = await fetch(`/api/events/subscriptions?eventId=${eventId}`, {
+          method: "DELETE",
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setSubscribedEventIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(eventId);
+            return newSet;
+          });
+          setReminders((prev) => {
+            const newReminders = prev.filter((d) => d !== eventDate);
+            localStorage.setItem("eventReminders", JSON.stringify(newReminders));
+            return newReminders;
+          });
+          // Broadcast to update notification counts
+          broadcastNotificationsUpdate();
+        }
+      } else {
+        // Subscribe
+        const response = await fetch("/api/events/subscriptions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventId,
+            eventTitle,
+            eventDate,
+          }),
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setSubscribedEventIds((prev) => new Set([...prev, eventId]));
+          setReminders((prev) => {
+            const newReminders = [...prev, eventDate];
+            localStorage.setItem("eventReminders", JSON.stringify(newReminders));
+            return newReminders;
+          });
+          // Broadcast to update notification counts
+          broadcastNotificationsUpdate();
+        }
+      }
+    } catch (error) {
+      console.error("Subscription toggle error:", error);
+    } finally {
+      setSubscriptionLoading(null);
+    }
   };
 
   const handleDateClick = (clickedDate: Date) => {
@@ -1100,19 +1197,23 @@ export default function EventsPage() {
                       ) : (
                         <button
                           className={`reminder-btn ${
-                            reminders.includes(event.date) ? "active" : ""
-                          }`}
+                            subscribedEventIds.has(event.id) || reminders.includes(event.date) ? "active" : ""
+                          } ${subscriptionLoading === event.id ? "loading" : ""}`}
                           onClick={() =>
                             !isPastEvent(event.date) && toggleReminder(idx)
                           }
-                          disabled={isPastEvent(event.date)}
+                          disabled={isPastEvent(event.date) || subscriptionLoading === event.id}
                           title={
                             isPastEvent(event.date)
                               ? "Cannot set reminder for past events"
-                              : "Set reminder"
+                              : subscribedEventIds.has(event.id)
+                              ? "Unsubscribe from event updates"
+                              : "Subscribe to event updates"
                           }
                         >
-                          {reminders.includes(event.date) ? (
+                          {subscriptionLoading === event.id ? (
+                            <span className="subscription-spinner" />
+                          ) : subscribedEventIds.has(event.id) || reminders.includes(event.date) ? (
                             <MdNotificationsActive className="icon-ringing" />
                           ) : (
                             <MdNotifications />
@@ -1301,8 +1402,8 @@ export default function EventsPage() {
                       ) : (
                         <button
                           className={`reminder-btn ${
-                            reminders.includes(event.date) ? "active" : ""
-                          }`}
+                            subscribedEventIds.has(event.id) || reminders.includes(event.date) ? "active" : ""
+                          } ${subscriptionLoading === event.id ? "loading" : ""}`}
                           onClick={() => {
                             const eventIndex = events.findIndex(
                               (e) => e.id === event.id
@@ -1311,14 +1412,18 @@ export default function EventsPage() {
                               toggleReminder(eventIndex);
                             }
                           }}
-                          disabled={isPastEvent(event.date)}
+                          disabled={isPastEvent(event.date) || subscriptionLoading === event.id}
                           title={
                             isPastEvent(event.date)
                               ? "Cannot set reminder for past events"
-                              : "Set reminder"
+                              : subscribedEventIds.has(event.id)
+                              ? "Unsubscribe from event updates"
+                              : "Subscribe to event updates"
                           }
                         >
-                          {reminders.includes(event.date) ? (
+                          {subscriptionLoading === event.id ? (
+                            <span className="subscription-spinner" />
+                          ) : subscribedEventIds.has(event.id) || reminders.includes(event.date) ? (
                             <MdNotificationsActive className="icon-ringing" />
                           ) : (
                             <MdNotifications />
@@ -1399,15 +1504,21 @@ export default function EventsPage() {
                 <button
                   type="button"
                   className={`calendar-icon-box ${
-                    reminders.includes(
-                      date.getFullYear() +
+                    (() => {
+                      const selectedDateStr =
+                        date.getFullYear() +
                         "-" +
                         String(date.getMonth() + 1).padStart(2, "0") +
                         "-" +
-                        String(date.getDate()).padStart(2, "0")
-                    )
-                      ? "active"
-                      : ""
+                        String(date.getDate()).padStart(2, "0");
+                      const matchingEvent = events.find(
+                        (e) => e.date === selectedDateStr
+                      );
+                      return (matchingEvent && subscribedEventIds.has(matchingEvent.id)) ||
+                        reminders.includes(selectedDateStr)
+                        ? "active"
+                        : "";
+                    })()
                   }`}
                   disabled={isPastEvent(
                     date.getFullYear() +
@@ -1434,35 +1545,46 @@ export default function EventsPage() {
                       String(date.getMonth() + 1).padStart(2, "0") +
                       "-" +
                       String(date.getDate()).padStart(2, "0");
-                    const hasEvent = events.some(
-                      (event) =>
-                        new Date(event.date).toDateString() ===
-                        date.toDateString()
+                    const matchingEvent = events.find(
+                      (e) => e.date === selectedDateStr
                     );
-                    if (!hasEvent || isPastEvent(selectedDateStr)) return;
+                    if (!matchingEvent || isPastEvent(selectedDateStr)) return;
 
-                    setReminders((reminders) =>
-                      reminders.includes(selectedDateStr)
-                        ? reminders.filter((d) => d !== selectedDateStr)
-                        : [...reminders, selectedDateStr]
+                    // Use the same toggle function as the event cards
+                    const eventIndex = events.findIndex(
+                      (e) => e.id === matchingEvent.id
                     );
+                    toggleReminder(eventIndex);
                     setCalendarReminder((prev) => !prev);
                   }}
                 >
-                  {reminders.includes(
-                    date.getFullYear() +
+                  {(() => {
+                    const selectedDateStr =
+                      date.getFullYear() +
                       "-" +
                       String(date.getMonth() + 1).padStart(2, "0") +
                       "-" +
-                      String(date.getDate()).padStart(2, "0")
-                  ) ? (
-                    <MdNotificationsActive
-                      className="icon-ringing"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <MdNotifications aria-hidden="true" />
-                  )}
+                      String(date.getDate()).padStart(2, "0");
+                    const matchingEvent = events.find(
+                      (e) => e.date === selectedDateStr
+                    );
+                    const isSubscribed =
+                      (matchingEvent && subscribedEventIds.has(matchingEvent.id)) ||
+                      reminders.includes(selectedDateStr);
+                    const isLoading = matchingEvent && subscriptionLoading === matchingEvent.id;
+
+                    if (isLoading) {
+                      return <span className="subscription-spinner" />;
+                    }
+                    return isSubscribed ? (
+                      <MdNotificationsActive
+                        className="icon-ringing"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <MdNotifications aria-hidden="true" />
+                    );
+                  })()}
                 </button>
               </div>
             </div>

@@ -8,6 +8,8 @@ import {
   FaTimes,
   FaSpinner,
   FaFilter,
+  FaStar,
+  FaMagic,
 } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -15,6 +17,7 @@ import ProductModal from "@/components/ProductModal";
 import SearchBar from "@/components/SearchBar";
 import { SearchSuggestion, SearchResult } from "@/lib/useSearch";
 import { useCartStore } from "@/store/cartStore";
+import { usePersonalization, PersonalizedProduct } from "@/lib/usePersonalization";
 import "./marketplace.css";
 
 const craftTypes = [
@@ -112,6 +115,16 @@ export default function Marketplace() {
   const [filterModalState, setFilterModalState] = useState<
     "closed" | "entering" | "entered" | "exiting"
   >("closed");
+
+  // Personalization hook for "For You" section
+  const {
+    products: personalizedProducts,
+    loading: personalizedLoading,
+    trackProductView,
+    trackSearch,
+    behavior,
+    refresh: refreshPersonalized,
+  } = usePersonalization({ limit: 12 });
 
   // Load wishlist from localStorage on mount
   useEffect(() => {
@@ -329,11 +342,17 @@ export default function Marketplace() {
     setSuggestions([]);
     setShowSuggestions(false);
     fetchAllProducts();
+    // Note: Personalized products will refresh automatically when user browses again
   }, []);
 
   // Handle enhanced search bar results
   const handleEnhancedSearch = useCallback((query: string, results: SearchResult[]) => {
     setSearchActive(true);
+    
+    // Track search for personalization
+    if (query.trim()) {
+      trackSearch(query);
+    }
     
     // Group results by category
     const grouped = results.reduce(
@@ -369,11 +388,14 @@ export default function Marketplace() {
     setHome(grouped.home || []);
     setFood(grouped.food || []);
     setBeauty(grouped.beauty || []);
-  }, []);
+  }, [trackSearch]);
 
   // Handle enhanced search suggestion selection
   const handleEnhancedSuggestionSelect = useCallback((suggestion: SearchSuggestion) => {
     if (suggestion.type === "product" && suggestion.productId) {
+      // Track product view when selecting from suggestions
+      trackProductView(suggestion.productId);
+      
       // Fetch the product and open modal
       fetch(`/api/products/${suggestion.productId}`)
         .then((res) => res.json())
@@ -404,7 +426,7 @@ export default function Marketplace() {
         })
         .catch((err) => console.error("Error fetching product:", err));
     }
-  }, []);
+  }, [trackProductView]);
 
   // Handle suggestion click - Open product modal
   const handleSuggestionClick = (product: Product) => {
@@ -442,7 +464,27 @@ export default function Marketplace() {
   });
 
   const handleProductClick = (product: Product) => {
+    // Track product view for personalization
+    trackProductView(product._id, product.category, product.craftType);
     setSelectedProduct(convertToLegacyProduct(product));
+  };
+
+  // Handle personalized product click
+  const handlePersonalizedProductClick = (product: PersonalizedProduct) => {
+    trackProductView(product._id, product.category, product.craftType);
+    setSelectedProduct({
+      img: product.images[0] || product.thumbnailUrl,
+      hoverImg: product.images[1] || product.images[0] || product.thumbnailUrl,
+      name: product.name,
+      artist: product.artistName,
+      price: `₱${product.price.toFixed(2)}`,
+      productId: product._id,
+      maxStock: product.stock,
+      craftType: product.craftType || "Unspecified",
+      category: formatCategory(product.category),
+      barangay: product.barangay || "Unspecified",
+      soldCount: 0,
+    });
   };
 
   // Helper function to match price range
@@ -870,6 +912,18 @@ export default function Marketplace() {
         </div>
       </div>
 
+      {/* Personalized "For You" Section - Only show when not searching */}
+      {!searchActive && (personalizedProducts.length > 0 || personalizedLoading) && (
+        <div className="category-section personalized-section">
+          <PersonalizedSection
+            products={personalizedProducts}
+            onProductClick={handlePersonalizedProductClick}
+            isLoading={personalizedLoading}
+            hasUserHistory={behavior.recentViews.length > 0 || behavior.interests.length > 0}
+          />
+        </div>
+      )}
+
       {handicrafts.length > 0 && (
         <div className="category-section">
           <Section
@@ -1112,6 +1166,13 @@ function Section({
                 className="product-image hover"
               />
 
+              {/* Product Labels Container - Right side */}
+              <div className="product-labels">
+                {product.isFeatured && (
+                  <span className="product-label featured">Featured</span>
+                )}
+              </div>
+
               {/* Add to cart icon */}
               <button
                 className={`add-to-cart-icon ${
@@ -1166,25 +1227,6 @@ function Section({
                   View
                 </button>
               )}
-
-              {/* Featured badge */}
-              {product.isFeatured && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "10px",
-                    right: "10px",
-                    backgroundColor: "#AF7928",
-                    color: "white",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    fontSize: "0.75rem",
-                    fontWeight: "bold",
-                  }}
-                >
-                  FEATURED
-                </div>
-              )}
             </div>
             <div className="market-product-info">
               <div className="market-product-info-top">
@@ -1202,6 +1244,169 @@ function Section({
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+// Personalized "For You" Section Component
+function PersonalizedSection({
+  products,
+  onProductClick,
+  isLoading,
+  hasUserHistory,
+}: {
+  products: PersonalizedProduct[];
+  onProductClick: (product: PersonalizedProduct) => void;
+  isLoading: boolean;
+  hasUserHistory: boolean;
+}) {
+  const { addItem } = useCartStore();
+  const [addingProduct, setAddingProduct] = useState<string | null>(null);
+  const [successProduct, setSuccessProduct] = useState<string | null>(null);
+  const [errorProduct, setErrorProduct] = useState<string | null>(null);
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+
+  const handleAddToCart = async (product: PersonalizedProduct, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!product.isAvailable || product.stock === 0) return;
+    if (addingProduct === product._id) return;
+
+    try {
+      setAddingProduct(product._id);
+      await addItem(product._id, 1);
+      setAddingProduct(null);
+      setSuccessProduct(product._id);
+      setTimeout(() => setSuccessProduct(null), 1000);
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      setAddingProduct(null);
+      setErrorProduct(product._id);
+      setTimeout(() => setErrorProduct(null), 2000);
+    }
+  };
+
+  return (
+    <>
+      <div className="section-header personalized-header">
+        <div className="section-title">
+          <FaMagic className="personalized-icon" />
+          {hasUserHistory ? "RECOMMENDED FOR YOU" : "DISCOVER PRODUCTS"}
+        </div>
+        <div className="section-subtitle">
+          {hasUserHistory
+            ? "Based on your browsing history and interests"
+            : "Explore our curated selection of local artisan products"}
+        </div>
+      </div>
+      
+      {isLoading && products.length === 0 ? (
+        <div className="product-grid personalized-grid">
+          {/* Skeleton loading cards */}
+          {[1, 2, 3, 4].map((i) => (
+            <div className="product-card personalized-card skeleton-card" key={`skeleton-${i}`}>
+              <div className="image-container skeleton-image"></div>
+              <div className="product-info">
+                <div className="skeleton-line skeleton-title"></div>
+                <div className="skeleton-line skeleton-artist"></div>
+                <div className="skeleton-line skeleton-price"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="product-grid personalized-grid">
+          {products.map((product) => (
+            <div
+              className={`product-card personalized-card ${
+                activeCardId === product._id ? "active" : ""
+              }`}
+              key={product._id}
+              onClick={() => setActiveCardId(product._id)}
+              onMouseLeave={() => setActiveCardId(null)}
+            >
+              <div className="image-container">
+                <img
+                  src={product.images[0] || product.thumbnailUrl}
+                  alt={product.name}
+                  className="product-image default"
+                />
+                <img
+                  src={product.images[1] || product.images[0] || product.thumbnailUrl}
+                  alt={product.name}
+                  className="product-image hover"
+                />
+
+                {/* Product Labels Container - Right side */}
+                <div className="product-labels">
+                  {product.recommendationReason && (
+                    <span className="recommendation-badge">
+                      {product.recommendationReason}
+                    </span>
+                  )}
+                  {product.averageRating >= 4.0 && product.totalReviews >= 3 && (
+                    <span className="product-label trending">
+                      <FaStar style={{ marginRight: '3px', fontSize: '0.55rem' }} />
+                      {product.averageRating.toFixed(1)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Add to cart icon */}
+                <button
+                  className={`add-to-cart-icon ${
+                    addingProduct === product._id ? "loading" : ""
+                  } ${successProduct === product._id ? "success" : ""} ${
+                    errorProduct === product._id ? "error" : ""
+                  }`}
+                  onClick={(e) => handleAddToCart(product, e)}
+                  disabled={
+                    !product.isAvailable ||
+                    product.stock === 0 ||
+                    addingProduct === product._id
+                  }
+                  aria-label="Add to cart"
+                >
+                  {addingProduct === product._id ? (
+                    <FaSpinner className="loading-spinner" />
+                  ) : successProduct === product._id ? (
+                    <FaCheck />
+                  ) : errorProduct === product._id ? (
+                    <FaTimes />
+                  ) : (
+                    <FaShoppingCart />
+                  )}
+                </button>
+
+                {/* Out of stock overlay */}
+                {!product.isAvailable || product.stock === 0 ? (
+                  <div className="out-of-stock-overlay">OUT OF STOCK</div>
+                ) : (
+                  <button
+                    className="view-button"
+                    onClick={() => onProductClick(product)}
+                  >
+                    View
+                  </button>
+                )}
+              </div>
+              <div className="market-product-info">
+                <div className="market-product-info-top">
+                  <h3 className="product-name">{product.name}</h3>
+                  <p className="product-artist">{product.artistName}</p>
+                </div>
+                <div className="product-info-bottom">
+                  <div className="product-price-wrapper">
+                    <span className="product-price">
+                      ₱{product.price.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

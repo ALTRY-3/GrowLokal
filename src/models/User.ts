@@ -31,6 +31,12 @@ export interface IUser extends mongoose.Document {
   gender?: 'male' | 'female' | 'other' | '';
   profilePicture?: string;
   wishlist: mongoose.Types.ObjectId[];
+  eventSubscriptions: {
+    eventId: number;
+    eventTitle: string;
+    eventDate: string;
+    subscribedAt: string;
+  }[];
   isSeller: boolean;
   shopId?: mongoose.Types.ObjectId;
   sellerProfile?: {
@@ -171,6 +177,12 @@ const UserSchema = new mongoose.Schema<IUser>(
     wishlist: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
+    }],
+    eventSubscriptions: [{
+      eventId: { type: Number, required: true },
+      eventTitle: { type: String, required: true },
+      eventDate: { type: String, required: true },
+      subscribedAt: { type: String, required: true },
     }],
     isSeller: {
       type: Boolean,

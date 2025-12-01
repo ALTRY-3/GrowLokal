@@ -2345,3 +2345,439 @@
     display: none;
   }
 } 
+
+/* ====== RECOMMENDED FOR YOU SECTION ====== */
+.recommended-section {
+  position: relative;
+  overflow: visible;
+}
+
+.recommended-section .carousel-container {
+  overflow: visible;
+}
+
+.section-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.section-title-with-icon .sparkle-icon {
+  color: #af7928;
+  animation: sparkle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sparkle-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.personalized-badge {
+  background: linear-gradient(135deg, #af7928 0%, #d4a84b 100%);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  box-shadow: 0 2px 8px rgba(175, 121, 40, 0.25);
+}
+
+/* Loading skeleton */
+.recommendations-loading {
+  padding: 0 4rem;
+}
+
+.recommendations-skeleton {
+  display: flex;
+  gap: 1.5rem;
+  overflow: hidden;
+}
+
+.skeleton-card {
+  min-width: 300px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.skeleton-image {
+  height: 120px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-content {
+  padding: 1rem;
+}
+
+.skeleton-line {
+  height: 16px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Recommendations carousel */
+.home-recommendations-carousel {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  padding: 0.5rem 4rem 1rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  align-items: stretch;
+}
+
+.home-recommendations-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Recommendation cards */
+.home-recommendation-card {
+  min-width: 300px;
+  max-width: 320px;
+  min-height: 320px;
+  height: auto;
+  background: white;
+  border-radius: 16px;
+  overflow: visible;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.home-recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.home-recommendation-card.event-card {
+  border-top: 4px solid #af7928;
+}
+
+.home-recommendation-card.artisan-card {
+  border-top: 4px solid #2e3f36;
+}
+
+/* Recommendation header - contains match reason */
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+/* Labels row - badge left, type right */
+.recommendation-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Recommendation badge - inline (Event/Shop label on left) */
+.recommendation-badge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+.recommendation-badge.recommendation-badge-event,
+.recommendation-badge-event {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #af7928 !important;
+  border: 1px solid rgba(175, 121, 40, 0.3) !important;
+}
+
+.recommendation-badge.recommendation-badge-artisan,
+.recommendation-badge-artisan {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #2e3f36 !important;
+  border: 1px solid rgba(46, 63, 54, 0.3) !important;
+}
+
+/* Recommendation type - (Workshop, Demo, etc. on right) */
+.recommendation-type {
+  display: inline-block;
+  background: #2e3f36 !important;
+  color: white !important;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none !important;
+}
+
+/* Match reason banner */
+.recommendation-match-reason {
+  flex: 1;
+  background: linear-gradient(135deg, rgba(175, 121, 40, 0.1) 0%, rgba(212, 168, 75, 0.1) 100%);
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #af7928;
+  font-weight: 500;
+  min-height: 36px;
+}
+
+.recommendation-match-reason svg {
+  flex-shrink: 0;
+}
+
+.recommendation-match-reason span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Recommendation content */
+.recommendation-content {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.recommendation-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recommendation-date {
+  font-size: 0.85rem;
+  color: #af7928;
+  font-weight: 600;
+  margin: 0;
+}
+
+.recommendation-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.recommendation-location svg {
+  flex-shrink: 0;
+  color: #af7928;
+}
+
+.recommendation-featured {
+  font-size: 0.75rem;
+  color: #888;
+  font-style: italic;
+  margin: 0;
+}
+
+.recommendation-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #2e3f36;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: auto;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.recommendation-action:hover {
+  background: #af7928;
+  transform: translateX(2px);
+}
+
+/* Artisan specific styles */
+.recommendation-artisan-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.recommendation-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f0f0f0;
+}
+
+.recommendation-artisan-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.recommendation-artist {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+}
+
+.recommendation-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.recommendation-tag {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.recommendation-tag.craft-type {
+  background: rgba(175, 121, 40, 0.15);
+  color: #af7928;
+}
+
+.recommendation-tag.category {
+  background: rgba(46, 63, 54, 0.1);
+  color: #2e3f36;
+}
+
+.recommendation-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.recommendation-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.recommendation-rating .star-icon {
+  color: #ffc107;
+  font-size: 0.85rem;
+}
+
+.recommendation-products {
+  color: #888;
+}
+
+/* Responsive styles for recommendations */
+@media (max-width: 768px) {
+  .recommendations-loading {
+    padding: 0 1.5rem;
+  }
+  
+  .home-recommendations-carousel {
+    padding: 0.5rem 1.5rem;
+    gap: 1rem;
+  }
+  
+  .home-recommendation-card {
+    min-width: 260px;
+    max-width: 280px;
+  }
+  
+  .recommendation-header {
+    flex-wrap: nowrap;
+  }
+  
+  .recommendation-content {
+    padding: 0.85rem 1rem 1rem;
+  }
+  
+  .recommendation-title {
+    font-size: 0.9rem;
+  }
+  
+  .section-title-with-icon h2 {
+    font-size: 1.3rem;
+  }
+  
+  .personalized-badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title-with-icon {
+    gap: 0.5rem;
+  }
+  
+  .section-title-with-icon .sparkle-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .home-recommendation-card {
+    min-width: 240px;
+    max-width: 260px;
+    min-height: 280px;
+  }
+  
+  .recommendation-badge {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.65rem;
+  }
+  
+  .recommendation-match-reason {
+    font-size: 0.7rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 32px;
+  }
+  
+  .recommendation-avatar {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .recommendation-action {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.75rem;
+  }
+}

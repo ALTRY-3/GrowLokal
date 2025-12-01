@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ImageCarousel from "@/components/ImageCarousel1";
 import ProductModal from "@/components/ProductModal"; // Add this import
 import { useWishlist } from "@/lib/useWishlist";
-import { FaStar } from "react-icons/fa";
-import { MapPin } from "lucide-react";
+import { FaStar, FaSparkles } from "react-icons/fa";
+import { MapPin, Sparkles } from "lucide-react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Calendar } from "lucide-react";
 import { Megaphone, Store } from "lucide-react";
@@ -313,10 +313,49 @@ const artisanStories = [
   },
 ];
 
+// Types for recommendations
+interface RecommendedEvent {
+  id: number;
+  title: string;
+  date: string;
+  dateText: string;
+  time: string;
+  location: string;
+  type: string;
+  details: string;
+  organizer?: string;
+  featuredArtisan?: string;
+  matchReason: string;
+  matchScore: number;
+}
+
+interface RecommendedArtisan {
+  id: string;
+  name: string;
+  shopName: string;
+  avatar: string;
+  craftType: string;
+  category: string;
+  location: string;
+  rating: number;
+  productsCount: number;
+  matchReason: string;
+  matchScore: number;
+}
+
 export default function HomePage() {
   const [eventReminders, setEventReminders] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Change this
+  
+  // Recommendations state
+  const [recommendedEvents, setRecommendedEvents] = useState<RecommendedEvent[]>([]);
+  const [recommendedArtisans, setRecommendedArtisans] = useState<RecommendedArtisan[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(true);
+  const [canScrollRecommendations, setCanScrollRecommendations] = useState({
+    left: false,
+    right: true,
+  });
   
   // Use wishlist hook instead of local state
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -368,10 +407,72 @@ export default function HomePage() {
   const eventsRef = useRef<HTMLDivElement>(null);
   const announcementsRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
+  const recommendationsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch personalized recommendations
+  const fetchRecommendations = useCallback(async () => {
+    try {
+      setRecommendationsLoading(true);
+      
+      // Get user preferences from localStorage
+      const viewedCategories = JSON.parse(localStorage.getItem('viewedCategories') || '[]');
+      const interests = JSON.parse(localStorage.getItem('userInterests') || '[]');
+      const recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+      const userLocation = localStorage.getItem('userLocation') || '';
+      
+      const params = new URLSearchParams();
+      if (viewedCategories.length) params.set('viewedCategories', viewedCategories.join(','));
+      if (interests.length) params.set('interests', interests.join(','));
+      if (recentSearches.length) params.set('recentSearches', recentSearches.slice(0, 5).join(','));
+      if (userLocation) params.set('userLocation', userLocation);
+      
+      const response = await fetch(`/api/home/recommendations?${params.toString()}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setRecommendedEvents(data.data.events || []);
+        setRecommendedArtisans(data.data.artisans || []);
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
+
+  // Recheck scroll position when recommendations finish loading
+  useEffect(() => {
+    if (!recommendationsLoading) {
+      // Small delay to ensure DOM is updated
+      const timer = setTimeout(() => {
+        checkScrollPosition(recommendationsRef.current, setCanScrollRecommendations);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [recommendationsLoading]);
+
+  const checkScrollPosition = (
+    container: HTMLDivElement | null,
+    setCanScroll: React.Dispatch<
+      React.SetStateAction<{ left: boolean; right: boolean }>
+    >
+  ) => {
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setCanScroll({
+      left: scrollLeft > 0,
+      right: scrollLeft < scrollWidth - clientWidth - 10,
+    });
+  };
 
   const scroll = (
     direction: "left" | "right",
-    container: HTMLDivElement | null
+    container: HTMLDivElement | null,
+    setCanScroll?: React.Dispatch<React.SetStateAction<{ left: boolean; right: boolean }>>
   ): void => {
     if (!container) return;
     const cardWidth = 312;
@@ -382,6 +483,13 @@ export default function HomePage() {
       left: direction === "left" ? -scrollDistance : scrollDistance,
       behavior: "smooth",
     });
+
+    // Update button visibility after scroll animation
+    if (setCanScroll) {
+      setTimeout(() => {
+        checkScrollPosition(container, setCanScroll);
+      }, 350);
+    }
   };
 
   const toggleEventReminder = (title: string) => {
@@ -433,20 +541,6 @@ export default function HomePage() {
     router.push(`/events?event=${encodeURIComponent(eventTitle)}`);
   };
 
-  const checkScrollPosition = (
-    container: HTMLDivElement | null,
-    setCanScroll: React.Dispatch<
-      React.SetStateAction<{ left: boolean; right: boolean }>
-    >
-  ) => {
-    if (!container) return;
-    const { scrollLeft, scrollWidth, clientWidth } = container;
-    setCanScroll({
-      left: scrollLeft > 0,
-      right: scrollLeft < scrollWidth - clientWidth - 10,
-    });
-  };
-
   // Add scroll event listeners
   useEffect(() => {
     let scrollTimeout: NodeJS.Timeout;
@@ -462,6 +556,10 @@ export default function HomePage() {
           announcementsRef.current,
           setCanScrollAnnouncements
         );
+        checkScrollPosition(
+          recommendationsRef.current,
+          setCanScrollRecommendations
+        );
       }, 100);
     };
 
@@ -471,6 +569,7 @@ export default function HomePage() {
       eventsRef.current,
       storiesRef.current,
       announcementsRef.current,
+      recommendationsRef.current,
     ];
 
     containers.forEach((container) => {
@@ -486,6 +585,7 @@ export default function HomePage() {
       checkScrollPosition(eventsRef.current, setCanScrollEvents);
       checkScrollPosition(storiesRef.current, setCanScrollStories);
       checkScrollPosition(announcementsRef.current, setCanScrollAnnouncements);
+      checkScrollPosition(recommendationsRef.current, setCanScrollRecommendations);
     }, 500);
 
     return () => {
@@ -528,6 +628,240 @@ export default function HomePage() {
       </section>
 
       <main className="main-content">
+        {/* RECOMMENDED FOR YOU */}
+        <section className="section bg-alt recommended-section">
+          <div className="home-section-header">
+            <div className="section-title-with-icon">
+              <Sparkles className="sparkle-icon" size={24} />
+              <h2>Recommended for You</h2>
+            </div>
+            <span className="personalized-badge">
+              Personalized
+            </span>
+          </div>
+
+          {recommendationsLoading ? (
+            <div className="recommendations-loading">
+              <div className="recommendations-skeleton">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="skeleton-card">
+                    <div className="skeleton-image"></div>
+                    <div className="skeleton-content">
+                      <div className="skeleton-line"></div>
+                      <div className="skeleton-line short"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="carousel-container">
+              {canScrollRecommendations.left && (
+                <button
+                  className="home-nav-button prev"
+                  onClick={() => scroll("left", recommendationsRef.current, setCanScrollRecommendations)}
+                  aria-label="Previous"
+                >
+                  <FaChevronLeft />
+                </button>
+              )}
+
+              <div className="home-recommendations-carousel" ref={recommendationsRef}>
+                {/* Recommended Events */}
+                {recommendedEvents.slice(0, 3).map((event) => (
+                  <div className="home-recommendation-card event-card" key={`event-${event.id}`}>
+                    <div className="recommendation-header">
+                      <div className="recommendation-match-reason">
+                        <Sparkles size={12} />
+                        <span>{event.matchReason}</span>
+                      </div>
+                    </div>
+                    <div className="recommendation-content">
+                      <div className="recommendation-labels">
+                        <span className="recommendation-badge recommendation-badge-event">
+                          <Calendar size={12} />
+                          <span>Event</span>
+                        </span>
+                        <span className="recommendation-type">{event.type}</span>
+                      </div>
+                      <h3 className="recommendation-title">{event.title}</h3>
+                      <p className="recommendation-date">{event.dateText}</p>
+                      <div className="recommendation-location">
+                        <MapPin size={12} />
+                        <span>{event.location}</span>
+                      </div>
+                      {event.featuredArtisan && (
+                        <p className="recommendation-featured">
+                          Featuring: {event.featuredArtisan}
+                        </p>
+                      )}
+                      <button
+                        className="recommendation-action"
+                        onClick={() => handleViewDetails(event.title)}
+                      >
+                        View Event <FaChevronRight size={10} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Recommended Artisans */}
+                {recommendedArtisans.slice(0, 3).map((artisan) => (
+                  <div className="home-recommendation-card artisan-card" key={`artisan-${artisan.id}`}>
+                    <div className="recommendation-header">
+                      <div className="recommendation-match-reason">
+                        <Sparkles size={12} />
+                        <span>{artisan.matchReason}</span>
+                      </div>
+                    </div>
+                    <div className="recommendation-content">
+                      <div className="recommendation-labels">
+                        <span className="recommendation-badge recommendation-badge-artisan">
+                          <Store size={12} />
+                          <span>Shop</span>
+                        </span>
+                      </div>
+                      <div className="recommendation-artisan-header">
+                        <img
+                          src={artisan.avatar}
+                          alt={artisan.name}
+                          className="recommendation-avatar"
+                        />
+                        <div className="recommendation-artisan-info">
+                          <h3 className="recommendation-title">{artisan.shopName}</h3>
+                          <p className="recommendation-artist">by {artisan.name}</p>
+                        </div>
+                      </div>
+                      <div className="recommendation-tags">
+                        <span className="recommendation-tag craft-type">{artisan.craftType}</span>
+                        <span className="recommendation-tag category">{artisan.category}</span>
+                      </div>
+                      <div className="recommendation-location">
+                        <MapPin size={12} />
+                        <span>{artisan.location}</span>
+                      </div>
+                      <div className="recommendation-meta">
+                        <div className="recommendation-rating">
+                          <FaStar className="star-icon" />
+                          <span>{artisan.rating.toFixed(1)}</span>
+                        </div>
+                        <span className="recommendation-products">
+                          {artisan.productsCount} products
+                        </span>
+                      </div>
+                      <Link
+                        href={`/artisan/${artisan.id}`}
+                        className="recommendation-action"
+                      >
+                        Visit Shop <FaChevronRight size={10} />
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Show placeholder cards if no recommendations yet */}
+                {recommendedEvents.length === 0 && recommendedArtisans.length === 0 && (
+                  <>
+                    {upcomingEvents.slice(0, 3).map((event, index) => (
+                      <div className="home-recommendation-card event-card" key={`fallback-event-${index}`}>
+                        <div className="recommendation-header">
+                          <div className="recommendation-match-reason">
+                            <Sparkles size={12} />
+                            <span>Popular event</span>
+                          </div>
+                        </div>
+                        <div className="recommendation-content">
+                          <div className="recommendation-labels">
+                            <span className="recommendation-badge recommendation-badge-event">
+                              <Calendar size={12} />
+                              <span>Event</span>
+                            </span>
+                            <span className="recommendation-type">{event.type}</span>
+                          </div>
+                          <h3 className="recommendation-title">{event.title}</h3>
+                          <p className="recommendation-date">{event.date}</p>
+                          <div className="recommendation-location">
+                            <MapPin size={12} />
+                            <span>{event.location}</span>
+                          </div>
+                          <button
+                            className="recommendation-action"
+                            onClick={() => handleViewDetails(event.title)}
+                          >
+                            View Event <FaChevronRight size={10} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {topArtisans.slice(0, 3).map((artisan) => (
+                      <div className="home-recommendation-card artisan-card" key={`fallback-artisan-${artisan.id}`}>
+                        <div className="recommendation-header">
+                          <div className="recommendation-match-reason">
+                            <Sparkles size={12} />
+                            <span>Popular artisan</span>
+                          </div>
+                        </div>
+                        <div className="recommendation-content">
+                          <div className="recommendation-labels">
+                            <span className="recommendation-badge recommendation-badge-artisan">
+                              <Store size={12} />
+                              <span>Shop</span>
+                            </span>
+                          </div>
+                          <div className="recommendation-artisan-header">
+                            <img
+                              src={artisan.avatar}
+                              alt={artisan.name}
+                              className="recommendation-avatar"
+                            />
+                            <div className="recommendation-artisan-info">
+                              <h3 className="recommendation-title">{artisan.name}</h3>
+                              <p className="recommendation-artist">{artisan.craftType}</p>
+                            </div>
+                          </div>
+                          <div className="recommendation-tags">
+                            <span className="recommendation-tag craft-type">{artisan.craftType}</span>
+                            <span className="recommendation-tag category">{artisan.category}</span>
+                          </div>
+                          <div className="recommendation-location">
+                            <MapPin size={12} />
+                            <span>{artisan.location}</span>
+                          </div>
+                          <div className="recommendation-meta">
+                            <div className="recommendation-rating">
+                              <FaStar className="star-icon" />
+                              <span>{artisan.rating.toFixed(1)}</span>
+                            </div>
+                            <span className="recommendation-products">
+                              {artisan.productsCount} products
+                            </span>
+                          </div>
+                          <Link
+                            href={`/artisan/${artisan.id}`}
+                            className="recommendation-action"
+                          >
+                            Visit Shop <FaChevronRight size={10} />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+
+              {canScrollRecommendations.right && (
+                <button
+                  className="home-nav-button next"
+                  onClick={() => scroll("right", recommendationsRef.current, setCanScrollRecommendations)}
+                  aria-label="Next"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+
         {/* TOP ARTISANS */}
         <section className="section bg-white">
           <div className="home-section-header">
@@ -538,7 +872,7 @@ export default function HomePage() {
             {canScrollArtisans.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", artisansRef.current)}
+                onClick={() => scroll("left", artisansRef.current, setCanScrollArtisans)}
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -614,7 +948,7 @@ export default function HomePage() {
             {canScrollArtisans.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", artisansRef.current)}
+                onClick={() => scroll("right", artisansRef.current, setCanScrollArtisans)}
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -636,7 +970,7 @@ export default function HomePage() {
             {canScrollFeatured.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", featuredRef.current)}
+                onClick={() => scroll("left", featuredRef.current, setCanScrollFeatured)}
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -690,7 +1024,7 @@ export default function HomePage() {
             {canScrollFeatured.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", featuredRef.current)}
+                onClick={() => scroll("right", featuredRef.current, setCanScrollFeatured)}
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -712,7 +1046,7 @@ export default function HomePage() {
             {canScrollEvents.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", eventsRef.current)}
+                onClick={() => scroll("left", eventsRef.current, setCanScrollEvents)}
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -765,7 +1099,7 @@ export default function HomePage() {
             {canScrollEvents.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", eventsRef.current)}
+                onClick={() => scroll("right", eventsRef.current, setCanScrollEvents)}
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -787,7 +1121,7 @@ export default function HomePage() {
             {canScrollStories.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", storiesRef.current)}
+                onClick={() => scroll("left", storiesRef.current, setCanScrollStories)}
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -826,7 +1160,7 @@ export default function HomePage() {
             {canScrollStories.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", storiesRef.current)}
+                onClick={() => scroll("right", storiesRef.current, setCanScrollStories)}
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -848,7 +1182,7 @@ export default function HomePage() {
             {canScrollAnnouncements.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", announcementsRef.current)}
+                onClick={() => scroll("left", announcementsRef.current, setCanScrollAnnouncements)}
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -878,7 +1212,7 @@ export default function HomePage() {
             {canScrollAnnouncements.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", announcementsRef.current)}
+                onClick={() => scroll("right", announcementsRef.current, setCanScrollAnnouncements)}
                 aria-label="Next"
               >
                 <FaChevronRight />

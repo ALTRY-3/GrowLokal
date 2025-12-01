@@ -842,6 +842,28 @@
     color: #AF7928;
   }
 
+  .reminder-btn.loading {
+    opacity: 0.7;
+    cursor: wait;
+  }
+
+  /* Subscription loading spinner */
+  .subscription-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(175, 121, 40, 0.3);
+    border-top-color: #AF7928;
+    border-radius: 50%;
+    animation: subscription-spin 0.8s linear infinite;
+  }
+
+  @keyframes subscription-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
 .event-title {
   font-size: 1.2rem;
   font-weight: 600;
