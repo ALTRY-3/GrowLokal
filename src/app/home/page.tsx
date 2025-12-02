@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import ImageCarousel from "@/components/ImageCarousel1";
 import ProductModal from "@/components/ProductModal"; // Add this import
 import { useWishlist } from "@/lib/useWishlist";
-import { FaStar, FaSparkles } from "react-icons/fa";
+import { FaStar } from "react-icons/fa";
 import { MapPin, Sparkles } from "lucide-react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Calendar } from "lucide-react";
@@ -347,19 +347,23 @@ export default function HomePage() {
   const [eventReminders, setEventReminders] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null); // Change this
-  
+
   // Recommendations state
-  const [recommendedEvents, setRecommendedEvents] = useState<RecommendedEvent[]>([]);
-  const [recommendedArtisans, setRecommendedArtisans] = useState<RecommendedArtisan[]>([]);
+  const [recommendedEvents, setRecommendedEvents] = useState<
+    RecommendedEvent[]
+  >([]);
+  const [recommendedArtisans, setRecommendedArtisans] = useState<
+    RecommendedArtisan[]
+  >([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(true);
   const [canScrollRecommendations, setCanScrollRecommendations] = useState({
     left: false,
     right: true,
   });
-  
+
   // Use wishlist hook instead of local state
   const { isInWishlist, toggleWishlist } = useWishlist();
-  
+
   const router = useRouter();
 
   // Add state to track scroll positions for each carousel
@@ -376,10 +380,6 @@ export default function HomePage() {
     right: true,
   });
   const [canScrollStories, setCanScrollStories] = useState({
-    left: false,
-    right: true,
-  });
-  const [canScrollAnnouncements, setCanScrollAnnouncements] = useState({
     left: false,
     right: true,
   });
@@ -405,7 +405,6 @@ export default function HomePage() {
   const featuredRef = useRef<HTMLDivElement>(null);
   const artisansRef = useRef<HTMLDivElement>(null);
   const eventsRef = useRef<HTMLDivElement>(null);
-  const announcementsRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
   const recommendationsRef = useRef<HTMLDivElement>(null);
 
@@ -413,28 +412,38 @@ export default function HomePage() {
   const fetchRecommendations = useCallback(async () => {
     try {
       setRecommendationsLoading(true);
-      
+
       // Get user preferences from localStorage
-      const viewedCategories = JSON.parse(localStorage.getItem('viewedCategories') || '[]');
-      const interests = JSON.parse(localStorage.getItem('userInterests') || '[]');
-      const recentSearches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-      const userLocation = localStorage.getItem('userLocation') || '';
-      
+      const viewedCategories = JSON.parse(
+        localStorage.getItem("viewedCategories") || "[]"
+      );
+      const interests = JSON.parse(
+        localStorage.getItem("userInterests") || "[]"
+      );
+      const recentSearches = JSON.parse(
+        localStorage.getItem("recentSearches") || "[]"
+      );
+      const userLocation = localStorage.getItem("userLocation") || "";
+
       const params = new URLSearchParams();
-      if (viewedCategories.length) params.set('viewedCategories', viewedCategories.join(','));
-      if (interests.length) params.set('interests', interests.join(','));
-      if (recentSearches.length) params.set('recentSearches', recentSearches.slice(0, 5).join(','));
-      if (userLocation) params.set('userLocation', userLocation);
-      
-      const response = await fetch(`/api/home/recommendations?${params.toString()}`);
+      if (viewedCategories.length)
+        params.set("viewedCategories", viewedCategories.join(","));
+      if (interests.length) params.set("interests", interests.join(","));
+      if (recentSearches.length)
+        params.set("recentSearches", recentSearches.slice(0, 5).join(","));
+      if (userLocation) params.set("userLocation", userLocation);
+
+      const response = await fetch(
+        `/api/home/recommendations?${params.toString()}`
+      );
       const data = await response.json();
-      
+
       if (data.success) {
         setRecommendedEvents(data.data.events || []);
         setRecommendedArtisans(data.data.artisans || []);
       }
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
+      console.error("Error fetching recommendations:", error);
     } finally {
       setRecommendationsLoading(false);
     }
@@ -449,7 +458,10 @@ export default function HomePage() {
     if (!recommendationsLoading) {
       // Small delay to ensure DOM is updated
       const timer = setTimeout(() => {
-        checkScrollPosition(recommendationsRef.current, setCanScrollRecommendations);
+        checkScrollPosition(
+          recommendationsRef.current,
+          setCanScrollRecommendations
+        );
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -472,7 +484,9 @@ export default function HomePage() {
   const scroll = (
     direction: "left" | "right",
     container: HTMLDivElement | null,
-    setCanScroll?: React.Dispatch<React.SetStateAction<{ left: boolean; right: boolean }>>
+    setCanScroll?: React.Dispatch<
+      React.SetStateAction<{ left: boolean; right: boolean }>
+    >
   ): void => {
     if (!container) return;
     const cardWidth = 312;
@@ -553,10 +567,6 @@ export default function HomePage() {
         checkScrollPosition(eventsRef.current, setCanScrollEvents);
         checkScrollPosition(storiesRef.current, setCanScrollStories);
         checkScrollPosition(
-          announcementsRef.current,
-          setCanScrollAnnouncements
-        );
-        checkScrollPosition(
           recommendationsRef.current,
           setCanScrollRecommendations
         );
@@ -568,7 +578,6 @@ export default function HomePage() {
       artisansRef.current,
       eventsRef.current,
       storiesRef.current,
-      announcementsRef.current,
       recommendationsRef.current,
     ];
 
@@ -584,8 +593,10 @@ export default function HomePage() {
       checkScrollPosition(artisansRef.current, setCanScrollArtisans);
       checkScrollPosition(eventsRef.current, setCanScrollEvents);
       checkScrollPosition(storiesRef.current, setCanScrollStories);
-      checkScrollPosition(announcementsRef.current, setCanScrollAnnouncements);
-      checkScrollPosition(recommendationsRef.current, setCanScrollRecommendations);
+      checkScrollPosition(
+        recommendationsRef.current,
+        setCanScrollRecommendations
+      );
     }, 500);
 
     return () => {
@@ -635,9 +646,7 @@ export default function HomePage() {
               <Sparkles className="sparkle-icon" size={24} />
               <h2>Recommended for You</h2>
             </div>
-            <span className="personalized-badge">
-              Personalized
-            </span>
+            <span className="personalized-badge">Personalized</span>
           </div>
 
           {recommendationsLoading ? (
@@ -659,17 +668,29 @@ export default function HomePage() {
               {canScrollRecommendations.left && (
                 <button
                   className="home-nav-button prev"
-                  onClick={() => scroll("left", recommendationsRef.current, setCanScrollRecommendations)}
+                  onClick={() =>
+                    scroll(
+                      "left",
+                      recommendationsRef.current,
+                      setCanScrollRecommendations
+                    )
+                  }
                   aria-label="Previous"
                 >
                   <FaChevronLeft />
                 </button>
               )}
 
-              <div className="home-recommendations-carousel" ref={recommendationsRef}>
+              <div
+                className="home-recommendations-carousel"
+                ref={recommendationsRef}
+              >
                 {/* Recommended Events */}
                 {recommendedEvents.slice(0, 3).map((event) => (
-                  <div className="home-recommendation-card event-card" key={`event-${event.id}`}>
+                  <div
+                    className="home-recommendation-card event-card"
+                    key={`event-${event.id}`}
+                  >
                     <div className="recommendation-header">
                       <div className="recommendation-match-reason">
                         <Sparkles size={12} />
@@ -682,7 +703,9 @@ export default function HomePage() {
                           <Calendar size={12} />
                           <span>Event</span>
                         </span>
-                        <span className="recommendation-type">{event.type}</span>
+                        <span className="recommendation-type">
+                          {event.type}
+                        </span>
                       </div>
                       <h3 className="recommendation-title">{event.title}</h3>
                       <p className="recommendation-date">{event.dateText}</p>
@@ -707,7 +730,10 @@ export default function HomePage() {
 
                 {/* Recommended Artisans */}
                 {recommendedArtisans.slice(0, 3).map((artisan) => (
-                  <div className="home-recommendation-card artisan-card" key={`artisan-${artisan.id}`}>
+                  <div
+                    className="home-recommendation-card artisan-card"
+                    key={`artisan-${artisan.id}`}
+                  >
                     <div className="recommendation-header">
                       <div className="recommendation-match-reason">
                         <Sparkles size={12} />
@@ -728,13 +754,21 @@ export default function HomePage() {
                           className="recommendation-avatar"
                         />
                         <div className="recommendation-artisan-info">
-                          <h3 className="recommendation-title">{artisan.shopName}</h3>
-                          <p className="recommendation-artist">by {artisan.name}</p>
+                          <h3 className="recommendation-title">
+                            {artisan.shopName}
+                          </h3>
+                          <p className="recommendation-artist">
+                            by {artisan.name}
+                          </p>
                         </div>
                       </div>
                       <div className="recommendation-tags">
-                        <span className="recommendation-tag craft-type">{artisan.craftType}</span>
-                        <span className="recommendation-tag category">{artisan.category}</span>
+                        <span className="recommendation-tag craft-type">
+                          {artisan.craftType}
+                        </span>
+                        <span className="recommendation-tag category">
+                          {artisan.category}
+                        </span>
                       </div>
                       <div className="recommendation-location">
                         <MapPin size={12} />
@@ -760,99 +794,124 @@ export default function HomePage() {
                 ))}
 
                 {/* Show placeholder cards if no recommendations yet */}
-                {recommendedEvents.length === 0 && recommendedArtisans.length === 0 && (
-                  <>
-                    {upcomingEvents.slice(0, 3).map((event, index) => (
-                      <div className="home-recommendation-card event-card" key={`fallback-event-${index}`}>
-                        <div className="recommendation-header">
-                          <div className="recommendation-match-reason">
-                            <Sparkles size={12} />
-                            <span>Popular event</span>
-                          </div>
-                        </div>
-                        <div className="recommendation-content">
-                          <div className="recommendation-labels">
-                            <span className="recommendation-badge recommendation-badge-event">
-                              <Calendar size={12} />
-                              <span>Event</span>
-                            </span>
-                            <span className="recommendation-type">{event.type}</span>
-                          </div>
-                          <h3 className="recommendation-title">{event.title}</h3>
-                          <p className="recommendation-date">{event.date}</p>
-                          <div className="recommendation-location">
-                            <MapPin size={12} />
-                            <span>{event.location}</span>
-                          </div>
-                          <button
-                            className="recommendation-action"
-                            onClick={() => handleViewDetails(event.title)}
-                          >
-                            View Event <FaChevronRight size={10} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {topArtisans.slice(0, 3).map((artisan) => (
-                      <div className="home-recommendation-card artisan-card" key={`fallback-artisan-${artisan.id}`}>
-                        <div className="recommendation-header">
-                          <div className="recommendation-match-reason">
-                            <Sparkles size={12} />
-                            <span>Popular artisan</span>
-                          </div>
-                        </div>
-                        <div className="recommendation-content">
-                          <div className="recommendation-labels">
-                            <span className="recommendation-badge recommendation-badge-artisan">
-                              <Store size={12} />
-                              <span>Shop</span>
-                            </span>
-                          </div>
-                          <div className="recommendation-artisan-header">
-                            <img
-                              src={artisan.avatar}
-                              alt={artisan.name}
-                              className="recommendation-avatar"
-                            />
-                            <div className="recommendation-artisan-info">
-                              <h3 className="recommendation-title">{artisan.name}</h3>
-                              <p className="recommendation-artist">{artisan.craftType}</p>
+                {recommendedEvents.length === 0 &&
+                  recommendedArtisans.length === 0 && (
+                    <>
+                      {upcomingEvents.slice(0, 3).map((event, index) => (
+                        <div
+                          className="home-recommendation-card event-card"
+                          key={`fallback-event-${index}`}
+                        >
+                          <div className="recommendation-header">
+                            <div className="recommendation-match-reason">
+                              <Sparkles size={12} />
+                              <span>Popular event</span>
                             </div>
                           </div>
-                          <div className="recommendation-tags">
-                            <span className="recommendation-tag craft-type">{artisan.craftType}</span>
-                            <span className="recommendation-tag category">{artisan.category}</span>
-                          </div>
-                          <div className="recommendation-location">
-                            <MapPin size={12} />
-                            <span>{artisan.location}</span>
-                          </div>
-                          <div className="recommendation-meta">
-                            <div className="recommendation-rating">
-                              <FaStar className="star-icon" />
-                              <span>{artisan.rating.toFixed(1)}</span>
+                          <div className="recommendation-content">
+                            <div className="recommendation-labels">
+                              <span className="recommendation-badge recommendation-badge-event">
+                                <Calendar size={12} />
+                                <span>Event</span>
+                              </span>
+                              <span className="recommendation-type">
+                                {event.type}
+                              </span>
                             </div>
-                            <span className="recommendation-products">
-                              {artisan.productsCount} products
-                            </span>
+                            <h3 className="recommendation-title">
+                              {event.title}
+                            </h3>
+                            <p className="recommendation-date">{event.date}</p>
+                            <div className="recommendation-location">
+                              <MapPin size={12} />
+                              <span>{event.location}</span>
+                            </div>
+                            <button
+                              className="recommendation-action"
+                              onClick={() => handleViewDetails(event.title)}
+                            >
+                              View Event <FaChevronRight size={10} />
+                            </button>
                           </div>
-                          <Link
-                            href={`/artisan/${artisan.id}`}
-                            className="recommendation-action"
-                          >
-                            Visit Shop <FaChevronRight size={10} />
-                          </Link>
                         </div>
-                      </div>
-                    ))}
-                  </>
-                )}
+                      ))}
+                      {topArtisans.slice(0, 3).map((artisan) => (
+                        <div
+                          className="home-recommendation-card artisan-card"
+                          key={`fallback-artisan-${artisan.id}`}
+                        >
+                          <div className="recommendation-header">
+                            <div className="recommendation-match-reason">
+                              <Sparkles size={12} />
+                              <span>Popular artisan</span>
+                            </div>
+                          </div>
+                          <div className="recommendation-content">
+                            <div className="recommendation-labels">
+                              <span className="recommendation-badge recommendation-badge-artisan">
+                                <Store size={12} />
+                                <span>Shop</span>
+                              </span>
+                            </div>
+                            <div className="recommendation-artisan-header">
+                              <img
+                                src={artisan.avatar}
+                                alt={artisan.name}
+                                className="recommendation-avatar"
+                              />
+                              <div className="recommendation-artisan-info">
+                                <h3 className="recommendation-title">
+                                  {artisan.name}
+                                </h3>
+                                <p className="recommendation-artist">
+                                  {artisan.craftType}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="recommendation-tags">
+                              <span className="recommendation-tag craft-type">
+                                {artisan.craftType}
+                              </span>
+                              <span className="recommendation-tag category">
+                                {artisan.category}
+                              </span>
+                            </div>
+                            <div className="recommendation-location">
+                              <MapPin size={12} />
+                              <span>{artisan.location}</span>
+                            </div>
+                            <div className="recommendation-meta">
+                              <div className="recommendation-rating">
+                                <FaStar className="star-icon" />
+                                <span>{artisan.rating.toFixed(1)}</span>
+                              </div>
+                              <span className="recommendation-products">
+                                {artisan.productsCount} products
+                              </span>
+                            </div>
+                            <Link
+                              href={`/artisan/${artisan.id}`}
+                              className="recommendation-action"
+                            >
+                              Visit Shop <FaChevronRight size={10} />
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
               </div>
 
               {canScrollRecommendations.right && (
                 <button
                   className="home-nav-button next"
-                  onClick={() => scroll("right", recommendationsRef.current, setCanScrollRecommendations)}
+                  onClick={() =>
+                    scroll(
+                      "right",
+                      recommendationsRef.current,
+                      setCanScrollRecommendations
+                    )
+                  }
                   aria-label="Next"
                 >
                   <FaChevronRight />
@@ -872,7 +931,9 @@ export default function HomePage() {
             {canScrollArtisans.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", artisansRef.current, setCanScrollArtisans)}
+                onClick={() =>
+                  scroll("left", artisansRef.current, setCanScrollArtisans)
+                }
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -948,7 +1009,9 @@ export default function HomePage() {
             {canScrollArtisans.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", artisansRef.current, setCanScrollArtisans)}
+                onClick={() =>
+                  scroll("right", artisansRef.current, setCanScrollArtisans)
+                }
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -970,7 +1033,9 @@ export default function HomePage() {
             {canScrollFeatured.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", featuredRef.current, setCanScrollFeatured)}
+                onClick={() =>
+                  scroll("left", featuredRef.current, setCanScrollFeatured)
+                }
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -1024,7 +1089,9 @@ export default function HomePage() {
             {canScrollFeatured.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", featuredRef.current, setCanScrollFeatured)}
+                onClick={() =>
+                  scroll("right", featuredRef.current, setCanScrollFeatured)
+                }
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -1046,7 +1113,9 @@ export default function HomePage() {
             {canScrollEvents.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", eventsRef.current, setCanScrollEvents)}
+                onClick={() =>
+                  scroll("left", eventsRef.current, setCanScrollEvents)
+                }
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -1099,7 +1168,9 @@ export default function HomePage() {
             {canScrollEvents.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", eventsRef.current, setCanScrollEvents)}
+                onClick={() =>
+                  scroll("right", eventsRef.current, setCanScrollEvents)
+                }
                 aria-label="Next"
               >
                 <FaChevronRight />
@@ -1121,7 +1192,9 @@ export default function HomePage() {
             {canScrollStories.left && (
               <button
                 className="home-nav-button prev"
-                onClick={() => scroll("left", storiesRef.current, setCanScrollStories)}
+                onClick={() =>
+                  scroll("left", storiesRef.current, setCanScrollStories)
+                }
                 aria-label="Previous"
               >
                 <FaChevronLeft />
@@ -1160,59 +1233,9 @@ export default function HomePage() {
             {canScrollStories.right && (
               <button
                 className="home-nav-button next"
-                onClick={() => scroll("right", storiesRef.current, setCanScrollStories)}
-                aria-label="Next"
-              >
-                <FaChevronRight />
-              </button>
-            )}
-          </div>
-        </section>
-
-        {/* ANNOUNCEMENTS */}
-        <section className="section bg-white">
-          <div className="home-section-header">
-            <h2>Community Announcements</h2>
-            <div className="header-right">
-              <Megaphone size={24} className="megaphone-icon" />
-            </div>
-          </div>
-
-          <div className="carousel-container">
-            {canScrollAnnouncements.left && (
-              <button
-                className="home-nav-button prev"
-                onClick={() => scroll("left", announcementsRef.current, setCanScrollAnnouncements)}
-                aria-label="Previous"
-              >
-                <FaChevronLeft />
-              </button>
-            )}
-
-            <div className="home-announcement-carousel" ref={announcementsRef}>
-              {announcements.map((announcement, index) => (
-                <div className="home-announcement-card" key={index}>
-                  <div className="home-announcement-content">
-                    <div className="announcement-title-row">
-                      <h3 className="home-announcement-title">
-                        {announcement.title}
-                      </h3>
-                      <span className="home-announcement-date">
-                        {announcement.date}
-                      </span>
-                    </div>
-                    <p className="home-announcement-description">
-                      {announcement.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {canScrollAnnouncements.right && (
-              <button
-                className="home-nav-button next"
-                onClick={() => scroll("right", announcementsRef.current, setCanScrollAnnouncements)}
+                onClick={() =>
+                  scroll("right", storiesRef.current, setCanScrollStories)
+                }
                 aria-label="Next"
               >
                 <FaChevronRight />

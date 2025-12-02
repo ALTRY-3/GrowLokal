@@ -1,4 +1,4 @@
-import { NextAuthOptions, type RequestInternal } from "next-auth";
+import { NextAuthOptions, type RequestInternal, type Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -7,6 +7,27 @@ import User from "@/models/User";
 import connectDB from "@/lib/mongodb";
 import { checkRateLimit, resetRateLimit } from "@/lib/rateLimit";
 import { checkAccountLockout, recordFailedLogin, resetFailedLogins } from "@/lib/accountLockout";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email?: string | null;
+      name?: string | null;
+      image?: string | null;
+      isSeller?: boolean;
+      shopName?: string | null;
+      rememberMe?: boolean;
+    };
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    rememberMe?: boolean;
+  }
+}
 
 type CredentialsAuthorizeRequest = Pick<RequestInternal, "headers"> | undefined;
 
@@ -194,20 +215,14 @@ export const authOptions: NextAuthOptions = {
       
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: Session; token: JWT }) {
       if (token) {
-        if (token.id) {
-          session.user.id = token.id;
-        }
-        if (token.email) {
-          session.user.email = token.email;
-        }
-        if (token.name) {
-          session.user.name = token.name;
-        }
-        if (token.image) {
-          session.user.image = token.image;
-        }
+        const user = session.user as any;
+        user.id = (token.id as string) || '';
+        user.email = (token.email as string) || null;
+        user.name = (token.name as string) || null;
+        user.image = (token.image as string) || null;
+        user.rememberMe = (token.rememberMe as boolean) || false;
         
         // Fetch seller status from database
         try {
@@ -215,8 +230,8 @@ export const authOptions: NextAuthOptions = {
             await connectDB();
             const userRecord = await User.findById(token.id).select('isSeller sellerProfile');
             if (userRecord) {
-              session.user.isSeller = userRecord.isSeller || false;
-              session.user.shopName = userRecord.sellerProfile?.shopName || null;
+              user.isSeller = userRecord.isSeller || false;
+              user.shopName = userRecord.sellerProfile?.shopName || null;
             }
           }
         } catch (error) {
@@ -232,7 +247,7 @@ export const authOptions: NextAuthOptions = {
           // 1 day for session cookie (expires on browser close)
           session.expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         }
-        session.user.rememberMe = rememberMe;
+        user.rememberMe = rememberMe;
       }
       return session;
     },

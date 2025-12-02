@@ -17,7 +17,10 @@ import ProductModal from "@/components/ProductModal";
 import SearchBar from "@/components/SearchBar";
 import { SearchSuggestion, SearchResult } from "@/lib/useSearch";
 import { useCartStore } from "@/store/cartStore";
-import { usePersonalization, PersonalizedProduct } from "@/lib/usePersonalization";
+import {
+  usePersonalization,
+  PersonalizedProduct,
+} from "@/lib/usePersonalization";
 import "./marketplace.css";
 
 const craftTypes = [
@@ -346,87 +349,97 @@ export default function Marketplace() {
   }, []);
 
   // Handle enhanced search bar results
-  const handleEnhancedSearch = useCallback((query: string, results: SearchResult[]) => {
-    setSearchActive(true);
-    
-    // Track search for personalization
-    if (query.trim()) {
-      trackSearch(query);
-    }
-    
-    // Group results by category
-    const grouped = results.reduce(
-      (acc: Record<string, Product[]>, result: SearchResult) => {
-        const product: Product = {
-          _id: result._id,
-          name: result.name,
-          description: result.description,
-          category: result.category,
-          price: result.price,
-          stock: result.stock,
-          images: result.images,
-          thumbnailUrl: result.thumbnailUrl,
-          artistName: result.artistName,
-          artistId: "",
-          averageRating: result.averageRating,
-          totalReviews: result.totalReviews,
-          isAvailable: result.isAvailable,
-          isFeatured: false,
-          craftType: result.craftType || "Unspecified",
-          barangay: result.barangay,
-        };
-        
-        if (!acc[result.category]) acc[result.category] = [];
-        acc[result.category].push(product);
-        return acc;
-      },
-      {}
-    );
+  const handleEnhancedSearch = useCallback(
+    (query: string, results: SearchResult[]) => {
+      setSearchActive(true);
 
-    setHandicrafts(grouped.handicrafts || []);
-    setFashion(grouped.fashion || []);
-    setHome(grouped.home || []);
-    setFood(grouped.food || []);
-    setBeauty(grouped.beauty || []);
-  }, [trackSearch]);
+      // Track search for personalization
+      if (query.trim()) {
+        trackSearch(query);
+      }
+
+      // Group results by category
+      const grouped = results.reduce(
+        (acc: Record<string, Product[]>, result: SearchResult) => {
+          const product: Product = {
+            _id: result._id,
+            name: result.name,
+            description: result.description,
+            category: result.category,
+            price: result.price,
+            stock: result.stock,
+            images: result.images,
+            thumbnailUrl: result.thumbnailUrl,
+            artistName: result.artistName,
+            artistId: "",
+            averageRating: result.averageRating,
+            totalReviews: result.totalReviews,
+            isAvailable: result.isAvailable,
+            isFeatured: false,
+            craftType: result.craftType || "Unspecified",
+            barangay: result.barangay,
+          };
+
+          if (!acc[result.category]) acc[result.category] = [];
+          acc[result.category].push(product);
+          return acc;
+        },
+        {}
+      );
+
+      setHandicrafts(grouped.handicrafts || []);
+      setFashion(grouped.fashion || []);
+      setHome(grouped.home || []);
+      setFood(grouped.food || []);
+      setBeauty(grouped.beauty || []);
+    },
+    [trackSearch]
+  );
 
   // Handle enhanced search suggestion selection
-  const handleEnhancedSuggestionSelect = useCallback((suggestion: SearchSuggestion) => {
-    if (suggestion.type === "product" && suggestion.productId) {
-      // Track product view when selecting from suggestions
-      trackProductView(suggestion.productId);
-      
-      // Fetch the product and open modal
-      fetch(`/api/products/${suggestion.productId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data) {
-            const product = data.data;
-            const categoryMap: { [key: string]: string } = {
-              handicrafts: "Handicrafts",
-              fashion: "Fashion",
-              home: "Home",
-              food: "Food",
-              beauty: "Beauty & Wellness",
-            };
-            setSelectedProduct({
-              img: product.images?.[0] || product.thumbnailUrl,
-              hoverImg: product.images?.[1] || product.images?.[0] || product.thumbnailUrl,
-              name: product.name,
-              artist: product.artistName,
-              price: `₱${product.price.toFixed(2)}`,
-              productId: product._id,
-              maxStock: product.stock,
-              craftType: product.craftType || "Unspecified",
-              category: categoryMap[product.category?.toLowerCase()] || "General",
-              barangay: product.barangay || "Unspecified",
-              soldCount: 0,
-            });
-          }
-        })
-        .catch((err) => console.error("Error fetching product:", err));
-    }
-  }, [trackProductView]);
+  const handleEnhancedSuggestionSelect = useCallback(
+    (suggestion: SearchSuggestion) => {
+      if (suggestion.type === "product" && suggestion.productId) {
+        // Track product view when selecting from suggestions
+        trackProductView(suggestion.productId);
+
+        // Fetch the product and open modal
+        fetch(`/api/products/${suggestion.productId}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.data) {
+              const product = data.data;
+              const categoryMap: { [key: string]: string } = {
+                handicrafts: "Handicrafts",
+                fashion: "Fashion",
+                home: "Home",
+                food: "Food",
+                beauty: "Beauty & Wellness",
+              };
+              setSelectedProduct({
+                img: product.images?.[0] || product.thumbnailUrl,
+                hoverImg:
+                  product.images?.[1] ||
+                  product.images?.[0] ||
+                  product.thumbnailUrl,
+                name: product.name,
+                artist: product.artistName,
+                price: `₱${product.price.toFixed(2)}`,
+                productId: product._id,
+                maxStock: product.stock,
+                craftType: product.craftType || "Unspecified",
+                category:
+                  categoryMap[product.category?.toLowerCase()] || "General",
+                barangay: product.barangay || "Unspecified",
+                soldCount: 0,
+              });
+            }
+          })
+          .catch((err) => console.error("Error fetching product:", err));
+      }
+    },
+    [trackProductView]
+  );
 
   // Handle suggestion click - Open product modal
   const handleSuggestionClick = (product: Product) => {
@@ -913,16 +926,19 @@ export default function Marketplace() {
       </div>
 
       {/* Personalized "For You" Section - Only show when not searching */}
-      {!searchActive && (personalizedProducts.length > 0 || personalizedLoading) && (
-        <div className="category-section personalized-section">
-          <PersonalizedSection
-            products={personalizedProducts}
-            onProductClick={handlePersonalizedProductClick}
-            isLoading={personalizedLoading}
-            hasUserHistory={behavior.recentViews.length > 0 || behavior.interests.length > 0}
-          />
-        </div>
-      )}
+      {!searchActive &&
+        (personalizedProducts.length > 0 || personalizedLoading) && (
+          <div className="category-section personalized-section">
+            <PersonalizedSection
+              products={personalizedProducts}
+              onProductClick={handlePersonalizedProductClick}
+              isLoading={personalizedLoading}
+              hasUserHistory={
+                behavior.recentViews.length > 0 || behavior.interests.length > 0
+              }
+            />
+          </div>
+        )}
 
       {handicrafts.length > 0 && (
         <div className="category-section">
@@ -1266,7 +1282,10 @@ function PersonalizedSection({
   const [errorProduct, setErrorProduct] = useState<string | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
 
-  const handleAddToCart = async (product: PersonalizedProduct, e: React.MouseEvent) => {
+  const handleAddToCart = async (
+    product: PersonalizedProduct,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
 
     if (!product.isAvailable || product.stock === 0) return;
@@ -1299,12 +1318,15 @@ function PersonalizedSection({
             : "Explore our curated selection of local artisan products"}
         </div>
       </div>
-      
+
       {isLoading && products.length === 0 ? (
         <div className="product-grid personalized-grid">
           {/* Skeleton loading cards */}
           {[1, 2, 3, 4].map((i) => (
-            <div className="product-card personalized-card skeleton-card" key={`skeleton-${i}`}>
+            <div
+              className="product-card personalized-card skeleton-card"
+              key={`skeleton-${i}`}
+            >
               <div className="image-container skeleton-image"></div>
               <div className="product-info">
                 <div className="skeleton-line skeleton-title"></div>
@@ -1332,7 +1354,11 @@ function PersonalizedSection({
                   className="product-image default"
                 />
                 <img
-                  src={product.images[1] || product.images[0] || product.thumbnailUrl}
+                  src={
+                    product.images[1] ||
+                    product.images[0] ||
+                    product.thumbnailUrl
+                  }
                   alt={product.name}
                   className="product-image hover"
                 />
@@ -1344,12 +1370,15 @@ function PersonalizedSection({
                       {product.recommendationReason}
                     </span>
                   )}
-                  {product.averageRating >= 4.0 && product.totalReviews >= 3 && (
-                    <span className="product-label trending">
-                      <FaStar style={{ marginRight: '3px', fontSize: '0.55rem' }} />
-                      {product.averageRating.toFixed(1)}
-                    </span>
-                  )}
+                  {product.averageRating >= 4.0 &&
+                    product.totalReviews >= 3 && (
+                      <span className="product-label trending">
+                        <FaStar
+                          style={{ marginRight: "3px", fontSize: "0.55rem" }}
+                        />
+                        {product.averageRating.toFixed(1)}
+                      </span>
+                    )}
                 </div>
 
                 {/* Add to cart icon */}

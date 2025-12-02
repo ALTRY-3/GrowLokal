@@ -145,39 +145,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="app-container">
+    <div className="login-app-container">
       {/* Left Panel */}
-      <div className="left-panel">
-        <div className="pattern-overlay">
+      <div className="login-left-panel">
+        <div className="login-pattern-overlay">
           <Image
             src="/left-panel.svg"
             alt="Traditional Pattern"
-            className="left-pattern"
+            className="login-left-pattern"
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
             unoptimized
           />
         </div>
-        <div className="left-content">
-          <div className="logo-section">
-            <div className="logo-icon">
+        <div className="login-left-content">
+          <div className="login-logo-section">
+            <div className="login-logo-icon">
               <Image
                 src="/logo.svg"
                 alt="GrowLokal Logo"
-                className="logo-image"
+                className="login-logo-image"
                 width={48}
                 height={48}
               />
             </div>
-            <span className="logo-text">GROWLOKAL</span>
+            <span className="login-logo-text">GROWLOKAL</span>
           </div>
 
-          <div className="hero-section">
-            <h1 className="hero-title">
+          <div className="login-hero-section">
+            <h1 className="login-hero-title">
               Discover Olongapo's heart in every craft.
             </h1>
-            <p className="hero-subtitle">
+            <p className="login-hero-subtitle">
               Experience the stories behind every handmade creation.
             </p>
           </div>
@@ -187,13 +187,13 @@ export default function LoginPage() {
       </div>
 
       {/* Right Panel */}
-      <div className="right-panel">
+      <div className="login-right-panel">
         <div className="login-container">
           <div className="login-header">
             <h2>Login</h2>
             <p>
               Don&apos;t have an account yet?{" "}
-              <Link href="/signup" className="signup-link">
+              <Link href="/signup" className="login-signup-link">
                 Signup
               </Link>
             </p>
@@ -201,14 +201,14 @@ export default function LoginPage() {
 
           <form className="login-form" onSubmit={handleSubmit}>
             {successMessage && (
-              <div className="success-message">
+              <div className="login-success-message">
                 <i className="fas fa-check-circle"></i>
                 {successMessage}
               </div>
             )}
 
             {error && (
-              <div className="error-message">
+              <div className="login-error-message">
                 <i className="fas fa-exclamation-triangle"></i>
                 {error}
                 {showResendVerification && formData.email && (
@@ -233,25 +233,25 @@ export default function LoginPage() {
               </div>
             )}
 
-            <div className="input-group">
+            <div className="login-input-group">
               <input
                 type="email"
                 name="email"
                 placeholder="Email"
-                className="form-input"
+                className="login-form-input"
                 value={formData.email}
                 onChange={handleInputChange}
                 required
               />
-              <i className="fas fa-envelope input-icon"></i>
+              <i className="fas fa-envelope login-input-icon"></i>
             </div>
 
-            <div className="input-group">
+            <div className="login-input-group">
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
-                className="form-input"
+                className="login-form-input"
                 value={formData.password}
                 onChange={handleInputChange}
                 required
@@ -259,22 +259,22 @@ export default function LoginPage() {
               <i
                 className={`fas ${
                   showPassword ? "fa-eye-slash" : "fa-eye"
-                } input-icon password-toggle`}
+                } login-input-icon login-password-toggle`}
                 onClick={() => setShowPassword(!showPassword)}
               ></i>
             </div>
 
-            <div className="form-options">
-              <label className="checkbox-container">
+            <div className="login-form-options">
+              <label className="login-checkbox-container">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                 />
-                <span className="checkmark"></span>
+                <span className="login-checkmark"></span>
                 Remember me
               </label>
-              <Link href="/forgot-password" className="forgot-password">
+              <Link href="/forgot-password" className="login-forgot-password">
                 Forgot password?
               </Link>
             </div>
@@ -295,13 +295,13 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="divider">
+          <div className="login-divider">
             <span>OR LOGIN WITH</span>
           </div>
 
-          <div className="social-login">
+          <div className="login-social-login">
             <button
-              className="social-button facebook"
+              className="login-social-button facebook"
               onClick={() => handleSocialLogin("facebook")}
               type="button"
               disabled={isLoading || socialLoading !== null}
@@ -318,7 +318,7 @@ export default function LoginPage() {
               ) : (
                 <Image
                   src="/facebook.svg"
-                  className="social-icon"
+                  className="login-social-icon"
                   alt="Facebook"
                   width={20}
                   height={20}
@@ -326,7 +326,7 @@ export default function LoginPage() {
               )}
             </button>
             <button
-              className="social-button google"
+              className="login-social-button google"
               onClick={() => handleSocialLogin("google")}
               type="button"
               disabled={isLoading || socialLoading !== null}
@@ -343,7 +343,7 @@ export default function LoginPage() {
               ) : (
                 <Image
                   src="/google.svg"
-                  className="social-icon"
+                  className="login-social-icon"
                   alt="Google"
                   width={20}
                   height={20}

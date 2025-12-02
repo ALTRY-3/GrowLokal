@@ -1159,82 +1159,7 @@
   }
 }
 
-/* ====== COMMUNITY ANNOUNCEMENTS ====== */
-
-.home-announcement-carousel {
-  display: flex;
-  gap: 1.5rem;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  padding: 0.5rem 0;
-}
-
-.home-announcement-carousel::-webkit-scrollbar {
-  display: none;
-}
-
-.home-announcement-card {
-  flex: 0 0 auto;
-  width: 450px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  padding: 1.25rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.home-announcement-card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-.home-announcement-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.announcement-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.5rem;
-}
-
-.home-announcement-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2e3f36;
-  margin: 0;
-  flex: 1;
-}
-
-.home-announcement-date {
-  display: inline-block;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-size: 0.95rem;
-  color: #666;
-  font-weight: 500;
-  white-space: nowrap;
-  margin-left: 1rem;
-}
-
-.home-announcement-description {
-  font-size: 0.9rem;
-  color: #444;
-  margin: 0;
-  line-height: 1.5;
-}
-
 .home-story-read-more,
-.home-announcement-read-more,
 .home-artisan-read-more {
   margin-top: auto;
   align-self: flex-end;
@@ -1254,7 +1179,6 @@
 }
 
 .home-story-read-more:hover,
-.home-announcement-read-more:hover,
 .home-artisan-read-more:hover {
   background: #936520;
   transform: translateY(-2px);
@@ -1262,7 +1186,6 @@
 }
 
 .home-story-read-more:hover .arrow,
-.home-announcement-read-more:hover .arrow,
 .home-artisan-read-more:hover .arrow {
   transform: translateX(4px);
 }
@@ -1456,10 +1379,6 @@
 
   .home-event-type {
     font-size: 0.7rem;
-  }
-
-  .home-announcement-card {
-    width: 400px;
   }
 
   .cta-content h2 {
@@ -1689,23 +1608,6 @@
   .book-experience-btn {
     padding: 0.5rem 0.9rem;
     font-size: 0.75rem;
-  }
-
-  /* Announcements */
-  .home-announcement-card {
-    width: 320px;
-  }
-
-  .home-announcement-title {
-    font-size: 1rem;
-  }
-
-  .home-announcement-date {
-    font-size: 1rem;
-  }
-
-  .home-announcement-description {
-    font-size: 0.85rem;
   }
 
   /* CTA */
@@ -1969,43 +1871,6 @@
   .home-event-view-details {
     font-size: 12px;
     padding: 6px;
-  }
-
-  /* Announcements */
-  .home-announcement-card {
-    width: 280px;
-    padding: 1rem;
-  }
-
-  .announcement-title-row {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
-  .home-announcement-title {
-    font-size: 0.9rem;
-  }
-
-  .home-announcement-date {
-    font-size: 0.9rem;
-    display: inline-block;
-    align-self: flex-start;
-    margin-left: auto;
-  }
-
-  .home-announcement-title {
-    font-size: 0.95rem;
-  }
-
-  .home-announcement-date {
-    font-size: 0.95rem;
-    display: inline-block;
-    align-self: flex-start;
-    margin-left: auto;
-  }
-
-  .home-announcement-description {
-    font-size: 0.8rem;
   }
 
   /* CTA */
@@ -2283,44 +2148,6 @@
     padding: 5px;
     margin-top: -0.5rem;
   }
-  /* Announcements */
-  .home-announcement-card {
-    width: 240px;
-    padding: 0.8rem;
-  }
-
-  .announcement-title-row {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
-  .announcement-title-row {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
-  .home-announcement-title {
-    font-size: 0.65rem;
-  }
-
-  .home-announcement-date {
-    font-size: 0.65rem;
-    display: inline-block;
-    align-self: flex-start;
-    margin-left: auto;
-  }
-
-  .home-announcement-date {
-    font-size: 0.65rem;
-    display: inline-block;
-    align-self: flex-start;
-    margin-left: auto;
-  }
-
-  .home-announcement-description {
-    font-size: 8px;
-  }
-
   /* CTA */
   .become-seller-cta {
     padding: 2rem 0.75rem;
@@ -2387,7 +2214,7 @@
 
 /* Loading skeleton */
 .recommendations-loading {
-  padding: 0 4rem;
+  padding: 0 5rem;
 }
 
 .recommendations-skeleton {
@@ -2440,8 +2267,6 @@
   overflow-x: auto;
   overflow-y: visible;
   scroll-behavior: smooth;
-  padding: 0.5rem 4rem 1rem;
-  -ms-overflow-style: none;
   scrollbar-width: none;
   align-items: stretch;
 }
@@ -2579,6 +2404,7 @@
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
