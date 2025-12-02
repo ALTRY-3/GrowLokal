@@ -926,19 +926,18 @@ export default function Marketplace() {
       </div>
 
       {/* Personalized "For You" Section - Only show when not searching */}
-      {!searchActive &&
-        (personalizedProducts.length > 0 || personalizedLoading) && (
-          <div className="category-section personalized-section">
-            <PersonalizedSection
-              products={personalizedProducts}
-              onProductClick={handlePersonalizedProductClick}
-              isLoading={personalizedLoading}
-              hasUserHistory={
-                behavior.recentViews.length > 0 || behavior.interests.length > 0
-              }
-            />
-          </div>
-        )}
+      {!searchActive && (
+        <div className="category-section personalized-section">
+          <PersonalizedSection
+            products={personalizedProducts}
+            onProductClick={handlePersonalizedProductClick}
+            isLoading={personalizedLoading}
+            hasUserHistory={
+              behavior.recentViews.length > 0 || behavior.interests.length > 0
+            }
+          />
+        </div>
+      )}
 
       {handicrafts.length > 0 && (
         <div className="category-section">
@@ -1304,6 +1303,11 @@ function PersonalizedSection({
       setTimeout(() => setErrorProduct(null), 2000);
     }
   };
+
+  // Don't render section if no products and not loading
+  if (!isLoading && products.length === 0) {
+    return null;
+  }
 
   return (
     <>

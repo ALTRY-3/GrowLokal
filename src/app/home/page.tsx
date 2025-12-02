@@ -2,13 +2,18 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ImageCarousel from "@/components/ImageCarousel1";
 import ProductModal from "@/components/ProductModal"; // Add this import
 import { useWishlist } from "@/lib/useWishlist";
 import { FaStar } from "react-icons/fa";
-import { MapPin, Sparkles } from "lucide-react";
+
+const HomeMapPreview = dynamic(() => import("@/components/HomeMapPreview"), {
+  ssr: false,
+});
+import { MapPin, Sparkles, Globe, Flame } from "lucide-react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Calendar } from "lucide-react";
 import { Megaphone, Store } from "lucide-react";
@@ -313,6 +318,236 @@ const artisanStories = [
   },
 ];
 
+// ===== MOCK DATA FOR NEW SECTIONS =====
+
+// Trending Crafts data
+const trendingCrafts = [
+  {
+    id: 101,
+    name: "Handwoven Buri Bag",
+    price: 79,
+    artist: "Aba Dela Cruz",
+    category: "Handicrafts",
+    craftType: "Weaving",
+    barangay: "Asinan",
+    image: "/box7.png",
+    trendingCount: 243,
+  },
+  {
+    id: 102,
+    name: "Embroidered Shawls",
+    price: 699,
+    artist: "David Delo Santos",
+    category: "Fashion",
+    craftType: "Embroidery",
+    barangay: "East Bajac-Bajac",
+    image: "/fashion5.png",
+    trendingCount: 189,
+  },
+  {
+    id: 103,
+    name: "Hardin Beaded Earrings",
+    price: 499,
+    artist: "Frances Toyang",
+    category: "Handicrafts",
+    craftType: "Jewelry Making",
+    barangay: "Kalaklan",
+    image: "/box6.png",
+    trendingCount: 156,
+  },
+  {
+    id: 104,
+    name: "Rice Grooved Kuksa Mug",
+    price: 449,
+    artist: "Ben Yap",
+    category: "Handicrafts",
+    craftType: "Woodwork",
+    barangay: "Banicain",
+    image: "/home6.png",
+    trendingCount: 134,
+  },
+];
+
+// Trending Artisan Shops data
+const trendingArtisans = [
+  {
+    id: 201,
+    name: "Aba Dela Cruz",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aba",
+    craftType: "Weaving",
+    category: "Handicrafts",
+    location: "Asinan",
+    rating: 4.8,
+    productsCount: 24,
+    viewsThisWeek: 487,
+  },
+  {
+    id: 202,
+    name: "Ben Yap",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ben",
+    craftType: "Woodwork",
+    category: "Handicrafts",
+    location: "Banicain",
+    rating: 4.6,
+    productsCount: 18,
+    viewsThisWeek: 412,
+  },
+  {
+    id: 203,
+    name: "David Delo Santos",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=David",
+    craftType: "Embroidery",
+    category: "Fashion",
+    location: "East Bajac-Bajac",
+    rating: 4.6,
+    productsCount: 18,
+    viewsThisWeek: 356,
+  },
+  {
+    id: 204,
+    name: "Frances Toyang",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Frances",
+    craftType: "Jewelry Making",
+    category: "Handicrafts",
+    location: "Kalaklan",
+    rating: 4.7,
+    productsCount: 21,
+    viewsThisWeek: 298,
+  },
+];
+
+// Trending Local Events data
+const trendingEvents = [
+  {
+    id: 301,
+    title: "Handcraft Workshop: Buri Weaving",
+    date: "Dec 15, 2024",
+    location: "Asinan Community Center",
+    type: "Workshop",
+    viewsThisWeek: 234,
+  },
+  {
+    id: 302,
+    title: "Olongapo Artisan Market",
+    date: "Dec 16, 2024",
+    location: "Subic Bay Freeport Zone",
+    type: "Market",
+    viewsThisWeek: 189,
+  },
+  {
+    id: 303,
+    title: "Cultural Heritage Tour",
+    date: "Dec 17, 2024",
+    location: "Downtown Olongapo",
+    type: "Tour",
+    viewsThisWeek: 156,
+  },
+  {
+    id: 304,
+    title: "Local Craft Fair 2024",
+    date: "Dec 22, 2024",
+    location: "Olongapo Convention Center",
+    type: "Fair",
+    viewsThisWeek: 312,
+  },
+];
+
+// Newest Uploads data
+const newestUploads = [
+  {
+    id: 401,
+    name: "Organic Natural Soap",
+    price: 189,
+    artist: "Ebon Santos",
+    category: "Beauty & Wellness",
+    craftType: "Cosmetics",
+    barangay: "East Tapinac",
+    image: "/beauty3.png",
+    uploadedDaysAgo: 2,
+  },
+  {
+    id: 402,
+    name: "Printed Cotton Tote Bag",
+    price: 299,
+    artist: "Juan Reyes",
+    category: "Fashion",
+    craftType: "Textile",
+    barangay: "Gordon Heights",
+    image: "/fashion5.png",
+    uploadedDaysAgo: 3,
+  },
+  {
+    id: 403,
+    name: "Hand-Carved Wooden Box",
+    price: 899,
+    artist: "Ben Yap",
+    category: "Handicrafts",
+    craftType: "Woodwork",
+    barangay: "Banicain",
+    image: "/home6.png",
+    uploadedDaysAgo: 1,
+  },
+  {
+    id: 404,
+    name: "Traditional Ube Jam",
+    price: 259,
+    artist: "Rei Bustamante",
+    category: "Food",
+    craftType: "Cooking",
+    barangay: "New Ilalim",
+    image: "/food6.png",
+    uploadedDaysAgo: 4,
+  },
+];
+
+// Most Viewed by Travelers data
+const viewedByTravelers = [
+  {
+    id: 501,
+    name: "Authentic Souvenir Pack",
+    price: 599,
+    artist: "Mixed Artisans",
+    category: "Handicrafts",
+    craftType: "Curated Gift",
+    barangay: "Multiple",
+    image: "/box6.png",
+    travelersViews: 567,
+  },
+  {
+    id: 502,
+    name: "Olongapo Local Map Guide",
+    price: 199,
+    artist: "Tourism Board",
+    category: "Travel",
+    craftType: "Guide",
+    barangay: "Downtown",
+    image: "/home6.png",
+    travelersViews: 489,
+  },
+  {
+    id: 503,
+    name: "Festival Merchandise Bundle",
+    price: 899,
+    artist: "Local Events",
+    category: "Merchandise",
+    craftType: "Special Edition",
+    barangay: "Various",
+    image: "/fashion5.png",
+    travelersViews: 412,
+  },
+  {
+    id: 504,
+    name: "Handmade Travel Diary",
+    price: 349,
+    artist: "Frances Toyang",
+    category: "Handicrafts",
+    craftType: "Bookbinding",
+    barangay: "Kalaklan",
+    image: "/box7.png",
+    travelersViews: 378,
+  },
+];
+
 // Types for recommendations
 interface RecommendedEvent {
   id: number;
@@ -384,6 +619,28 @@ export default function HomePage() {
     right: true,
   });
 
+  // New carousel scroll states for "What's Popular" section
+  const [canScrollTrendingCrafts, setCanScrollTrendingCrafts] = useState({
+    left: false,
+    right: true,
+  });
+  const [canScrollTrendingArtisans, setCanScrollTrendingArtisans] = useState({
+    left: false,
+    right: true,
+  });
+  const [canScrollTrendingEvents, setCanScrollTrendingEvents] = useState({
+    left: false,
+    right: true,
+  });
+  const [canScrollNewestUploads, setCanScrollNewestUploads] = useState({
+    left: false,
+    right: true,
+  });
+  const [canScrollTravelerViews, setCanScrollTravelerViews] = useState({
+    left: false,
+    right: true,
+  });
+
   useEffect(() => {
     const savedReminders = localStorage.getItem("eventReminders");
     if (savedReminders) {
@@ -407,6 +664,13 @@ export default function HomePage() {
   const eventsRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
   const recommendationsRef = useRef<HTMLDivElement>(null);
+
+  // Refs for "What's Popular" section carousels
+  const trendingCraftsRef = useRef<HTMLDivElement>(null);
+  const trendingArtisansRef = useRef<HTMLDivElement>(null);
+  const trendingEventsRef = useRef<HTMLDivElement>(null);
+  const newestUploadsRef = useRef<HTMLDivElement>(null);
+  const travelerViewsRef = useRef<HTMLDivElement>(null);
 
   // Fetch personalized recommendations
   const fetchRecommendations = useCallback(async () => {
@@ -570,6 +834,27 @@ export default function HomePage() {
           recommendationsRef.current,
           setCanScrollRecommendations
         );
+        // New popular section carousels
+        checkScrollPosition(
+          trendingCraftsRef.current,
+          setCanScrollTrendingCrafts
+        );
+        checkScrollPosition(
+          trendingArtisansRef.current,
+          setCanScrollTrendingArtisans
+        );
+        checkScrollPosition(
+          trendingEventsRef.current,
+          setCanScrollTrendingEvents
+        );
+        checkScrollPosition(
+          newestUploadsRef.current,
+          setCanScrollNewestUploads
+        );
+        checkScrollPosition(
+          travelerViewsRef.current,
+          setCanScrollTravelerViews
+        );
       }, 100);
     };
 
@@ -579,6 +864,11 @@ export default function HomePage() {
       eventsRef.current,
       storiesRef.current,
       recommendationsRef.current,
+      trendingCraftsRef.current,
+      trendingArtisansRef.current,
+      trendingEventsRef.current,
+      newestUploadsRef.current,
+      travelerViewsRef.current,
     ];
 
     containers.forEach((container) => {
@@ -597,6 +887,21 @@ export default function HomePage() {
         recommendationsRef.current,
         setCanScrollRecommendations
       );
+      // New popular section carousels
+      checkScrollPosition(
+        trendingCraftsRef.current,
+        setCanScrollTrendingCrafts
+      );
+      checkScrollPosition(
+        trendingArtisansRef.current,
+        setCanScrollTrendingArtisans
+      );
+      checkScrollPosition(
+        trendingEventsRef.current,
+        setCanScrollTrendingEvents
+      );
+      checkScrollPosition(newestUploadsRef.current, setCanScrollNewestUploads);
+      checkScrollPosition(travelerViewsRef.current, setCanScrollTravelerViews);
     }, 500);
 
     return () => {
@@ -619,13 +924,24 @@ export default function HomePage() {
         <div className="hero-overlay" />
         <div className="hero-content">
           <h1 className="hero-title">
-            Empowering Local{" "}
-            <span className="highlight">Artisans & Communities</span>
+            Discover Olongapo's Local{" "}
+            <span className="highlight">Crafts, Culture & Stories</span>
           </h1>
           <p className="hero-text">
-            Whether you're a buyer seeking authentic crafts or an artisan ready
-            to showcase your work, GrowLokal connects everyone to preserve and
-            celebrate Filipino heritage.
+            Shop handmade treasures, explore artisan stories, and experience the
+            heart of Olongapo — crafted for locals, travelers, and culture
+            lovers from around the world.
+          </p>
+          <p
+            style={{
+              fontSize: "0.85rem",
+              opacity: "0.85",
+              marginBottom: "1.5rem",
+              fontWeight: "500",
+            }}
+          >
+            🇵🇭 Proudly Olongapo-Made • 100+ Local Artisans • Loved by Travelers
+            & Locals
           </p>
           <div className="hero-buttons">
             <Link href="/marketplace" className="btn-explore">
@@ -642,9 +958,23 @@ export default function HomePage() {
         {/* RECOMMENDED FOR YOU */}
         <section className="section bg-alt recommended-section">
           <div className="home-section-header">
-            <div className="section-title-with-icon">
-              <Sparkles className="sparkle-icon" size={24} />
-              <h2>Recommended for You</h2>
+            <div>
+              <div className="section-title-with-icon">
+                <Sparkles className="sparkle-icon" size={24} />
+                <h2>Personalized Picks Just for You</h2>
+              </div>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  marginTop: "0.35rem",
+                  marginBottom: "0",
+                  fontWeight: "400",
+                }}
+              >
+                Discover events, shops, and crafts that match your interests,
+                browsing habits, and location.
+              </p>
             </div>
             <span className="personalized-badge">Personalized</span>
           </div>
@@ -921,268 +1251,446 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* TOP ARTISANS */}
+        {/* WHAT'S POPULAR THIS WEEK IN OLONGAPO */}
         <section className="section bg-white">
           <div className="home-section-header">
-            <h2>Top Artisans</h2>
+            <div>
+              <h2>What's Popular This Week in Olongapo</h2>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  marginTop: "0.35rem",
+                  marginBottom: "0",
+                  fontWeight: "400",
+                }}
+              >
+                See what locals and travelers are discovering and loving right
+                now.
+              </p>
+            </div>
           </div>
 
-          <div className="carousel-container">
-            {canScrollArtisans.left && (
-              <button
-                className="home-nav-button prev"
-                onClick={() =>
-                  scroll("left", artisansRef.current, setCanScrollArtisans)
-                }
-                aria-label="Previous"
-              >
-                <FaChevronLeft />
-              </button>
-            )}
-
-            <div className="home-artisan-carousel" ref={artisansRef}>
-              {topArtisans.map((artisan) => (
-                <div className="home-artisan-card" key={artisan.id}>
-                  <div className="home-artisan-menu" id={`menu-${artisan.id}`}>
-                    <button
-                      className="home-artisan-menu-button"
-                      onClick={(e) => {
-                        setOpenMenuId(
-                          openMenuId === artisan.id ? null : artisan.id
-                        );
-                      }}
-                      aria-label="Artisan menu"
-                    >
-                      <BsThreeDotsVertical />
-                    </button>
-                    {openMenuId === artisan.id && (
-                      <div className="home-artisan-menu-dropdown">
-                        <Link
-                          href={`/artisan/${artisan.id}`}
-                          className="home-artisan-menu-item"
-                        >
-                          <User size={16} />
-                          Visit Shop
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                  <Link
-                    href={`/artisan/${artisan.id}`}
-                    className="home-artisan-profile"
-                    style={{ textDecoration: "none" }}
+          {/* Trending Crafts Subsection */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h3 className="popular-subsection-title">
+              <Flame
+                size={18}
+                style={{ marginRight: "0.5rem", color: "#af7928" }}
+              />
+              Trending Crafts
+              <span className="popular-subsection-subtitle">
+                Updated Weekly
+              </span>
+            </h3>
+            <div className="carousel-container">
+              {canScrollTrendingCrafts.left && (
+                <button
+                  className="home-nav-button prev"
+                  onClick={() =>
+                    scroll(
+                      "left",
+                      trendingCraftsRef.current,
+                      setCanScrollTrendingCrafts
+                    )
+                  }
+                  aria-label="Previous"
+                >
+                  <FaChevronLeft />
+                </button>
+              )}
+              <div className="home-product-carousel" ref={trendingCraftsRef}>
+                {trendingCrafts.map((product) => (
+                  <div
+                    className="home-product-card"
+                    key={product.id}
+                    onClick={() => handleProductClick(product)}
+                    style={{ cursor: "pointer" }}
                   >
-                    <img
-                      src={artisan.avatar}
-                      alt={artisan.name}
-                      className="home-artisan-avatar"
-                    />
-                    <div className="home-artisan-info">
-                      <h3 className="home-artisan-name">{artisan.name}</h3>
-                      <div className="home-artisan-tags">
-                        <span className="home-artisan-tag craft-type">
-                          {artisan.craftType}
-                        </span>
-                        <span className="home-artisan-tag category">
-                          {artisan.category}
-                        </span>
-                      </div>
-                      <div className="home-artisan-location">
-                        <MapPin size={12} />
-                        <span>{artisan.location}</span>
-                      </div>
-                      <div className="home-artisan-meta">
-                        <div className="home-artisan-rating">
-                          <FaStar className="star-icon" />
-                          <span>{artisan.rating}</span>
+                    <div className="home-image-container">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="home-product-image"
+                      />
+                    </div>
+                    <div className="home-product-info">
+                      <div className="home-product-info-top">
+                        <h3 className="home-product-name">{product.name}</h3>
+                        <p className="home-product-artist">{product.artist}</p>
+                        <p className="home-product-location">
+                          <MapPin size={12} />
+                          {product.barangay}
+                        </p>
+                        <div className="home-product-tags">
+                          <span className="home-product-tag craft-type">
+                            {product.craftType}
+                          </span>
+                          <span className="home-product-tag category">
+                            {product.category}
+                          </span>
                         </div>
-                        <span className="home-artisan-products">
-                          {artisan.productsCount} products
-                        </span>
+                      </div>
+                      <div className="home-product-info-bottom">
+                        <p className="home-product-price">₱{product.price}</p>
                       </div>
                     </div>
-                  </Link>
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
+              {canScrollTrendingCrafts.right && (
+                <button
+                  className="home-nav-button next"
+                  onClick={() =>
+                    scroll(
+                      "right",
+                      trendingCraftsRef.current,
+                      setCanScrollTrendingCrafts
+                    )
+                  }
+                  aria-label="Next"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
             </div>
+          </div>
 
-            {canScrollArtisans.right && (
-              <button
-                className="home-nav-button next"
-                onClick={() =>
-                  scroll("right", artisansRef.current, setCanScrollArtisans)
-                }
-                aria-label="Next"
-              >
-                <FaChevronRight />
-              </button>
-            )}
+          {/* Trending Artisan Shops Subsection */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h3 className="popular-subsection-title">
+              <Flame
+                size={18}
+                style={{ marginRight: "0.5rem", color: "#af7928" }}
+              />
+              Trending Artisan Shops
+              <span className="popular-subsection-subtitle">Most Visited</span>
+            </h3>
+            <div className="carousel-container">
+              {canScrollTrendingArtisans.left && (
+                <button
+                  className="home-nav-button prev"
+                  onClick={() =>
+                    scroll(
+                      "left",
+                      trendingArtisansRef.current,
+                      setCanScrollTrendingArtisans
+                    )
+                  }
+                  aria-label="Previous"
+                >
+                  <FaChevronLeft />
+                </button>
+              )}
+              <div className="home-artisan-carousel" ref={trendingArtisansRef}>
+                {trendingArtisans.map((artisan) => (
+                  <div className="home-artisan-card" key={artisan.id}>
+                    <Link
+                      href={`/artisan/${artisan.id}`}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <div className="home-artisan-profile">
+                        <img
+                          src={artisan.avatar}
+                          alt={artisan.name}
+                          className="home-artisan-avatar"
+                        />
+                        <div className="home-artisan-info">
+                          <h3 className="home-artisan-name">{artisan.name}</h3>
+                          <span className="home-artisan-category">
+                            {artisan.craftType}
+                          </span>
+                          <p className="home-artisan-location">
+                            <MapPin size={12} />
+                            {artisan.location}
+                          </p>
+                          <div className="home-artisan-meta">
+                            <div className="home-artisan-rating">
+                              <FaStar className="star-icon" />
+                              <span>{artisan.rating}</span>
+                            </div>
+                            <span className="home-artisan-products">
+                              {artisan.productsCount} products
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+              {canScrollTrendingArtisans.right && (
+                <button
+                  className="home-nav-button next"
+                  onClick={() =>
+                    scroll(
+                      "right",
+                      trendingArtisansRef.current,
+                      setCanScrollTrendingArtisans
+                    )
+                  }
+                  aria-label="Next"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Trending Local Events Subsection */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h3 className="popular-subsection-title">
+              <Flame
+                size={18}
+                style={{ marginRight: "0.5rem", color: "#af7928" }}
+              />
+              Trending Local Events
+              <span className="popular-subsection-subtitle">Top Picks</span>
+            </h3>
+            <div className="carousel-container">
+              {canScrollTrendingEvents.left && (
+                <button
+                  className="home-nav-button prev"
+                  onClick={() =>
+                    scroll(
+                      "left",
+                      trendingEventsRef.current,
+                      setCanScrollTrendingEvents
+                    )
+                  }
+                  aria-label="Previous"
+                >
+                  <FaChevronLeft />
+                </button>
+              )}
+              <div className="home-event-carousel" ref={trendingEventsRef}>
+                {trendingEvents.map((event) => (
+                  <div className="home-event-card" key={event.id}>
+                    <div className="home-event-header">
+                      <span className="home-event-type">{event.type}</span>
+                    </div>
+                    <div className="home-event-content">
+                      <h3 className="home-event-title">{event.title}</h3>
+                      <p className="home-event-date">{event.date}</p>
+                      <div className="home-event-location">
+                        <MapPin size={12} />
+                        <span>{event.location}</span>
+                      </div>
+                      <div className="home-event-actions">
+                        <button
+                          className="home-event-view-details"
+                          onClick={() => handleViewDetails(event.title)}
+                        >
+                          View Event Details <FaChevronRight size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {canScrollTrendingEvents.right && (
+                <button
+                  className="home-nav-button next"
+                  onClick={() =>
+                    scroll(
+                      "right",
+                      trendingEventsRef.current,
+                      setCanScrollTrendingEvents
+                    )
+                  }
+                  aria-label="Next"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Newest Uploads Subsection */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h3 className="popular-subsection-title">
+              <Flame
+                size={18}
+                style={{ marginRight: "0.5rem", color: "#af7928" }}
+              />
+              Newest Uploads
+              <span className="popular-subsection-subtitle">
+                Fresh Additions
+              </span>
+            </h3>
+            <div className="carousel-container">
+              {canScrollNewestUploads.left && (
+                <button
+                  className="home-nav-button prev"
+                  onClick={() =>
+                    scroll(
+                      "left",
+                      newestUploadsRef.current,
+                      setCanScrollNewestUploads
+                    )
+                  }
+                  aria-label="Previous"
+                >
+                  <FaChevronLeft />
+                </button>
+              )}
+              <div className="home-product-carousel" ref={newestUploadsRef}>
+                {newestUploads.map((product) => (
+                  <div
+                    className="home-product-card"
+                    key={product.id}
+                    onClick={() => handleProductClick(product)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="home-image-container">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="home-product-image"
+                      />
+                    </div>
+                    <div className="home-product-info">
+                      <div className="home-product-info-top">
+                        <h3 className="home-product-name">{product.name}</h3>
+                        <p className="home-product-artist">{product.artist}</p>
+                        <p className="home-product-location">
+                          <MapPin size={12} />
+                          {product.barangay}
+                        </p>
+                        <div className="home-product-tags">
+                          <span className="home-product-tag craft-type">
+                            {product.craftType}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="home-product-info-bottom">
+                        <p className="home-product-price">₱{product.price}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {canScrollNewestUploads.right && (
+                <button
+                  className="home-nav-button next"
+                  onClick={() =>
+                    scroll(
+                      "right",
+                      newestUploadsRef.current,
+                      setCanScrollNewestUploads
+                    )
+                  }
+                  aria-label="Next"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Most Viewed by Travelers Subsection */}
+          <div>
+            <h3 className="popular-subsection-title">
+              <Flame
+                size={18}
+                style={{ marginRight: "0.5rem", color: "#af7928" }}
+              />
+              Most Viewed by Travelers This Week
+              <span className="popular-subsection-subtitle">
+                Based on Views
+              </span>
+            </h3>
+            <div className="carousel-container">
+              {canScrollTravelerViews.left && (
+                <button
+                  className="home-nav-button prev"
+                  onClick={() =>
+                    scroll(
+                      "left",
+                      travelerViewsRef.current,
+                      setCanScrollTravelerViews
+                    )
+                  }
+                  aria-label="Previous"
+                >
+                  <FaChevronLeft />
+                </button>
+              )}
+              <div className="home-product-carousel" ref={travelerViewsRef}>
+                {viewedByTravelers.map((product) => (
+                  <div
+                    className="home-product-card"
+                    key={product.id}
+                    onClick={() => handleProductClick(product)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="home-image-container">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="home-product-image"
+                      />
+                    </div>
+                    <div className="home-product-info">
+                      <div className="home-product-info-top">
+                        <h3 className="home-product-name">{product.name}</h3>
+                        <p className="home-product-artist">{product.artist}</p>
+                        <p className="home-product-location">
+                          <MapPin size={12} />
+                          {product.barangay}
+                        </p>
+                        <div className="home-product-tags">
+                          <span className="home-product-tag craft-type">
+                            {product.craftType}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="home-product-info-bottom">
+                        <p className="home-product-price">₱{product.price}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {canScrollTravelerViews.right && (
+                <button
+                  className="home-nav-button next"
+                  onClick={() =>
+                    scroll(
+                      "right",
+                      travelerViewsRef.current,
+                      setCanScrollTravelerViews
+                    )
+                  }
+                  aria-label="Next"
+                >
+                  <FaChevronRight />
+                </button>
+              )}
+            </div>
           </div>
         </section>
 
         {/* FEATURED PRODUCTS */}
-        <section className="section bg-alt">
-          <div className="home-section-header">
-            <h2>Featured Crafts</h2>
-            <Link href="/marketplace" className="home-see-all">
-              See All <FaChevronRight className="home-arrow-icon" />
-            </Link>
-          </div>
-
-          <div className="carousel-container">
-            {canScrollFeatured.left && (
-              <button
-                className="home-nav-button prev"
-                onClick={() =>
-                  scroll("left", featuredRef.current, setCanScrollFeatured)
-                }
-                aria-label="Previous"
-              >
-                <FaChevronLeft />
-              </button>
-            )}
-
-            <div className="home-product-carousel" ref={featuredRef}>
-              {featuredProducts.map((product) => (
-                <div
-                  className="home-product-card"
-                  key={product.id}
-                  onClick={() => handleProductClick(product)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <div className="home-image-container">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="home-product-image"
-                    />
-                  </div>
-                  <div className="home-product-info">
-                    <div className="home-product-info-top">
-                      <h3 className="home-product-name">{product.name}</h3>
-                      <p className="home-product-artist">{product.artist}</p>
-                      <p className="home-product-location">
-                        <MapPin size={12} />
-                        {product.barangay}
-                      </p>
-                      <div className="home-product-tags">
-                        <span className="home-product-tag craft-type">
-                          {product.craftType}
-                        </span>
-                        <span className="home-product-tag category">
-                          {product.category}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="home-product-info-bottom">
-                      <div className="home-product-price-wrapper">
-                        <span className="home-product-price">
-                          ₱{product.price.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {canScrollFeatured.right && (
-              <button
-                className="home-nav-button next"
-                onClick={() =>
-                  scroll("right", featuredRef.current, setCanScrollFeatured)
-                }
-                aria-label="Next"
-              >
-                <FaChevronRight />
-              </button>
-            )}
-          </div>
-        </section>
-
-        {/* EVENTS */}
-        <section className="section bg-white">
-          <div className="home-section-header">
-            <h2>Upcoming Events</h2>
-            <Link href="/events" className="home-see-all">
-              View All <FaChevronRight className="home-arrow-icon" />
-            </Link>
-          </div>
-
-          <div className="carousel-container">
-            {canScrollEvents.left && (
-              <button
-                className="home-nav-button prev"
-                onClick={() =>
-                  scroll("left", eventsRef.current, setCanScrollEvents)
-                }
-                aria-label="Previous"
-              >
-                <FaChevronLeft />
-              </button>
-            )}
-
-            <div className="home-event-carousel" ref={eventsRef}>
-              {upcomingEvents.map((event, index) => (
-                <div className="home-event-card" key={index}>
-                  <div className="home-event-header">
-                    <span className="home-event-type">{event.type}</span>
-                    <button
-                      className={`home-event-reminder ${
-                        eventReminders.includes(event.title) ? "active" : ""
-                      }`}
-                      onClick={() => toggleEventReminder(event.title)}
-                      aria-label={
-                        eventReminders.includes(event.title)
-                          ? "Remove reminder"
-                          : "Set reminder"
-                      }
-                    >
-                      {eventReminders.includes(event.title) ? (
-                        <MdNotificationsActive className="icon-ringing" />
-                      ) : (
-                        <MdNotifications />
-                      )}
-                    </button>
-                  </div>
-                  <div className="home-event-content">
-                    <h3 className="home-event-title">{event.title}</h3>
-                    <p className="home-event-date">{event.date}</p>
-                    <div className="home-event-location">
-                      <MapPin size={12} />
-                      <span>{event.location}</span>
-                    </div>
-                    <div className="home-event-actions">
-                      <button
-                        className="home-event-view-details"
-                        onClick={() => handleViewDetails(event.title)}
-                      >
-                        View Event Details <FaChevronRight size={12} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {canScrollEvents.right && (
-              <button
-                className="home-nav-button next"
-                onClick={() =>
-                  scroll("right", eventsRef.current, setCanScrollEvents)
-                }
-                aria-label="Next"
-              >
-                <FaChevronRight />
-              </button>
-            )}
-          </div>
-        </section>
 
         {/* ARTISAN STORIES */}
         <section className="section bg-alt">
           <div className="home-section-header">
-            <h2>Artisan Stories</h2>
+            <div>
+              <h2>Stories Behind the Craft</h2>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  marginTop: "0.35rem",
+                  marginBottom: "0",
+                  fontWeight: "400",
+                }}
+              >
+                Discover the journeys and traditions that shape every handmade
+                creation.
+              </p>
+            </div>
             <Link href="/stories" className="home-see-all">
               Read More <FaChevronRight className="home-arrow-icon" />
             </Link>
@@ -1244,13 +1752,56 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* EXPLORE OLONGAPO ON THE MAP */}
+        <section className="section bg-white">
+          <div className="home-section-header">
+            <div>
+              <h2>Explore Olongapo on the Map</h2>
+              <p
+                style={{
+                  fontSize: "0.9rem",
+                  color: "#666",
+                  marginTop: "0.35rem",
+                  marginBottom: "0",
+                  fontWeight: "400",
+                }}
+              >
+                Discover artisan shops, events, and cultural spots across
+                Olongapo.
+              </p>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginBottom: "2rem",
+              padding: "0",
+              width: "100%",
+            }}
+          >
+            <div className="map-preview-card">
+              <HomeMapPreview />
+            </div>
+          </div>
+
+          <div style={{ textAlign: "center" }}>
+            <Link href="/map" className="map-preview-cta">
+              <MapPin size={16} />
+              View Full Map
+            </Link>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="section bg-alt full-width become-seller-cta">
           <div className="cta-content">
             <h2>Ready to Grow Your Craft Business?</h2>
             <p>
-              Join hundreds of local artisans in Olongapo. Showcase your crafts,
-              connect with buyers, and track your growth, all in one place.
+              Join Olongapo's artisan community. Showcase your creations and
+              reach new customers.
             </p>
             <Link href="/profile" className="btn-start">
               <Store size={20} />
