@@ -932,17 +932,22 @@ export default function HomePage() {
             heart of Olongapo — crafted for locals, travelers, and culture
             lovers from around the world.
           </p>
-          <p
-            style={{
-              fontSize: "0.85rem",
-              opacity: "0.85",
-              marginBottom: "1.5rem",
-              fontWeight: "500",
-            }}
-          >
-            🇵🇭 Proudly Olongapo-Made • 100+ Local Artisans • Loved by Travelers
-            & Locals
-          </p>
+          <div className="hero-tagline-strip">
+            <div className="tagline-item">
+              <span className="tagline-flag-badge">🇵🇭</span>
+              <span className="tagline-text">Proudly Olongapo-Made</span>
+            </div>
+            <div className="tagline-divider"></div>
+            <div className="tagline-item">
+              <span className="tagline-icon">👥</span>
+              <span className="tagline-text">100+ Local Artisans</span>
+            </div>
+            <div className="tagline-divider"></div>
+            <div className="tagline-item">
+              <span className="tagline-icon">❤️</span>
+              <span className="tagline-text">Loved by Travelers & Locals</span>
+            </div>
+          </div>
           <div className="hero-buttons">
             <Link href="/marketplace" className="btn-explore">
               Explore Marketplace
