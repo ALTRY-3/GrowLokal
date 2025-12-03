@@ -191,11 +191,11 @@ const topArtisans = [
 
 const upcomingEvents = [
   {
-    title: "Luzon Art Fair 2025",
+    title: "Luzon Art Fair 2026",
     type: "Fair",
-    date: "October 12, 2025",
+    date: "October 12, 2026",
     location: "Barangay Pag-asa",
-    fullDate: "2025-10-12",
+    fullDate: "2026-10-12",
   },
   {
     title: "Alab Sining 2026",
@@ -221,37 +221,37 @@ const upcomingEvents = [
   {
     title: "Sip and Sketch 'Gapo",
     type: "Fair",
-    date: "November 11, 2025",
+    date: "November 11, 2026",
     location: "Olongapo City, Sibul Kapihan",
     image: "/event2.jpg",
-    fullDate: "2025-11-11",
+    fullDate: "2026-11-11",
   },
   {
     title: "Local Crafts Fair",
     type: "Fair",
-    date: "April 2, 2025",
+    date: "April 2, 2026",
     location: "Olongapo City Plaza",
     image: "/event2.jpg",
-    fullDate: "2025-04-02",
+    fullDate: "2026-04-02",
   },
 ];
 
 const announcements = [
   {
     title: "New Artisan Training Program",
-    date: "March 10, 2025",
+    date: "March 10, 2026",
     description:
       "LGU announces free training for aspiring artisans in traditional crafts.",
   },
   {
     title: "Barangay Craft Fair",
-    date: "April 1, 2025",
+    date: "April 1, 2026",
     description:
       "Join the local fair and showcase your handmade creations to the community.",
   },
   {
     title: "Subic Bay Cultural Festival",
-    date: "March 15, 2025",
+    date: "March 15, 2026",
     description:
       "Annual celebration of local culture featuring artisan booths, traditional performances, and cultural exhibits.",
   },
@@ -263,12 +263,12 @@ const announcements = [
   },
   {
     title: "Market Day Extension",
-    date: "March 8, 2025",
+    date: "March 8, 2026",
     description: "Weekend market hours extended to support local artisans.",
   },
   {
     title: "New Artisan Training Program",
-    date: "March 10, 2025",
+    date: "March 10, 2026",
     description:
       "LGU announces free training for aspiring artisans in traditional crafts.s",
   },

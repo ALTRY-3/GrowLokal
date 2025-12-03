@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -106,7 +112,9 @@ const getOrderItemKey = (
 ) => {
   const baseKey = order.orderId || order._id || "order";
   const resolvedProductId = resolveProductId(item?.productId);
-  return resolvedProductId ? `${baseKey}-${resolvedProductId}` : `${baseKey}-${index}`;
+  return resolvedProductId
+    ? `${baseKey}-${resolvedProductId}`
+    : `${baseKey}-${index}`;
 };
 
 const regionList = [
@@ -3193,6 +3201,9 @@ export default function ProfilePage() {
         sellerStory,
         sellerPhoto: sellerPhotoUrl,
         validIdUrl: validIdFileUrl,
+        documentType,
+        verificationFile: verificationFile?.name || "",
+        isEligibleForBadge,
         agreedToTerms,
         agreedToCommission,
         agreedToShipping,
@@ -3287,7 +3298,8 @@ export default function ProfilePage() {
     };
 
     window.addEventListener("orders:created", handleOrdersCreated);
-    return () => window.removeEventListener("orders:created", handleOrdersCreated);
+    return () =>
+      window.removeEventListener("orders:created", handleOrdersCreated);
   }, [fetchOrders]);
 
   useEffect(() => {
@@ -3648,6 +3660,16 @@ export default function ProfilePage() {
     sunday: { open: "09:00", close: "17:00", enabled: false },
   });
   const [byAppointment, setByAppointment] = useState(false);
+
+  // Verification step fields
+  const [verificationIdType, setVerificationIdType] = useState("");
+  const [verificationIdNumber, setVerificationIdNumber] = useState("");
+  const [verificationBusinessReg, setVerificationBusinessReg] = useState("");
+  const [verificationTin, setVerificationTin] = useState("");
+  const [verificationAgreed, setVerificationAgreed] = useState(false);
+  const [verificationFile, setVerificationFile] = useState<File | null>(null);
+  const [documentType, setDocumentType] = useState("");
+  const [isEligibleForBadge, setIsEligibleForBadge] = useState(false);
   const [socialMediaLinks, setSocialMediaLinks] = useState({
     facebook: "",
     instagram: "",
@@ -3691,7 +3713,6 @@ export default function ProfilePage() {
       shopEmail:
         shopEmail.trim() !== "" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shopEmail),
       shopPhone: shopPhone.trim().length === 11 && /^[0-9]+$/.test(shopPhone),
-      validIdFile: validIdFile !== null,
     };
 
     return Object.values(validations).every((v) => v === true);
@@ -3699,13 +3720,21 @@ export default function ProfilePage() {
 
   const isStep2Valid = () => {
     return (
+      documentType !== "" &&
+      verificationFile !== null &&
+      verificationAgreed === true
+    );
+  };
+
+  const isStep3Valid = () => {
+    return (
       sellerStoryTitle.trim() !== "" &&
       sellerStory.trim().length >= 10 &&
       sellerStory.trim().length <= 1000
     );
   };
 
-  const isStep3Valid = () => {
+  const isStep4Valid = () => {
     return agreedToTerms && agreedToCommission && agreedToShipping;
   };
 
@@ -3756,8 +3785,7 @@ export default function ProfilePage() {
       shopEmail.trim() !== "" &&
       /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shopEmail) &&
       shopPhone.trim().length === 11 &&
-      /^[0-9]+$/.test(shopPhone) &&
-      validIdFile !== null;
+      /^[0-9]+$/.test(shopPhone);
 
     if (!complete) {
       console.log("Shop info incomplete. Current state:", {
@@ -4442,25 +4470,29 @@ export default function ProfilePage() {
                 )}
 
                 {/* Empty State */}
-                {!isLoadingOrders && !ordersError && filteredOrders.length === 0 && (
-                  <div className="orders-empty-state">
-                    <i className="fa-solid fa-box-open orders-empty-icon"></i>
-                    <div className="orders-empty-title">
-                      {ordersSearchQuery ? "No matching orders" : "No Order Found"}
+                {!isLoadingOrders &&
+                  !ordersError &&
+                  filteredOrders.length === 0 && (
+                    <div className="orders-empty-state">
+                      <i className="fa-solid fa-box-open orders-empty-icon"></i>
+                      <div className="orders-empty-title">
+                        {ordersSearchQuery
+                          ? "No matching orders"
+                          : "No Order Found"}
+                      </div>
+                      <div className="orders-empty-desc">
+                        {ordersSearchQuery
+                          ? "Try adjusting your search to find a specific seller or product."
+                          : "Looks like you haven't made your order yet."}
+                      </div>
+                      <button
+                        className="orders-empty-btn"
+                        onClick={() => router.push("/marketplace")}
+                      >
+                        Shop Now
+                      </button>
                     </div>
-                    <div className="orders-empty-desc">
-                      {ordersSearchQuery
-                        ? "Try adjusting your search to find a specific seller or product."
-                        : "Looks like you haven't made your order yet."}
-                    </div>
-                    <button
-                      className="orders-empty-btn"
-                      onClick={() => router.push("/marketplace")}
-                    >
-                      Shop Now
-                    </button>
-                  </div>
-                )}
+                  )}
 
                 <div className="orders-content">
                   {!isLoadingOrders &&
@@ -4537,17 +4569,26 @@ export default function ProfilePage() {
                           <div className="order-footer">
                             <div className="order-summary">
                               <div className="order-summary-row">
-                                <span className="order-summary-label">Items</span>
-                                <span className="order-summary-value">{totalItems}</span>
+                                <span className="order-summary-label">
+                                  Items
+                                </span>
+                                <span className="order-summary-value">
+                                  {totalItems}
+                                </span>
                               </div>
                               <div className="order-summary-row">
-                                <span className="order-summary-label">Order Total</span>
+                                <span className="order-summary-label">
+                                  Order Total
+                                </span>
                                 <span className="order-summary-value">
-                                  {formatCurrency(order.total || order.subtotal || 0)}
+                                  {formatCurrency(
+                                    order.total || order.subtotal || 0
+                                  )}
                                 </span>
                               </div>
                               <div className="order-payment-meta">
-                                Payment: {paymentMethodLabel} · {paymentStatusLabel}
+                                Payment: {paymentMethodLabel} ·{" "}
+                                {paymentStatusLabel}
                               </div>
                               <div className="order-payment-meta">
                                 Placed on {formatOrderDate(order.createdAt)}
@@ -4605,83 +4646,86 @@ export default function ProfilePage() {
               <div className="profile-details-inner-box">
                 {/* Progress Steps */}
                 <div className="selling-progress">
-                  {["Shop Information", "Seller Story", "Submit"].map(
-                    (label, i) => {
-                      const isActive = i === activeStep;
-                      const isCompleted = i < activeStep;
-                      return (
-                        <React.Fragment key={label}>
+                  {[
+                    "Shop Information",
+                    "Verification",
+                    "Seller Story",
+                    "Submit",
+                  ].map((label, i) => {
+                    const isActive = i === activeStep;
+                    const isCompleted = i < activeStep;
+                    return (
+                      <React.Fragment key={label}>
+                        <div
+                          className="progress-step"
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
                           <div
-                            className="progress-step"
+                            className="circle"
                             style={{
+                              backgroundColor: isCompleted
+                                ? "#4caf50"
+                                : isActive
+                                ? "#AF7928"
+                                : "rgba(0,0,0,0.15)",
+                              width: "40px",
+                              height: "40px",
+                              borderRadius: "50%",
                               display: "flex",
-                              flexDirection: "column",
                               alignItems: "center",
-                              gap: "8px",
+                              justifyContent: "center",
+                              color: "#fff",
+                              fontWeight: "600",
+                              fontSize: "16px",
+                              transition: "all 0.3s ease",
+                              animation: isActive
+                                ? "pulse 2s infinite"
+                                : "none",
+                              boxShadow: isActive
+                                ? "0 0 0 4px rgba(175, 121, 40, 0.2)"
+                                : "none",
                             }}
                           >
-                            <div
-                              className="circle"
-                              style={{
-                                backgroundColor: isCompleted
-                                  ? "#4caf50"
-                                  : isActive
-                                  ? "#AF7928"
-                                  : "rgba(0,0,0,0.15)",
-                                width: "40px",
-                                height: "40px",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "#fff",
-                                fontWeight: "600",
-                                fontSize: "16px",
-                                transition: "all 0.3s ease",
-                                animation: isActive
-                                  ? "pulse 2s infinite"
-                                  : "none",
-                                boxShadow: isActive
-                                  ? "0 0 0 4px rgba(175, 121, 40, 0.2)"
-                                  : "none",
-                              }}
-                            >
-                              {isCompleted ? "✓" : i + 1}
-                            </div>
-                            <span
-                              className="label"
-                              style={{
-                                color:
-                                  isCompleted || isActive
-                                    ? "#333"
-                                    : "rgba(0,0,0,0.4)",
-                                fontWeight: isActive ? "600" : "400",
-                                fontSize: "13px",
-                                textAlign: "center",
-                                maxWidth: "100px",
-                              }}
-                            >
-                              {label}
-                            </span>
+                            {isCompleted ? "✓" : i + 1}
                           </div>
-                          {i < 2 && (
-                            <div
-                              className="progress-line"
-                              style={{
-                                backgroundColor: isCompleted
-                                  ? "#4caf50"
-                                  : "rgba(0,0,0,0.15)",
-                                height: "2px",
-                                flex: "1",
-                                marginTop: "-20px",
-                                transition: "all 0.3s ease",
-                              }}
-                            ></div>
-                          )}
-                        </React.Fragment>
-                      );
-                    }
-                  )}
+                          <span
+                            className="label"
+                            style={{
+                              color:
+                                isCompleted || isActive
+                                  ? "#333"
+                                  : "rgba(0,0,0,0.4)",
+                              fontWeight: isActive ? "600" : "400",
+                              fontSize: "13px",
+                              textAlign: "center",
+                              maxWidth: "100px",
+                            }}
+                          >
+                            {label}
+                          </span>
+                        </div>
+                        {i < 3 && (
+                          <div
+                            className="progress-line"
+                            style={{
+                              backgroundColor: isCompleted
+                                ? "#4caf50"
+                                : "rgba(0,0,0,0.15)",
+                              height: "2px",
+                              flex: "1",
+                              marginTop: "-20px",
+                              transition: "all 0.3s ease",
+                            }}
+                          ></div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
 
                 {/* Add keyframes for pulse animation */}
@@ -4935,34 +4979,357 @@ export default function ProfilePage() {
                         />
                       </div>
                     </div>
-
-                    <div className="form-row">
-                      <label className="form-label">
-                        Valid ID <span style={{ color: "red" }}>*</span>
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="form-input"
-                        onChange={(e) =>
-                          setValidIdFile(e.target.files?.[0] || null)
-                        }
-                        required
-                      />
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#888",
-                          marginLeft: "12px",
-                        }}
-                      >
-                        Upload a clear photo or scan of your valid ID.
-                      </span>
-                    </div>
                   </div>
                 )}
 
                 {activeStep === 1 && (
+                  <div
+                    className="selling-step-content"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "24px",
+                    }}
+                  >
+                    {/* Header Section */}
+                    <div
+                      style={{
+                        padding: "24px",
+                        background: "rgba(175, 121, 40, 0.08)",
+                        border: "1px solid rgba(175, 121, 40, 0.2)",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <h3
+                        style={{
+                          margin: "0 0 8px 0",
+                          fontWeight: "700",
+                          color: "#2e3f36",
+                          fontSize: "16px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <span>📜</span> Proof of Authenticity
+                      </h3>
+                      <p
+                        style={{
+                          margin: "0",
+                          color: "#666",
+                          fontSize: "13px",
+                          fontWeight: "500",
+                        }}
+                      >
+                        Select your document type and upload proof to verify
+                        your seller identity
+                      </p>
+                    </div>
+
+                    {/* Document Type Dropdown */}
+                    <div style={{ marginTop: "8px" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontWeight: "600",
+                          color: "#2e3f36",
+                          fontSize: "14px",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Document Type <span style={{ color: "red" }}>*</span>
+                      </label>
+
+                      <select
+                        value={documentType}
+                        onChange={(e) => {
+                          const selectedDoc = e.target.value;
+                          setDocumentType(selectedDoc);
+
+                          // Determine badge eligibility based on document type
+                          const businessRegisteredDocs = [
+                            "dti-certificate",
+                            "sec-registration",
+                            "mayors-permit",
+                            "bir-certificate",
+                          ];
+                          setIsEligibleForBadge(
+                            businessRegisteredDocs.includes(selectedDoc)
+                          );
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          border: "1px solid #af7928",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontFamily: "poppins, sans-serif",
+                          backgroundColor: "#fff",
+                          color: "#2e3f36",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        <option value="">-- Select a document type --</option>
+
+                        {/* Beginner / Casual Artisan Section */}
+                        <optgroup label="BEGINNER / CASUAL ARTISAN (No verified badge)">
+                          <option value="govt-id">
+                            Government ID (PhilSys, Barangay ID, UMID)
+                          </option>
+                          <option value="barangay-clearance">
+                            Barangay Clearance
+                          </option>
+                          <option value="artisan-membership">
+                            Artisan Group Membership Card (OZA, local groups)
+                          </option>
+                        </optgroup>
+
+                        {/* Business Registered Artisan Section */}
+                        <optgroup label="BUSINESS-REGISTERED ARTISAN (Eligible for verified badge)">
+                          <option value="dti-certificate">
+                            DTI Business Name Certificate
+                          </option>
+                          <option value="sec-registration">
+                            SEC Registration (Corporation/Partnership)
+                          </option>
+                          <option value="mayors-permit">
+                            Mayor's Permit / Business Permit
+                          </option>
+                          <option value="bir-certificate">
+                            BIR Certificate of Registration
+                          </option>
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    {/* File Upload Section */}
+                    <div style={{ marginTop: "8px" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontWeight: "600",
+                          color: "#2e3f36",
+                          fontSize: "14px",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Upload Document <span style={{ color: "red" }}>*</span>
+                      </label>
+
+                      {/* File Input Wrapper */}
+                      <div
+                        style={{
+                          position: "relative",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          onChange={(e) =>
+                            setVerificationFile(e.target.files?.[0] || null)
+                          }
+                          required
+                          style={{
+                            position: "absolute",
+                            opacity: 0,
+                            width: 0,
+                            height: 0,
+                          }}
+                          id="verification-file-input"
+                        />
+                        <label
+                          htmlFor="verification-file-input"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "28px 20px",
+                            border: "2px dashed #af7928",
+                            borderRadius: "8px",
+                            background: "rgba(175, 121, 40, 0.03)",
+                            cursor: "pointer",
+                            transition: "all 0.3s ease",
+                            backgroundColor: verificationFile
+                              ? "rgba(175, 121, 40, 0.1)"
+                              : "rgba(175, 121, 40, 0.03)",
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor =
+                              "#946520";
+                            (e.currentTarget as HTMLElement).style.background =
+                              "rgba(175, 121, 40, 0.08)";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.borderColor =
+                              "#af7928";
+                            (e.currentTarget as HTMLElement).style.background =
+                              verificationFile
+                                ? "rgba(175, 121, 40, 0.1)"
+                                : "rgba(175, 121, 40, 0.03)";
+                          }}
+                        >
+                          <div style={{ textAlign: "center" }}>
+                            <div
+                              style={{
+                                fontSize: "28px",
+                                marginBottom: "8px",
+                              }}
+                            >
+                              {verificationFile ? "✅" : "📤"}
+                            </div>
+                            {verificationFile ? (
+                              <div>
+                                <p
+                                  style={{
+                                    margin: "0 0 4px 0",
+                                    fontWeight: "600",
+                                    color: "#2e3f36",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  {verificationFile.name}
+                                </p>
+                                <p
+                                  style={{
+                                    margin: "0",
+                                    color: "#888",
+                                    fontSize: "12px",
+                                  }}
+                                >
+                                  Click to change
+                                </p>
+                              </div>
+                            ) : (
+                              <div>
+                                <p
+                                  style={{
+                                    margin: "0 0 4px 0",
+                                    fontWeight: "600",
+                                    color: "#2e3f36",
+                                    fontSize: "14px",
+                                  }}
+                                >
+                                  Click to upload or drag and drop
+                                </p>
+                                <p
+                                  style={{
+                                    margin: "0",
+                                    color: "#888",
+                                    fontSize: "12px",
+                                  }}
+                                >
+                                  PNG, JPG, PDF up to 10MB
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* Helper Text */}
+                      <p
+                        style={{
+                          margin: "0",
+                          fontSize: "13px",
+                          color: "#666",
+                          lineHeight: "1.5",
+                        }}
+                      >
+                        Upload ONE valid document. Clear photos or scans help us
+                        validate your seller identity.
+                      </p>
+                    </div>
+
+                    {/* Badge Eligibility Info Box */}
+                    {documentType && (
+                      <div
+                        style={{
+                          padding: "14px 16px",
+                          background: isEligibleForBadge
+                            ? "rgba(69, 149, 106, 0.08)"
+                            : "rgba(175, 121, 40, 0.05)",
+                          border: `1px solid ${
+                            isEligibleForBadge
+                              ? "rgba(69, 149, 106, 0.2)"
+                              : "rgba(175, 121, 40, 0.15)"
+                          }`,
+                          borderRadius: "6px",
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: "16px",
+                            flex: "0 0 20px",
+                            marginTop: "2px",
+                          }}
+                        >
+                          ℹ️
+                        </span>
+                        <p
+                          style={{
+                            margin: "0",
+                            fontSize: "13px",
+                            color: isEligibleForBadge ? "#45956a" : "#af7928",
+                            fontWeight: "500",
+                            lineHeight: "1.5",
+                          }}
+                        >
+                          {isEligibleForBadge
+                            ? "This document qualifies you for the Verified Artisan Badge."
+                            : "You can still sell normally, but this document does not qualify for the Verified Artisan Badge."}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Certification Checkbox */}
+                    <div
+                      style={{
+                        padding: "16px",
+                        background: "rgba(175, 121, 40, 0.05)",
+                        borderRadius: "6px",
+                        marginTop: "8px",
+                      }}
+                    >
+                      <label
+                        className="agreement-label"
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                          margin: "0",
+                          padding: "0",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={verificationAgreed || false}
+                          onChange={(e) =>
+                            setVerificationAgreed(e.target.checked)
+                          }
+                          required
+                          style={{
+                            marginTop: "2px",
+                            cursor: "pointer",
+                            width: "16px",
+                            height: "16px",
+                            accentColor: "#af7928",
+                          }}
+                        />
+                        <span style={{ fontSize: "14px", color: "#2e3f36" }}>
+                          I certify that the information and documents provided
+                          are accurate, authentic, and truthful
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {activeStep === 2 && (
                   <div
                     className="selling-step-content"
                     style={{
@@ -5170,6 +5537,15 @@ export default function ProfilePage() {
                 {activeStep === 2 && (
                   <div className="selling-step-content">
                     <p style={{ fontSize: "15px", marginBottom: "20px" }}>
+                      Tell us your story! Share what inspired your craft and why
+                      you started.
+                    </p>
+                  </div>
+                )}
+
+                {activeStep === 3 && (
+                  <div className="selling-step-content">
+                    <p style={{ fontSize: "15px", marginBottom: "20px" }}>
                       Review your details before submitting your shop for
                       approval.
                     </p>
@@ -5255,6 +5631,21 @@ export default function ProfilePage() {
                         <h4 style={{ margin: 0, fontSize: "16px" }}>
                           Shop Information
                         </h4>
+                        <button
+                          type="button"
+                          onClick={() => setActiveStep(0)}
+                          style={{
+                            background: "none",
+                            border: "1px solid rgba(175, 121, 40, 0.5)",
+                            borderRadius: "4px",
+                            padding: "4px 12px",
+                            fontSize: "12px",
+                            cursor: "pointer",
+                            color: "#af7928",
+                          }}
+                        >
+                          Edit
+                        </button>
                       </div>
 
                       <div style={{ marginBottom: "10px" }}>
@@ -5340,7 +5731,7 @@ export default function ProfilePage() {
                         </h4>
                         <button
                           type="button"
-                          onClick={() => setActiveStep(1)}
+                          onClick={() => setActiveStep(2)}
                           style={{
                             background: "none",
                             border: "1px solid rgba(175, 121, 40, 0.5)",
@@ -5571,7 +5962,6 @@ export default function ProfilePage() {
                         !/^[0-9]+$/.test(shopPhone)) && (
                         <li>Shop Phone (exactly 11 digits)</li>
                       )}
-                      {!validIdFile && <li>Valid ID Upload</li>}
                     </ul>
                   </div>
                 )}
@@ -5581,81 +5971,14 @@ export default function ProfilePage() {
                     className="order-btn primary"
                     onClick={async () => {
                       if (activeStep === 0) {
-                        // Validate Step 1 including OCR validation for ID
+                        // Validate Step 0 (Shop Information)
                         if (!isStep1Valid()) {
                           return; // Basic validation failed
                         }
 
-                        // Perform OCR validation on the uploaded ID
-                        if (validIdFile) {
-                          try {
-                            setIsValidatingId(true);
-                            console.log(
-                              "Starting OCR validation for ID document..."
-                            );
-
-                            // Create FormData for OCR API
-                            const formData = new FormData();
-                            formData.append("idDocument", validIdFile);
-
-                            const ocrResponse = await fetch(
-                              "/api/ocr/validate-id",
-                              {
-                                method: "POST",
-                                body: formData,
-                              }
-                            );
-
-                            const ocrResult = await ocrResponse.json();
-
-                            console.log("OCR validation result:", ocrResult);
-
-                            if (
-                              !ocrResult.success ||
-                              !ocrResult.validation?.isValidId
-                            ) {
-                              // Show specific error message
-                              let errorMessage = "ID validation failed: ";
-                              if (
-                                ocrResult.errors &&
-                                ocrResult.errors.length > 0
-                              ) {
-                                errorMessage += ocrResult.errors.join(", ");
-                              } else {
-                                errorMessage +=
-                                  "The uploaded document does not appear to be a valid Philippine government ID.";
-                              }
-
-                              alert(
-                                errorMessage +
-                                  "\\n\\nPlease upload a clear photo of a valid Philippine government-issued ID."
-                              );
-                              return; // Stop progression to Step 2
-                            }
-
-                            // OCR validation passed
-                            console.log(
-                              `ID validated successfully: ${
-                                ocrResult.validation?.detectedIdType ||
-                                "Government ID"
-                              } (${
-                                ocrResult.validation?.confidence || 0
-                              }% confidence)`
-                            );
-                          } catch (error) {
-                            console.error("OCR validation error:", error);
-                            alert(
-                              "Unable to validate ID document. Please check your internet connection and try again."
-                            );
-                            return;
-                          } finally {
-                            setIsValidatingId(false);
-                          }
-                        }
-
-                        // Move to Step 2 after successful validation
+                        // Move to Step 1 (Verification) after successful validation
                         setActiveStep(1);
-                      } else if (activeStep < 2) {
+                      } else if (activeStep < 3) {
                         setActiveStep(activeStep + 1);
                       } else {
                         // Submit the application
@@ -5663,17 +5986,13 @@ export default function ProfilePage() {
                       }
                     }}
                     disabled={
-                      isValidatingId ||
                       (activeStep === 0 && !isStep1Valid()) ||
                       (activeStep === 1 && !isStep2Valid()) ||
-                      (activeStep === 2 && !isStep3Valid())
+                      (activeStep === 2 && !isStep3Valid()) ||
+                      (activeStep === 3 && !isStep4Valid())
                     }
                   >
-                    {isValidatingId
-                      ? "Validating ID..."
-                      : activeStep < 2
-                      ? "Next"
-                      : "Submit"}
+                    {activeStep < 3 ? "Next" : "Submit"}
                   </button>
 
                   {activeStep > 0 && (

@@ -144,7 +144,7 @@ export const sendMagicLinkEmail = async (email: string, magicLink: string) => {
             </div>
             
             <div class="footer">
-              <p>© 2025 GrowLokal. All rights reserved.</p>
+              <p>© 2026 GrowLokal. All rights reserved.</p>
               <p>This is an automated email, please do not reply.</p>
             </div>
           </div>
@@ -162,7 +162,7 @@ export const sendMagicLinkEmail = async (email: string, magicLink: string) => {
       
       If you didn't create an account with GrowLokal, you can safely ignore this email.
       
-      © 2025 GrowLokal. All rights reserved.
+      © 2026 GrowLokal. All rights reserved.
     `,
   };
 
@@ -286,7 +286,7 @@ export const sendPasswordResetEmail = async (email: string, resetLink: string) =
             </div>
             
             <div class="footer">
-              <p>© 2025 GrowLokal. All rights reserved.</p>
+              <p>© 2026 GrowLokal. All rights reserved.</p>
               <p>This is an automated email, please do not reply.</p>
             </div>
           </div>
@@ -304,7 +304,7 @@ export const sendPasswordResetEmail = async (email: string, resetLink: string) =
       
       If you didn't request a password reset, you can safely ignore this email.
       
-      © 2025 GrowLokal. All rights reserved.
+      © 2026 GrowLokal. All rights reserved.
     `,
   };
 
@@ -437,7 +437,7 @@ export const sendEventBookingEmail = async ({
               to this email if you need to update your reservation.
             </p>
             <div class="footer">
-              <p>© 2025 GrowLokal. See you at the event!</p>
+              <p>© 2026 GrowLokal. See you at the event!</p>
             </div>
           </div>
         </body>

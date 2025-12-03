@@ -922,7 +922,7 @@ export default function SignupPage() {
                 <i className="fa-solid fa-clipboard-list modal-icon"></i>
                 <div className="modal-title-text">
                   <h2>Terms of Service</h2>
-                  <p className="modal-date">Last updated September 8, 2025</p>
+                  <p className="modal-date">Last updated September 8, 2026</p>
                 </div>
               </div>
             </div>

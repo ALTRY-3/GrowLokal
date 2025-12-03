@@ -702,6 +702,18 @@
   background: #946520;
 }
 
+.order-btn:disabled {
+  background: #ccc;
+  color: #999;
+  border-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.order-btn:disabled:hover {
+  background: #ccc;
+}
+
 .order-shop {
   display: flex;
   align-items: center;

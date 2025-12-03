@@ -54,7 +54,7 @@ export default function Footer() {
       </div>
 
       <div className="footer-copyright">
-        © 2025 GrowLokal. Preserving Filipino heritage, one craft at a time.
+        © 2026 GrowLokal. Preserving Filipino heritage, one craft at a time.
       </div>
     </footer>
   );

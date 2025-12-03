@@ -33,13 +33,13 @@ interface Event {
 const eventsData: Event[] = [
   {
     title: "Artisan Fair",
-    date: "2025-09-15",
+    date: "2026-09-15",
     location: "SM City Olongapo",
     lat: 14.8333,
     lng: 120.2828,
     details: "A four-day artisan fair featuring Filipino crafts.",
     type: "Fair",
-    dateText: "September 15, 2025",
+    dateText: "September 15, 2026",
     time: "9:00 AM",
   },
   {
@@ -55,13 +55,13 @@ const eventsData: Event[] = [
   },
   {
     title: "This Is Not Art Escape",
-    date: "2025-10-25",
+    date: "2026-10-25",
     location: "Ayala Malls Harbor Point",
     lat: 14.8276,
     lng: 120.2823,
     details: "A two-day art market with handmade crafts and artworks.",
     type: "Workshop",
-    dateText: "October 25, 2025",
+    dateText: "October 25, 2026",
     time: "9:00 AM",
   },
 ];

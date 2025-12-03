@@ -47,19 +47,19 @@ import {
 } from "react-icons/fa";
 
 const mockSalesOverview = [
-  { date: "2025-08", sales: 8000 },
-  { date: "2025-09", sales: 12000 },
-  { date: "2025-10", sales: 9500 },
-  { date: "2025-11", sales: 16000 },
-  { date: "2025-12", sales: 11000 },
+  { date: "2026-08", sales: 8000 },
+  { date: "2026-09", sales: 12000 },
+  { date: "2026-10", sales: 9500 },
+  { date: "2026-11", sales: 16000 },
+  { date: "2026-12", sales: 11000 },
 ];
 
 const mockSalesTrend = [
-  { date: "2025-09-01", sales: 1200, category: "Handicrafts" },
-  { date: "2025-09-02", sales: 1500, category: "Fashion" },
-  { date: "2025-09-03", sales: 1000, category: "Home" },
-  { date: "2025-09-04", sales: 1800, category: "Food" },
-  { date: "2025-09-05", sales: 2000, category: "Beauty & Wellness" },
+  { date: "2026-09-01", sales: 1200, category: "Handicrafts" },
+  { date: "2026-09-02", sales: 1500, category: "Fashion" },
+  { date: "2026-09-03", sales: 1000, category: "Home" },
+  { date: "2026-09-04", sales: 1800, category: "Food" },
+  { date: "2026-09-05", sales: 2000, category: "Beauty & Wellness" },
 ];
 
 const mockTopItems = [
@@ -71,11 +71,11 @@ const mockTopItems = [
 ];
 
 const mockDailyOrders = [
-  { date: "2025-09-01", orders: 15, category: "Handicrafts" },
-  { date: "2025-09-02", orders: 18, category: "Fashion" },
-  { date: "2025-09-03", orders: 12, category: "Home" },
-  { date: "2025-09-04", orders: 20, category: "Food" },
-  { date: "2025-09-05", orders: 22, category: "Beauty & Wellness" },
+  { date: "2026-09-01", orders: 15, category: "Handicrafts" },
+  { date: "2026-09-02", orders: 18, category: "Fashion" },
+  { date: "2026-09-03", orders: 12, category: "Home" },
+  { date: "2026-09-04", orders: 20, category: "Food" },
+  { date: "2026-09-05", orders: 22, category: "Beauty & Wellness" },
 ];
 
 const mockCategoryBreakdown = [

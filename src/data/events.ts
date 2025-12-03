@@ -23,9 +23,9 @@ export type Event = {
 export const events: Event[] = [
   {
     id: 1,
-    date: "2025-09-15",
+    date: "2026-09-15",
     title: "Subic Bay Cultural Festival",
-    dateText: "March 15, 2025",
+    dateText: "March 15, 2026",
     time: "9:00 AM",
     location: "Subic Bay Freeport Zone",
     details:
@@ -49,9 +49,9 @@ export const events: Event[] = [
   },
   {
     id: 3,
-    date: "2025-10-25",
+    date: "2026-10-25",
     title: "This Is Not Art Escape",
-    dateText: "October 25, 2025",
+    dateText: "October 25, 2026",
     time: "9:00 AM",
     location: "Ayala Malls Harbor Point",
     details:
@@ -73,9 +73,9 @@ export const events: Event[] = [
   },
   {
     id: 5,
-    date: "2025-09-16",
+    date: "2026-09-16",
     title: "My City, My SM, My Crafts",
-    dateText: "September 16, 2025",
+    dateText: "September 16, 2026",
     time: "9:00 AM",
     location: "SM City Olongapo",
     details:
@@ -85,9 +85,9 @@ export const events: Event[] = [
   },
   {
     id: 6,
-    date: "2025-10-12",
-    title: "Luzon Art Fair 2025",
-    dateText: "October 12, 2025",
+    date: "2026-10-12",
+    title: "Luzon Art Fair 2026",
+    dateText: "October 12, 2026",
     time: "9:00 AM",
     location: "Diwa ng Tarlac and Bulwagang Kanlahi, Tarlac City",
     details:
@@ -97,9 +97,9 @@ export const events: Event[] = [
   },
   {
     id: 7,
-    date: "2025-11-11",
+    date: "2026-11-11",
     title: "Sip and Sketch 'Gapo",
-    dateText: "November 11, 2025",
+    dateText: "November 11, 2026",
     time: "9:00 AM",
     location: "Olongapo City, Sibul Kapihan",
     details:

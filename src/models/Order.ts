@@ -33,7 +33,7 @@ export interface IPaymentDetails {
 // Order Document Interface
 export interface IOrder extends Document {
   _id: mongoose.Types.ObjectId;
-  orderId: string; // Unique readable order ID (e.g., "ORD-20250102-001")
+  orderId: string; // Unique readable order ID (e.g., "ORD-20260102-001")
   userId: mongoose.Types.ObjectId | string; // User ID or guest session ID
   items: IOrderItem[];
   shippingAddress: IShippingAddress;
