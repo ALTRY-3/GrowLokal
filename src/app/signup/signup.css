@@ -789,7 +789,7 @@ select.form-input.disabled-select ~ .input-icon {
 
 
 /* Terms of Service Modal */
-.modal-overlay {
+.app-container .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -805,7 +805,7 @@ select.form-input.disabled-select ~ .input-icon {
   padding: 2rem;
 }
 
-.modal-content {
+.app-container .app-container .modal-content {
   background: white;
   border-radius: 5px;
   max-width: 900px;
@@ -813,10 +813,10 @@ select.form-input.disabled-select ~ .input-icon {
   max-height: 100vh;
   overflow: hidden;
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
-  animation: modalSlideIn 0.3s ease-out;
+  animation: signupModalSlideIn 0.3s ease-out;
 }
 
-@keyframes modalSlideIn {
+@keyframes signupModalSlideIn {
   from {
     opacity: 0;
     transform: translateY(-30px) scale(0.95);
@@ -827,30 +827,30 @@ select.form-input.disabled-select ~ .input-icon {
   }
 }
 
-.modal-header {
+.app-container .modal-header {
   padding: 2rem 2rem 1.5rem 2rem;
   border-bottom: 1px solid #e5e5e5;
   background: white;
 }
 
-.modal-title-section {
+.app-container .modal-title-section {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
 }
 
-.modal-icon {
+.app-container .modal-icon {
   color: #AF7928;
   font-size: 3.5rem;
   margin-top: 0.125rem;
   flex-shrink: 0;
 }
 
-.modal-title-text {
+.app-container .modal-title-text {
   flex: 1;
 }
 
-.modal-content h2 {
+.app-container .modal-content h2 {
   margin: 0 0 0.25rem 0;
   font-size: 1.75rem;
   color: #1a1a1a;
@@ -859,14 +859,14 @@ select.form-input.disabled-select ~ .input-icon {
   line-height: 1.2;
 }
 
-.modal-date {
+.app-container .modal-date {
   margin: 0;
   color: #6b7280;
   font-size: 0.875rem;
   font-weight: 400;
 }
 
-.modal-body {
+.app-container .modal-body {
   padding: 1.5rem 2rem 2rem 2rem;
   max-height: 45vh;
   overflow-y: auto;
@@ -875,31 +875,31 @@ select.form-input.disabled-select ~ .input-icon {
 }
 
 /* Custom Scrollbar */
-.modal-body::-webkit-scrollbar {
+.app-container .modal-body::-webkit-scrollbar {
   width: 8px;
 }
 
-.modal-body::-webkit-scrollbar-track {
+.app-container .modal-body::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
-.modal-body::-webkit-scrollbar-thumb {
+.app-container .modal-body::-webkit-scrollbar-thumb {
   background: #AF7928;
   border-radius: 4px;
 }
 
-.modal-body::-webkit-scrollbar-thumb:hover {
+.app-container .modal-body::-webkit-scrollbar-thumb:hover {
   background: #956621;
 }
 
 /* Firefox */
-.modal-body {
+.app-container .modal-body {
   scrollbar-width: thin;
   scrollbar-color: #AF7928 #f1f1f1;
 }
 
-.modal-body p {
+.app-container .modal-body p {
   margin-bottom: 1.25rem;
   color: #374151;
   font-size: 0.85rem;
@@ -908,16 +908,16 @@ select.form-input.disabled-select ~ .input-icon {
   padding: 0rem 1rem;
 }
 
-.modal-body p:last-child {
+.app-container .modal-body p:last-child {
   margin-bottom: 0;
 }
 
-.modal-body strong {
+.app-container .modal-body strong {
   font-weight: 600;
   color: #1f2937;
 }
 
-.modal-footer {
+.app-container .modal-footer {
   padding: 1.5rem 2rem 2rem 2rem;
   display: flex;
   gap: 1rem;
@@ -926,7 +926,7 @@ select.form-input.disabled-select ~ .input-icon {
   background: white;
 }
 
-.decline-btn, .accept-btn {
+.app-container .decline-btn, .app-container .accept-btn {
   padding: 0.875rem 2.5rem;
   border: none;
   border-radius: 2px;
@@ -938,13 +938,13 @@ select.form-input.disabled-select ~ .input-icon {
   min-width: 120px;
 }
 
-.decline-btn {
+.app-container .decline-btn {
   background: white;
   color: #2E3F36;
   border: 1.5px solid #2E3F36;
 }
 
-.decline-btn:hover {
+.app-container .decline-btn:hover {
   background: #f9fafb;
   border-color: #9ca3af;
   color: #374151;
