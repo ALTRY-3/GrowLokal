@@ -168,6 +168,7 @@ export async function POST(request: NextRequest) {
     // Create new user (email starts as unverified)
     const user = await User.create({
       name,
+      fullName: name, // Store fullName as well for profile display
       email,
       password, // Password will be hashed by the pre-save middleware
       phone: phone || undefined,

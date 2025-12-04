@@ -198,8 +198,8 @@ export async function POST(request: NextRequest) {
           await createNotification({
             userId: recipientId,
             type: 'order',
-            title: 'Order placed successfully',
-            description: `Order #${order.orderId} is now pending confirmation.`,
+            title: 'Order delivered successfully',
+            description: `Order #${order.orderId} has been delivered successfully.`,
             metadata: {
               orderId: order.orderId,
               total: order.total,

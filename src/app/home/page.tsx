@@ -596,6 +596,14 @@ export default function HomePage() {
     right: true,
   });
 
+  // Dynamic trending data state
+  const [dynamicTrendingCrafts, setDynamicTrendingCrafts] = useState<any[]>([]);
+  const [dynamicNewestUploads, setDynamicNewestUploads] = useState<any[]>([]);
+  const [dynamicMostViewed, setDynamicMostViewed] = useState<any[]>([]);
+  const [dynamicTrendingArtisans, setDynamicTrendingArtisans] = useState<any[]>([]);
+  const [dynamicTrendingEvents, setDynamicTrendingEvents] = useState<any[]>([]);
+  const [trendingDataLoading, setTrendingDataLoading] = useState(true);
+
   // Use wishlist hook instead of local state
   const { isInWishlist, toggleWishlist } = useWishlist();
 
@@ -749,9 +757,72 @@ export default function HomePage() {
     }
   }, []);
 
+  // Fetch trending data for home page sections
+  const fetchTrendingData = useCallback(async () => {
+    try {
+      setTrendingDataLoading(true);
+
+      // Check cache first
+      const cacheKey = "homeTrendingCache";
+      const cacheTimeKey = "homeTrendingCacheTime";
+      const CACHE_DURATION = 3 * 60 * 1000; // 3 minutes for fresher data
+
+      const cachedTime = localStorage.getItem(cacheTimeKey);
+      const cachedData = localStorage.getItem(cacheKey);
+
+      if (cachedTime && cachedData) {
+        const age = Date.now() - parseInt(cachedTime, 10);
+        if (age < CACHE_DURATION) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            if (parsed.trendingCrafts?.length) setDynamicTrendingCrafts(parsed.trendingCrafts);
+            if (parsed.newestUploads?.length) setDynamicNewestUploads(parsed.newestUploads);
+            if (parsed.mostViewed?.length) setDynamicMostViewed(parsed.mostViewed);
+            if (parsed.trendingArtisans?.length) setDynamicTrendingArtisans(parsed.trendingArtisans);
+            if (parsed.trendingEvents?.length) setDynamicTrendingEvents(parsed.trendingEvents);
+            setTrendingDataLoading(false);
+            console.log("[Home] Using cached trending data");
+            return;
+          } catch (e) {
+            // Invalid cache, continue to fetch
+          }
+        }
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch("/api/home/trending", {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        if (data.data.trendingCrafts?.length) setDynamicTrendingCrafts(data.data.trendingCrafts);
+        if (data.data.newestUploads?.length) setDynamicNewestUploads(data.data.newestUploads);
+        if (data.data.mostViewed?.length) setDynamicMostViewed(data.data.mostViewed);
+        if (data.data.trendingArtisans?.length) setDynamicTrendingArtisans(data.data.trendingArtisans);
+        if (data.data.trendingEvents?.length) setDynamicTrendingEvents(data.data.trendingEvents);
+
+        // Cache the results
+        localStorage.setItem(cacheKey, JSON.stringify(data.data));
+        localStorage.setItem(cacheTimeKey, Date.now().toString());
+      }
+    } catch (error: any) {
+      if (error.name !== "AbortError") {
+        console.error("Error fetching trending data:", error);
+      }
+    } finally {
+      setTrendingDataLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRecommendations();
-  }, [fetchRecommendations]);
+    fetchTrendingData();
+  }, [fetchRecommendations, fetchTrendingData]);
 
   // Recheck scroll position when recommendations finish loading
   useEffect(() => {
@@ -843,7 +914,8 @@ export default function HomePage() {
       price: `₱${product.price.toFixed(2)}`,
       craftType: product.craftType,
       category: product.category,
-      productId: product.id.toString(),
+      productId: product.id?.toString() || product._id?.toString(),
+      artistId: product.artistId,
       maxStock: 10,
       soldCount: 0,
     };
@@ -1341,7 +1413,7 @@ export default function HomePage() {
                 </button>
               )}
               <div className="home-product-carousel" ref={trendingCraftsRef}>
-                {trendingCrafts.map((product) => (
+                {(dynamicTrendingCrafts.length > 0 ? dynamicTrendingCrafts : trendingCrafts).map((product) => (
                   <div
                     className="home-product-card"
                     key={product.id}
@@ -1424,7 +1496,7 @@ export default function HomePage() {
                 </button>
               )}
               <div className="home-artisan-carousel" ref={trendingArtisansRef}>
-                {trendingArtisans.map((artisan) => (
+                {(dynamicTrendingArtisans.length > 0 ? dynamicTrendingArtisans : trendingArtisans).map((artisan) => (
                   <div className="home-artisan-card" key={artisan.id}>
                     <Link
                       href={`/artisan/${artisan.id}`}
@@ -1505,7 +1577,7 @@ export default function HomePage() {
                 </button>
               )}
               <div className="home-event-carousel" ref={trendingEventsRef}>
-                {trendingEvents.map((event) => (
+                {(dynamicTrendingEvents.length > 0 ? dynamicTrendingEvents : trendingEvents).map((event) => (
                   <div className="home-event-card" key={event.id}>
                     <div className="home-event-header">
                       <span className="home-event-type">{event.type}</span>
@@ -1576,7 +1648,7 @@ export default function HomePage() {
                 </button>
               )}
               <div className="home-product-carousel" ref={newestUploadsRef}>
-                {newestUploads.map((product) => (
+                {(dynamicNewestUploads.length > 0 ? dynamicNewestUploads : newestUploads).map((product) => (
                   <div
                     className="home-product-card"
                     key={product.id}
@@ -1658,7 +1730,7 @@ export default function HomePage() {
                 </button>
               )}
               <div className="home-product-carousel" ref={travelerViewsRef}>
-                {viewedByTravelers.map((product) => (
+                {(dynamicMostViewed.length > 0 ? dynamicMostViewed : viewedByTravelers).map((product) => (
                   <div
                     className="home-product-card"
                     key={product.id}

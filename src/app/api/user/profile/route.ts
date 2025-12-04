@@ -41,6 +41,7 @@ export async function GET(request: Request) {
           postalCode: user.address?.postalCode || "",
         },
         gender: user.gender || "",
+        dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString().split('T')[0] : "",
         isSeller: user.isSeller || false,
         sellerApplicationStatus: user.sellerProfile?.applicationStatus || null,
       },
@@ -66,7 +67,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { fullName, phone, address, gender, profilePicture } = body;
+    const { fullName, phone, address, gender, profilePicture, dateOfBirth } = body;
 
     await connectDB();
     const user = await User.findByIdAndUpdate(
@@ -77,6 +78,7 @@ export async function PUT(request: Request) {
         address,
         gender,
         profilePicture,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       },
       { new: true, runValidators: true }
     ).select("-password");
@@ -98,6 +100,7 @@ export async function PUT(request: Request) {
         profilePicture: user.profilePicture,
         address: user.address,
         gender: user.gender,
+        dateOfBirth: user.dateOfBirth ? user.dateOfBirth.toISOString().split('T')[0] : "",
       },
     });
   } catch (error: any) {

@@ -2853,6 +2853,7 @@ export default function ProfilePage() {
   const [region, setRegion] = useState<string>("");
   const [barangay, setBarangay] = useState<string>("");
   const [selectedGender, setSelectedGender] = useState<string>("");
+  const [dateOfBirth, setDateOfBirth] = useState<string>("");
   const [profilePicture, setProfilePicture] = useState<string>(
     DEFAULT_PROFILE_PICTURE
   );
@@ -2912,8 +2913,15 @@ export default function ProfilePage() {
         setActiveSection(querySection);
       }
 
-      if (querySection === "profile") setExpandedSection("profile");
-      else setExpandedSection(null);
+      // Expand profile section only when it's explicitly selected
+      if (querySection === "profile") {
+        setExpandedSection("profile");
+      } else {
+        setExpandedSection(null);
+      }
+      
+      // Scroll to top when section changes via URL
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [querySection, isSeller]);
 
@@ -2970,6 +2978,7 @@ export default function ProfilePage() {
           setRegion(data.data.address.region || "");
           setPostal(data.data.address.postalCode || "");
           setSelectedGender(data.data.gender || "");
+          setDateOfBirth(data.data.dateOfBirth || "");
 
           // Only update profile picture if we have a new one
           const newProfilePicture =
@@ -3085,8 +3094,10 @@ export default function ProfilePage() {
         setSellerStoryTitle(data.data.sellerStoryTitle || "");
         setSellerStory(data.data.sellerStory || "");
 
-        // Set seller photo preview if available
+        // Set seller photo URL state
         if (data.data.sellerPhoto) {
+          setSellerPhotoUrl(data.data.sellerPhoto);
+          // Also update the preview element if it exists (for backwards compatibility)
           const previewEl = document.getElementById(
             "sellerPhotoPreview"
           ) as HTMLImageElement;
@@ -3143,9 +3154,9 @@ export default function ProfilePage() {
     try {
       // Upload valid ID first if not already uploaded
       let validIdFileUrl = "";
-      if (validIdFile) {
+      if (verificationFile) {
         const formData = new FormData();
-        formData.append("file", validIdFile);
+        formData.append("file", verificationFile);
 
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
@@ -3161,7 +3172,7 @@ export default function ProfilePage() {
       }
 
       // Upload seller photo if provided
-      let sellerPhotoUrl = "";
+      let uploadedSellerPhotoUrl = "";
       if (sellerPhotos.length > 0) {
         const sellerPhotoFormData = new FormData();
         sellerPhotoFormData.append("file", sellerPhotos[0]);
@@ -3177,12 +3188,18 @@ export default function ProfilePage() {
           alert(sellerPhotoData.message || "Failed to upload story photo");
           return false;
         }
-        sellerPhotoUrl = sellerPhotoData.data.url;
+        uploadedSellerPhotoUrl = sellerPhotoData.data.url;
+        // Update the state with the new photo URL
+        setSellerPhotoUrl(uploadedSellerPhotoUrl);
       } else {
-        const sellerPhotoEl = document.getElementById(
-          "sellerPhotoPreview"
-        ) as HTMLImageElement;
-        sellerPhotoUrl = sellerPhotoEl?.src || "";
+        // Use existing photo URL from state or DOM
+        uploadedSellerPhotoUrl = sellerPhotoUrl || "";
+        if (!uploadedSellerPhotoUrl) {
+          const sellerPhotoEl = document.getElementById(
+            "sellerPhotoPreview"
+          ) as HTMLImageElement;
+          uploadedSellerPhotoUrl = sellerPhotoEl?.src || "";
+        }
       }
 
       // Prepare application data
@@ -3199,7 +3216,7 @@ export default function ProfilePage() {
         socialMediaLinks,
         sellerStoryTitle,
         sellerStory,
-        sellerPhoto: sellerPhotoUrl,
+        sellerPhoto: uploadedSellerPhotoUrl,
         validIdUrl: validIdFileUrl,
         documentType,
         verificationFile: verificationFile?.name || "",
@@ -3377,6 +3394,7 @@ export default function ProfilePage() {
             postalCode: postal,
           },
           gender: selectedGender,
+          dateOfBirth,
           profilePicture,
         }),
       });
@@ -3395,6 +3413,7 @@ export default function ProfilePage() {
           setRegion(data.data.address?.region || "");
           setPostal(data.data.address?.postalCode || "");
           setSelectedGender(data.data.gender || "");
+          setDateOfBirth(data.data.dateOfBirth || "");
           if (data.data.profilePicture) {
             setProfilePicture(data.data.profilePicture);
           }
@@ -3643,7 +3662,6 @@ export default function ProfilePage() {
 
   const [pickupBarangay, setPickupBarangay] = useState("");
 
-  const [validIdFile, setValidIdFile] = useState<File | null>(null);
   const [isValidatingId, setIsValidatingId] = useState(false);
 
   const [sellerStoryTitle, setSellerStoryTitle] = useState("");
@@ -3686,6 +3704,7 @@ export default function ProfilePage() {
   });
   const [deliveryRadius, setDeliveryRadius] = useState("");
   const [sellerPhotos, setSellerPhotos] = useState<File[]>([]);
+  const [sellerPhotoUrl, setSellerPhotoUrl] = useState<string>("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToCommission, setAgreedToCommission] = useState(false);
   const [agreedToShipping, setAgreedToShipping] = useState(false);
@@ -3796,7 +3815,7 @@ export default function ProfilePage() {
         pickupAddress: pickupAddress || "EMPTY",
         shopEmail: shopEmail || "EMPTY",
         shopPhone: `${shopPhone} (${shopPhone.length} digits, need 11)`,
-        validIdFile: validIdFile?.name || "NO FILE",
+        verificationFile: verificationFile?.name || "NO FILE",
       });
     }
 
@@ -4132,7 +4151,12 @@ export default function ProfilePage() {
                   <div className="form-row double-row">
                     <div className="form-group">
                       <label className="form-label">Date of Birth</label>
-                      <input type="date" className="form-input" />
+                      <input
+                        type="date"
+                        className="form-input"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                      />
                     </div>
 
                     <div className="form-group">
@@ -4142,17 +4166,35 @@ export default function ProfilePage() {
                         style={{ alignItems: "center" }}
                       >
                         <label className="gender-option">
-                          <input type="radio" name="gender" value="male" />
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="male"
+                            checked={selectedGender === "male"}
+                            onChange={(e) => setSelectedGender(e.target.value)}
+                          />
                           <span className="custom-radio" />
                           Male
                         </label>
                         <label className="gender-option">
-                          <input type="radio" name="gender" value="female" />
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="female"
+                            checked={selectedGender === "female"}
+                            onChange={(e) => setSelectedGender(e.target.value)}
+                          />
                           <span className="custom-radio" />
                           Female
                         </label>
                         <label className="gender-option">
-                          <input type="radio" name="gender" value="other" />
+                          <input
+                            type="radio"
+                            name="gender"
+                            value="other"
+                            checked={selectedGender === "other"}
+                            onChange={(e) => setSelectedGender(e.target.value)}
+                          />
                           <span className="custom-radio" />
                           Other
                         </label>
@@ -4570,15 +4612,7 @@ export default function ProfilePage() {
                             <div className="order-summary">
                               <div className="order-summary-row">
                                 <span className="order-summary-label">
-                                  Items
-                                </span>
-                                <span className="order-summary-value">
-                                  {totalItems}
-                                </span>
-                              </div>
-                              <div className="order-summary-row">
-                                <span className="order-summary-label">
-                                  Order Total
+                                  {totalItems} {totalItems === 1 ? 'item' : 'items'}
                                 </span>
                                 <span className="order-summary-value">
                                   {formatCurrency(
@@ -4586,14 +4620,16 @@ export default function ProfilePage() {
                                   )}
                                 </span>
                               </div>
-                              <div className="order-payment-meta">
-                                Payment: {paymentMethodLabel} ·{" "}
-                                {paymentStatusLabel}
-                              </div>
-                              <div className="order-payment-meta">
-                                Placed on {formatOrderDate(order.createdAt)}
-                              </div>
                             </div>
+                            {order.status === 'shipped' && !confirmedOrders.has(order._id) && (
+                              <button
+                                className="order-btn primary"
+                                onClick={() => handleConfirmReceipt(order._id)}
+                                disabled={loadingConfirm}
+                              >
+                                {loadingConfirm && pendingOrderId === order._id ? 'Processing...' : 'Order Received'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -6159,12 +6195,9 @@ export default function ProfilePage() {
                       gap: "32px",
                     }}
                   >
-                    {/* Profile Picture */}
+                    {/* Profile Picture - uses user's profile picture, not the story photo */}
                     <img
                       src={
-                        document
-                          .getElementById("sellerPhotoPreview")
-                          ?.getAttribute("src") ||
                         profilePicture ||
                         "/default-profile.jpg"
                       }
@@ -6315,18 +6348,18 @@ export default function ProfilePage() {
                       gap: "32px",
                     }}
                   >
-                    {/* Story Image */}
+                    {/* Story Image - maintains aspect ratio with max dimensions */}
                     <img
                       src={
-                        document
-                          .getElementById("storyPhotoPreview")
-                          ?.getAttribute("src") || "/default-profile.jpg"
+                        sellerPhotoUrl || "/default-profile.jpg"
                       }
                       alt="Story"
                       style={{
-                        width: "180px",
-                        height: "180px",
-                        objectFit: "cover",
+                        maxWidth: "180px",
+                        maxHeight: "240px",
+                        width: "auto",
+                        height: "auto",
+                        objectFit: "contain",
                         borderRadius: "8px",
                         boxShadow: "0 2px 12px rgba(46,63,54,0.08)",
                         flexShrink: 0,

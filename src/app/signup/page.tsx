@@ -35,9 +35,9 @@ const BARANGAYS = [
   "West Tapinac",
 ];
 
-const CITIES = ["Olongapo City"];
+const CITIES = ["Olongapo"];
 const PROVINCES = ["Zambales"];
-const REGIONS = ["Region III (Central Luzon)"];
+const REGIONS = ["Central Luzon (Region III)"];
 
 export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -54,9 +54,9 @@ export default function SignupPage() {
     // Step 3
     street: "",
     barangay: "",
-    city: "Olongapo City",
+    city: "Olongapo",
     province: "Zambales",
-    region: "Region III (Central Luzon)",
+    region: "Central Luzon (Region III)",
     postalCode: "",
   });
 
@@ -76,6 +76,10 @@ export default function SignupPage() {
   const [isPasswordBreached, setIsPasswordBreached] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [showEmailSentModal, setShowEmailSentModal] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const { getToken, error: recaptchaError } = useRecaptcha();
   const { csrfToken, loading: csrfLoading } = useCsrfToken();
@@ -250,13 +254,9 @@ export default function SignupPage() {
         console.log("Development verification link:", data.developmentLink);
       }
 
-      setSuccess(
-        "Account created successfully! Please check your email to verify your account."
-      );
-
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
+      // Show email verification modal
+      setRegisteredEmail(formData.email);
+      setShowEmailSentModal(true);
     } catch (error: any) {
       setError(getFriendlyErrorMessage(error.message || error));
     } finally {
@@ -284,6 +284,35 @@ export default function SignupPage() {
     } catch (error: any) {
       setError(getFriendlyErrorMessage(error?.message || error));
       setSocialLoading(null);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registeredEmail || isResendingEmail) return;
+    
+    setIsResendingEmail(true);
+    setResendMessage("");
+    
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: registeredEmail }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResendMessage("Verification email sent! Please check your inbox.");
+      } else {
+        setResendMessage(data.message || "Failed to resend email. Please try again.");
+      }
+    } catch (error) {
+      setResendMessage("Network error. Please try again.");
+    } finally {
+      setIsResendingEmail(false);
     }
   };
 
@@ -748,8 +777,8 @@ export default function SignupPage() {
                         }}
                       >
                         <option value="">Select Region</option>
-                        <option value="Region III (Central Luzon)">
-                          Region III (Central Luzon)
+                        <option value="Central Luzon (Region III)">
+                          Central Luzon (Region III)
                         </option>
                       </select>
                       <i className="fas fa-chevron-down input-icon"></i>
@@ -826,7 +855,7 @@ export default function SignupPage() {
                       >
                         <option value="">Select City</option>
                         {formData.province && (
-                          <option value="Olongapo City">Olongapo City</option>
+                          <option value="Olongapo">Olongapo</option>
                         )}
                       </select>
                       <i className="fas fa-chevron-down input-icon"></i>
@@ -1000,6 +1029,68 @@ export default function SignupPage() {
                 Accept
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Verification Sent Modal */}
+      {showEmailSentModal && (
+        <div className="modal-overlay">
+          <div className="modal-content email-sent-modal">
+            <div className="email-sent-icon">
+              <i className="fas fa-envelope-open-text"></i>
+            </div>
+            <h2>Verify Your Email</h2>
+            <p className="email-sent-message">
+              We've sent a verification link to:
+            </p>
+            <p className="email-address-display">{registeredEmail}</p>
+            <p className="email-sent-instructions">
+              Please check your inbox and click the verification link to activate your account. 
+              If you don't see the email, check your spam folder.
+            </p>
+            
+            {resendMessage && (
+              <div className={`resend-message ${resendMessage.includes("sent") ? "success" : "error"}`}>
+                <i className={`fas ${resendMessage.includes("sent") ? "fa-check-circle" : "fa-exclamation-circle"}`}></i>
+                {resendMessage}
+              </div>
+            )}
+            
+            <div className="email-sent-actions">
+              <button
+                className="resend-btn"
+                onClick={handleResendVerification}
+                disabled={isResendingEmail}
+              >
+                {isResendingEmail ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-redo"></i>
+                    Resend Email
+                  </>
+                )}
+              </button>
+              <button
+                className="go-to-login-btn"
+                onClick={() => router.push("/login")}
+              >
+                Go to Login
+              </button>
+            </div>
+            
+            {devVerificationLink && (
+              <div className="dev-link-section">
+                <p className="dev-link-label">Development Link:</p>
+                <a href={devVerificationLink} className="dev-link">
+                  Click here to verify (Dev only)
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}

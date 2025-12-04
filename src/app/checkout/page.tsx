@@ -849,13 +849,13 @@ export default function CheckoutPage() {
       {showSuccessModal && (
         <div className="modal-overlay">
           <div className="modal-box">
-            <h3 className="modal-title">🎉 Order Placed Successfully!</h3>
+            <h3 className="modal-title">🎉 Order Delivered Successfully!</h3>
             <p className="modal-text">
               {selectedPayment === "card" 
                 ? "Redirecting to payment page..." 
                 : selectedPayment === "ewallet"
                 ? "Redirecting to payment verification..."
-                : "Thank you for your order! You'll receive updates on your order status."}
+                : "Thank you for your order! Your order has been marked as delivered."}
             </p>
           </div>
         </div>

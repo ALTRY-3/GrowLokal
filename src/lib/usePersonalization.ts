@@ -65,8 +65,10 @@ const MAX_RECENT_VIEWS = 50;
 const MAX_RECENT_SEARCHES = 20;
 const MAX_INTERESTS = 15;
 const VIEW_EXPIRY_DAYS = 30;
-const CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes cache (increased from 5)
+const CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes cache
 const STALE_WHILE_REVALIDATE_MS = 30 * 1000; // Background refresh after 30s
+const FETCH_RETRY_DELAY_MS = 2000; // Retry after 2s if fetch fails
+const MAX_RETRIES = 2;
 
 // Helper to safely access localStorage
 function getStorageItem<T>(key: string, defaultValue: T): T {
@@ -113,7 +115,7 @@ function cacheProducts(products: PersonalizedProduct[]): void {
 }
 
 // Get cached products if still valid
-function getCachedProducts(): { products: PersonalizedProduct[] | null; isStale: boolean } {
+function getCachedProducts(): { products: PersonalizedProduct[] | null; isStale: boolean; age: number } {
   const cacheTime = getStorageItem<number>(STORAGE_KEYS.cacheTimestamp, 0);
   const now = Date.now();
   const age = now - cacheTime;
@@ -123,13 +125,11 @@ function getCachedProducts(): { products: PersonalizedProduct[] | null; isStale:
     const cached = getStorageItem<PersonalizedProduct[]>(STORAGE_KEYS.cachedProducts, []);
     if (cached.length > 0) {
       const isStale = age > STALE_WHILE_REVALIDATE_MS;
-      console.log('[usePersonalization] Cache hit, age:', Math.round(age/1000), 's, stale:', isStale);
-      return { products: cached, isStale };
+      return { products: cached, isStale, age };
     }
   }
   
-  console.log('[usePersonalization] Cache miss or expired');
-  return { products: null, isStale: true };
+  return { products: null, isStale: true, age };
 }
 
 // Load behavior from localStorage
@@ -166,37 +166,16 @@ export function usePersonalization(
 ): UsePersonalizationReturn {
   const { limit = 20, category, excludeIds = [] } = options;
 
-  // Initialize products from cache if available - use a function to avoid running on every render
-  const [products, setProducts] = useState<PersonalizedProduct[]>(() => {
-    if (typeof window !== 'undefined') {
-      const { products: cached } = getCachedProducts();
-      return cached || [];
-    }
-    return [];
-  });
-  
-  // Start loading as false if we have cached products, true otherwise
-  const [loading, setLoading] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const { products: cached } = getCachedProducts();
-      return !cached || cached.length === 0;
-    }
-    return true;
-  });
-  
+  // Initialize with empty state - load from cache in useEffect to avoid SSR issues
+  const [products, setProducts] = useState<PersonalizedProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [behavior, setBehavior] = useState<UserBehavior>(() => {
-    // Initialize from localStorage on first render
-    if (typeof window !== 'undefined') {
-      return loadBehaviorFromStorage();
-    }
-    return {
-      recentViews: [],
-      recentSearches: [],
-      interests: [],
-      viewedCategories: [],
-      viewTimestamps: {},
-    };
+  const [behavior, setBehavior] = useState<UserBehavior>({
+    recentViews: [],
+    recentSearches: [],
+    interests: [],
+    viewedCategories: [],
+    viewTimestamps: {},
   });
   
   // Use refs to track fetch state - this is the KEY to preventing infinite loops
@@ -205,6 +184,8 @@ export function usePersonalization(
   const mountedRef = useRef(true);
   const hasInitializedRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Store options in ref to use in fetch without causing re-renders
   const optionsRef = useRef({ limit, category, excludeIds });
@@ -220,16 +201,16 @@ export function usePersonalization(
   }, [behavior]);
 
   // Fetch function - stable reference, uses refs for data
-  const fetchPersonalizedProducts = useCallback(async (isBackgroundRefresh = false) => {
+  const fetchPersonalizedProducts = useCallback(async (isBackgroundRefresh = false, retryAttempt = 0) => {
     // CRITICAL: Prevent concurrent fetches
     if (isFetchingRef.current) {
       console.log('[usePersonalization] Already fetching, skipping');
       return;
     }
     
-    // Throttle fetches - minimum 5 seconds between fetches
+    // Throttle fetches - minimum 3 seconds between fetches (reduced from 5)
     const now = Date.now();
-    if (now - lastFetchTimeRef.current < 5000 && !isBackgroundRefresh) {
+    if (now - lastFetchTimeRef.current < 3000 && !isBackgroundRefresh && retryAttempt === 0) {
       console.log('[usePersonalization] Throttled, too soon since last fetch');
       return;
     }
@@ -245,7 +226,7 @@ export function usePersonalization(
     
     try {
       // Only show loading spinner if this is not a background refresh and we have no products
-      if (!isBackgroundRefresh) {
+      if (!isBackgroundRefresh && retryAttempt === 0) {
         setLoading(true);
       }
       setError(null);
@@ -276,18 +257,17 @@ export function usePersonalization(
         params.set('excludeIds', currentOptions.excludeIds.join(','));
       }
 
-      console.log('[usePersonalization] Fetching products...', isBackgroundRefresh ? '(background)' : '');
+      console.log('[usePersonalization] Fetching products...', isBackgroundRefresh ? '(background)' : '', retryAttempt > 0 ? `(retry ${retryAttempt})` : '');
       
       const response = await fetch(`/api/products/personalized?${params.toString()}`, {
         signal: abortControllerRef.current.signal,
-        // Add cache headers to help with browser caching
         headers: {
-          'Cache-Control': 'max-age=60',
+          'Cache-Control': 'no-cache',
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch personalized products');
+        throw new Error(`Failed to fetch: ${response.status}`);
       }
 
       const data = await response.json();
@@ -298,14 +278,14 @@ export function usePersonalization(
       if (data.success && data.data && data.data.length > 0) {
         const fetchedProducts = data.data || [];
         setProducts(fetchedProducts);
-        // Cache the products for navigation persistence
         cacheProducts(fetchedProducts);
+        retryCountRef.current = 0; // Reset retry count on success
       } else {
         // Fallback: if personalized returns no products, fetch popular products
         console.log('[usePersonalization] No personalized products, fetching popular products as fallback');
         
         try {
-          const fallbackResponse = await fetch(`/api/products?limit=${currentOptions.limit}&sort=popular`, {
+          const fallbackResponse = await fetch(`/api/products?limit=${currentOptions.limit}&sortBy=viewCount&sortOrder=desc`, {
             signal: abortControllerRef.current.signal,
           });
           const fallbackData = await fallbackResponse.json();
@@ -316,6 +296,7 @@ export function usePersonalization(
             const fetchedProducts = fallbackData.data;
             setProducts(fetchedProducts);
             cacheProducts(fetchedProducts);
+            retryCountRef.current = 0;
           }
         } catch (fallbackErr: any) {
           if (fallbackErr.name !== 'AbortError') {
@@ -326,11 +307,24 @@ export function usePersonalization(
     } catch (err: any) {
       if (err.name === 'AbortError') {
         console.log('[usePersonalization] Fetch aborted');
+        isFetchingRef.current = false;
         return;
       }
       console.error('[usePersonalization] Fetch error:', err);
+      
       if (mountedRef.current) {
         setError(err.message);
+        
+        // Retry logic - only if we don't have products and haven't exceeded retries
+        if (retryAttempt < MAX_RETRIES && products.length === 0) {
+          console.log(`[usePersonalization] Will retry in ${FETCH_RETRY_DELAY_MS}ms (attempt ${retryAttempt + 1}/${MAX_RETRIES})`);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (mountedRef.current) {
+              isFetchingRef.current = false; // Allow retry
+              fetchPersonalizedProducts(false, retryAttempt + 1);
+            }
+          }, FETCH_RETRY_DELAY_MS);
+        }
       }
     } finally {
       if (mountedRef.current) {
@@ -338,15 +332,36 @@ export function usePersonalization(
       }
       isFetchingRef.current = false;
     }
-  }, []); // Empty deps - uses refs for all data
+  }, [products.length]); // Include products.length to check for retry necessity
 
-  // Track if component is mounted
   // Track if component is mounted
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      // Clear any pending retries
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
+  }, []);
+
+  // Load behavior and cached products on mount (client-side only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Load behavior from storage
+    const storedBehavior = loadBehaviorFromStorage();
+    setBehavior(storedBehavior);
+    
+    // Check for cached products
+    const { products: cachedProducts, isStale, age } = getCachedProducts();
+    
+    if (cachedProducts && cachedProducts.length > 0) {
+      console.log('[usePersonalization] Found cached products:', cachedProducts.length, 'age:', Math.round(age/1000), 's');
+      setProducts(cachedProducts);
+      setLoading(false);
+    }
   }, []);
 
   // Initial fetch - runs on mount with stale-while-revalidate pattern
@@ -358,11 +373,7 @@ export function usePersonalization(
     const { products: cachedProducts, isStale } = getCachedProducts();
     
     if (cachedProducts && cachedProducts.length > 0) {
-      // We have cached products - show them immediately
-      setProducts(cachedProducts);
-      setLoading(false);
-      console.log('[usePersonalization] Showing cached products:', cachedProducts.length);
-      
+      // We have cached products - they were set in the previous effect
       // If cache is stale, refresh in background
       if (isStale) {
         console.log('[usePersonalization] Cache stale, scheduling background refresh');
@@ -370,7 +381,7 @@ export function usePersonalization(
           if (mountedRef.current) {
             fetchPersonalizedProducts(true); // Background refresh
           }
-        }, 500); // Short delay to avoid blocking render
+        }, 300); // Short delay to avoid blocking render
         
         return () => {
           clearTimeout(refreshTimeoutId);
