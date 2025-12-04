@@ -2919,9 +2919,9 @@ export default function ProfilePage() {
       } else {
         setExpandedSection(null);
       }
-      
+
       // Scroll to top when section changes via URL
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [querySection, isSeller]);
 
@@ -4612,7 +4612,8 @@ export default function ProfilePage() {
                             <div className="order-summary">
                               <div className="order-summary-row">
                                 <span className="order-summary-label">
-                                  {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                                  {totalItems}{" "}
+                                  {totalItems === 1 ? "item" : "items"}
                                 </span>
                                 <span className="order-summary-value">
                                   {formatCurrency(
@@ -4621,15 +4622,22 @@ export default function ProfilePage() {
                                 </span>
                               </div>
                             </div>
-                            {order.status === 'shipped' && !confirmedOrders.has(order._id) && (
-                              <button
-                                className="order-btn primary"
-                                onClick={() => handleConfirmReceipt(order._id)}
-                                disabled={loadingConfirm}
-                              >
-                                {loadingConfirm && pendingOrderId === order._id ? 'Processing...' : 'Order Received'}
-                              </button>
-                            )}
+                            {order.status === "shipped" &&
+                              order._id &&
+                              !confirmedOrders.has(order._id) && (
+                                <button
+                                  className="order-btn primary"
+                                  onClick={() =>
+                                    handleConfirmReceipt(order._id!)
+                                  }
+                                  disabled={loadingConfirm}
+                                >
+                                  {loadingConfirm &&
+                                  pendingOrderId === order._id
+                                    ? "Processing..."
+                                    : "Order Received"}
+                                </button>
+                              )}
                           </div>
                         </div>
                       );
@@ -6197,10 +6205,7 @@ export default function ProfilePage() {
                   >
                     {/* Profile Picture - uses user's profile picture, not the story photo */}
                     <img
-                      src={
-                        profilePicture ||
-                        "/default-profile.jpg"
-                      }
+                      src={profilePicture || "/default-profile.jpg"}
                       alt="Shop Profile Picture"
                       style={{
                         width: 120,
@@ -6350,9 +6355,7 @@ export default function ProfilePage() {
                   >
                     {/* Story Image - maintains aspect ratio with max dimensions */}
                     <img
-                      src={
-                        sellerPhotoUrl || "/default-profile.jpg"
-                      }
+                      src={sellerPhotoUrl || "/default-profile.jpg"}
                       alt="Story"
                       style={{
                         maxWidth: "180px",
@@ -6553,7 +6556,7 @@ export default function ProfilePage() {
                         Shop Analytics
                       </span>
                     </div>
-                    {/* FAQ */}
+                    {/* My Orders */}
                     <div
                       className="quick-link-card"
                       style={{
@@ -6568,20 +6571,19 @@ export default function ProfilePage() {
                         cursor: "pointer",
                         position: "relative",
                       }}
-                      onClick={() => (window.location.href = "/faq")}
+                      onClick={() => (window.location.href = "/myorders")}
                       tabIndex={0}
                       role="button"
-                      aria-label="Go to FAQ"
+                      aria-label="Go to My Orders"
                     >
-                      <span
+                      <i
+                        className="fa-solid fa-truck"
                         style={{
-                          fontSize: 30,
+                          fontSize: 23,
                           color: "#FFC46B",
                           marginBottom: 8,
                         }}
-                      >
-                        ?
-                      </span>
+                      ></i>
                       <span
                         style={{
                           fontWeight: 600,
@@ -6589,7 +6591,7 @@ export default function ProfilePage() {
                           color: "#FFC46B",
                         }}
                       >
-                        FAQ
+                        My Orders
                       </span>
                     </div>
                   </div>
