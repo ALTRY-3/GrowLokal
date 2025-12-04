@@ -71,9 +71,24 @@ type CartApiResponse = {
 };
 
 const shippingOptions: ShippingOption[] = [
-  { id: "standard", name: "Standard Shipping", price: 58, estimatedDays: "3-5 business days" },
-  { id: "express", name: "Express Shipping", price: 75, estimatedDays: "2-3 business days" },
-  { id: "priority", name: "Priority Shipping", price: 120, estimatedDays: "1-2 business days" },
+  {
+    id: "standard",
+    name: "Standard Shipping",
+    price: 58,
+    estimatedDays: "3-5 business days",
+  },
+  {
+    id: "express",
+    name: "Express Shipping",
+    price: 75,
+    estimatedDays: "2-3 business days",
+  },
+  {
+    id: "priority",
+    name: "Priority Shipping",
+    price: 120,
+    estimatedDays: "1-2 business days",
+  },
 ];
 
 const FALLBACK_ADDRESS: UserAddress = {
@@ -94,22 +109,31 @@ export default function CheckoutPage() {
   const { clearCart } = useCartStore();
 
   const [checkoutItems, setCheckoutItems] = React.useState<CheckoutItem[]>([]);
-  const [userAddress, setUserAddress] = React.useState<UserAddress | null>(FALLBACK_ADDRESS);
-  const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([FALLBACK_ADDRESS]);
+  const [userAddress, setUserAddress] = React.useState<UserAddress | null>(
+    FALLBACK_ADDRESS
+  );
+  const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([
+    FALLBACK_ADDRESS,
+  ]);
   const [showAddressModal, setShowAddressModal] = React.useState(false);
-  
+
   const [isLoading, setIsLoading] = React.useState(true);
   const [isProcessing, setIsProcessing] = React.useState(false);
   const [error, setError] = React.useState("");
-  
+
   const [selectedPayment, setSelectedPayment] = React.useState("");
-  const [selectedShipping, setSelectedShipping] = React.useState(shippingOptions[0]);
+  const [selectedShipping, setSelectedShipping] = React.useState(
+    shippingOptions[0]
+  );
   const [showShippingOptions, setShowShippingOptions] = React.useState(false);
-  
+
   const [voucherCode, setVoucherCode] = React.useState("");
-  const [appliedVoucher, setAppliedVoucher] = React.useState<{ code: string; discount: number } | null>(null);
+  const [appliedVoucher, setAppliedVoucher] = React.useState<{
+    code: string;
+    discount: number;
+  } | null>(null);
   const [messageToSeller, setMessageToSeller] = React.useState("");
-  
+
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
 
   const broadcastOrderUpdate = React.useCallback((newOrderId: string) => {
@@ -133,7 +157,9 @@ export default function CheckoutPage() {
     );
   }, []);
 
-  const fetchCartItems = React.useCallback(async (): Promise<CheckoutItem[]> => {
+  const fetchCartItems = React.useCallback(async (): Promise<
+    CheckoutItem[]
+  > => {
     try {
       const response = await fetch("/api/cart", { cache: "no-store" });
       const data: CartApiResponse = await response.json();
@@ -203,7 +229,7 @@ export default function CheckoutPage() {
 
       const storedCart = sessionStorage.getItem("checkoutItems");
       console.log("📦 Raw sessionStorage data:", storedCart);
-      
+
       if (storedCart) {
         try {
           const parsedCart = JSON.parse(storedCart) as Partial<CheckoutItem>[];
@@ -238,7 +264,7 @@ export default function CheckoutPage() {
       //   try {
       //     const response = await fetch("/api/user/profile");
       //     const contentType = response.headers.get("content-type");
-      //     
+      //
       //     if (response.ok && contentType?.includes("application/json")) {
       //       const data = await response.json();
       //       if (data.address) {
@@ -279,9 +305,7 @@ export default function CheckoutPage() {
           session?.user?.name ||
           FALLBACK_ADDRESS.fullName,
         email:
-          profile.data.email ||
-          session?.user?.email ||
-          FALLBACK_ADDRESS.email,
+          profile.data.email || session?.user?.email || FALLBACK_ADDRESS.email,
         phone: profile.data.phone || FALLBACK_ADDRESS.phone,
         street: profile.data.address?.street || "",
         barangay: profile.data.address?.barangay || "",
@@ -294,7 +318,10 @@ export default function CheckoutPage() {
       setUserAddress(normalizedAddress);
       setSavedAddresses([normalizedAddress]);
     } catch (profileError) {
-      console.warn("Using fallback address due to profile fetch issue:", profileError);
+      console.warn(
+        "Using fallback address due to profile fetch issue:",
+        profileError
+      );
       setUserAddress(FALLBACK_ADDRESS);
       setSavedAddresses([FALLBACK_ADDRESS]);
     }
@@ -318,7 +345,9 @@ export default function CheckoutPage() {
       fullName: baseAddress.fullName || fallbackName,
       email: baseAddress.email || fallbackEmail,
       phone: baseAddress.phone || FALLBACK_ADDRESS.phone,
-      address: [baseAddress.street, baseAddress.barangay].filter(Boolean).join(", "),
+      address: [baseAddress.street, baseAddress.barangay]
+        .filter(Boolean)
+        .join(", "),
       city: baseAddress.city || FALLBACK_ADDRESS.city,
       province: baseAddress.province || FALLBACK_ADDRESS.province,
       postalCode: baseAddress.postalCode || FALLBACK_ADDRESS.postalCode,
@@ -354,11 +383,15 @@ export default function CheckoutPage() {
       setIsProcessing(true);
       setError("");
 
-      const subtotal = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const subtotal = checkoutItems.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
       const shippingFee = selectedShipping.price;
       const discount = appliedVoucher?.discount || 0;
       const total = subtotal + shippingFee - discount;
-      const normalizedPaymentMethod = selectedPayment === "ewallet" ? "gcash" : selectedPayment;
+      const normalizedPaymentMethod =
+        selectedPayment === "ewallet" ? "gcash" : selectedPayment;
       const shippingPayload = buildShippingAddress();
 
       const orderData = {
@@ -381,7 +414,9 @@ export default function CheckoutPage() {
       });
 
       if (!response.ok) {
-        const body = await response.json().catch(() => ({ message: "Failed to create order" }));
+        const body = await response
+          .json()
+          .catch(() => ({ message: "Failed to create order" }));
         throw new Error(body.message || "Failed to create order");
       }
 
@@ -411,36 +446,52 @@ export default function CheckoutPage() {
 
         const paymongoData = await paymongoResponse.json();
 
-        if (!paymongoResponse.ok || !paymongoData.success || !paymongoData.data?.checkoutUrl) {
-          throw new Error(paymongoData.message || "Failed to initialize e-wallet payment");
+        if (
+          !paymongoResponse.ok ||
+          !paymongoData.success ||
+          !paymongoData.data?.checkoutUrl
+        ) {
+          throw new Error(
+            paymongoData.message || "Failed to initialize e-wallet payment"
+          );
         }
 
         window.location.href = paymongoData.data.checkoutUrl;
         return;
       }
 
-        if (normalizedPaymentMethod === "card") {
-          router.push(`/payment/${newOrderId}`);
-          return;
-        }
+      if (normalizedPaymentMethod === "card") {
+        router.push(`/payment/${newOrderId}`);
+        return;
+      }
 
-        // Show success modal for non-card methods
-        setShowSuccessModal(true);
+      // Show success modal for non-card methods
+      setShowSuccessModal(true);
 
-        setTimeout(() => {
-          router.push("/profile?section=orders");
-        }, 1500);
+      setTimeout(() => {
+        router.push("/profile?section=orders");
+      }, 1500);
     } catch (err) {
       console.error("Error placing order:", err);
-      setError(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to place order. Please try again."
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
   // Calculations
-  const totalItems = checkoutItems.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = checkoutItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalItems = checkoutItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+  const subtotal = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
   const shippingFee = selectedShipping.price;
   const discount = appliedVoucher?.discount || 0;
   const total = subtotal + shippingFee - discount;
@@ -458,10 +509,10 @@ export default function CheckoutPage() {
       <>
         <Navbar />
         <div className="checkout-wrapper">
-           <div className="checkout-loading" role="status" aria-live="polite">
-             <span className="checkout-loading-spinner" aria-hidden="true" />
-             <p>Loading checkout...</p>
-           </div>
+          <div className="checkout-loading" role="status" aria-live="polite">
+            <span className="checkout-loading-spinner" aria-hidden="true" />
+            <p>Loading checkout...</p>
+          </div>
         </div>
         <Footer />
       </>
@@ -475,7 +526,10 @@ export default function CheckoutPage() {
         <div className="checkout-wrapper">
           <div style={{ textAlign: "center", padding: "2rem" }}>
             <p>No items in checkout</p>
-            <button onClick={() => router.push("/cart")} className="place-order-btn">
+            <button
+              onClick={() => router.push("/cart")}
+              className="place-order-btn"
+            >
               Go to Cart
             </button>
           </div>
@@ -518,7 +572,8 @@ export default function CheckoutPage() {
                 <div className="address-phone">{userAddress.phone}</div>
               </div>
               <div className="address-right">
-                {userAddress.street}, {userAddress.barangay}, {userAddress.city}, {userAddress.province} {userAddress.postalCode}
+                {userAddress.street}, {userAddress.barangay}, {userAddress.city}
+                , {userAddress.province} {userAddress.postalCode}
               </div>
             </div>
           )}
@@ -535,13 +590,15 @@ export default function CheckoutPage() {
 
           <div className="checkout-items-scroll">
             {checkoutItems.length === 0 ? (
-              <div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
+              <div
+                style={{ padding: "20px", textAlign: "center", color: "#666" }}
+              >
                 No items found. Redirecting to cart...
               </div>
             ) : (
               checkoutItems.map((item) => (
                 <div className="checkout-item-row" key={item.productId}>
-                  <div className="product-info">
+                  <div className="checkout-product-info">
                     <img
                       src={item.image}
                       alt={item.name}
@@ -573,7 +630,7 @@ export default function CheckoutPage() {
           <div className="checkout-shipping-section">
             <div className="shipping-header">
               <span className="shipping-label">Shipping Option</span>
-              <button 
+              <button
                 className="change-shipping-btn"
                 onClick={() => setShowShippingOptions(true)}
               >
@@ -602,8 +659,10 @@ export default function CheckoutPage() {
             {appliedVoucher ? (
               <div className="voucher-applied">
                 <span className="voucher-code">{appliedVoucher.code}</span>
-                <span className="voucher-discount">-₱{appliedVoucher.discount}</span>
-                <button 
+                <span className="voucher-discount">
+                  -₱{appliedVoucher.discount}
+                </span>
+                <button
                   className="remove-voucher-btn"
                   onClick={handleRemoveVoucher}
                 >
@@ -611,7 +670,7 @@ export default function CheckoutPage() {
                 </button>
               </div>
             ) : (
-              <button 
+              <button
                 className="select-voucher-btn"
                 onClick={() => {
                   const code = prompt("Enter voucher code:");
@@ -630,7 +689,9 @@ export default function CheckoutPage() {
 
           {/* Message to Seller */}
           <div className="checkout-message-section">
-            <label className="message-label">Message to Seller (Optional)</label>
+            <label className="message-label">
+              Message to Seller (Optional)
+            </label>
             <input
               type="text"
               className="message-input"
@@ -700,10 +761,12 @@ export default function CheckoutPage() {
               {selectedPayment === "card" && (
                 <div className="payment-info-box">
                   <p className="payment-info-text">
-                    You will be redirected to our secure payment page to enter your card details.
+                    You will be redirected to our secure payment page to enter
+                    your card details.
                   </p>
                   <p className="payment-info-note">
-                    We accept Visa, Mastercard, and other major credit/debit cards.
+                    We accept Visa, Mastercard, and other major credit/debit
+                    cards.
                   </p>
                 </div>
               )}
@@ -755,7 +818,9 @@ export default function CheckoutPage() {
                 {appliedVoucher && (
                   <div className="summary-row discount">
                     <span className="summary-label">Voucher Discount</span>
-                    <span className="summary-value discount">-₱{discount.toFixed(2)}</span>
+                    <span className="summary-value discount">
+                      -₱{discount.toFixed(2)}
+                    </span>
                   </div>
                 )}
                 <div className="summary-row total">
@@ -783,14 +848,22 @@ export default function CheckoutPage() {
 
       {/* Shipping Options Modal */}
       {showShippingOptions && (
-        <div className="modal-overlay" onClick={() => setShowShippingOptions(false)}>
-          <div className="modal-box shipping-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowShippingOptions(false)}
+        >
+          <div
+            className="modal-box shipping-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="modal-title">Select Shipping Option</h3>
             <div className="shipping-options-list">
               {shippingOptions.map((option) => (
                 <div
                   key={option.id}
-                  className={`shipping-option-item ${selectedShipping.id === option.id ? "selected" : ""}`}
+                  className={`shipping-option-item ${
+                    selectedShipping.id === option.id ? "selected" : ""
+                  }`}
                   onClick={() => {
                     setSelectedShipping(option);
                     setShowShippingOptions(false);
@@ -798,13 +871,15 @@ export default function CheckoutPage() {
                 >
                   <div className="shipping-option-info">
                     <div className="shipping-option-name">{option.name}</div>
-                    <div className="shipping-option-days">{option.estimatedDays}</div>
+                    <div className="shipping-option-days">
+                      {option.estimatedDays}
+                    </div>
                   </div>
                   <div className="shipping-option-price">₱{option.price}</div>
                 </div>
               ))}
             </div>
-            <button 
+            <button
               className="modal-close-btn"
               onClick={() => setShowShippingOptions(false)}
             >
@@ -816,26 +891,35 @@ export default function CheckoutPage() {
 
       {/* Address Selection Modal */}
       {showAddressModal && (
-        <div className="modal-overlay" onClick={() => setShowAddressModal(false)}>
-          <div className="modal-box address-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowAddressModal(false)}
+        >
+          <div
+            className="modal-box address-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="modal-title">Select Delivery Address</h3>
             <div className="address-list">
               {savedAddresses.map((address, index) => (
                 <div
                   key={index}
-                  className={`address-item ${userAddress === address ? "selected" : ""}`}
+                  className={`address-item ${
+                    userAddress === address ? "selected" : ""
+                  }`}
                   onClick={() => handleSelectAddress(address)}
                 >
                   <div className="address-item-info">
                     <div className="address-item-phone">{address.phone}</div>
                     <div className="address-item-text">
-                      {address.street}, {address.barangay}, {address.city}, {address.province} {address.postalCode}
+                      {address.street}, {address.barangay}, {address.city},{" "}
+                      {address.province} {address.postalCode}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <button 
+            <button
               className="modal-close-btn"
               onClick={() => setShowAddressModal(false)}
             >
@@ -851,8 +935,8 @@ export default function CheckoutPage() {
           <div className="modal-box">
             <h3 className="modal-title">🎉 Order Delivered Successfully!</h3>
             <p className="modal-text">
-              {selectedPayment === "card" 
-                ? "Redirecting to payment page..." 
+              {selectedPayment === "card"
+                ? "Redirecting to payment page..."
                 : selectedPayment === "ewallet"
                 ? "Redirecting to payment verification..."
                 : "Thank you for your order! Your order has been marked as delivered."}

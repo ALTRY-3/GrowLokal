@@ -38,6 +38,7 @@ export default function Chatbot() {
   const [botTyping, setBotTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatbotRef = useRef<HTMLDivElement>(null);
 
   const hiddenRoutes = [
     "/login",
@@ -55,6 +56,25 @@ export default function Chatbot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, botTyping]);
+
+  // Close chatbot when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        chatbotRef.current &&
+        !chatbotRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   // Show intro message when chat opens
   useEffect(() => {
@@ -173,7 +193,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="chatbot-container">
+    <div className="chatbot-container" ref={chatbotRef}>
       {/* Floating button when closed */}
       {!isOpen && (
         <button

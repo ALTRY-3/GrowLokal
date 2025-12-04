@@ -929,7 +929,7 @@
   color: #fff;
 }
 
-.modal-overlay {
+.profile-page-wrapper .modal-overlay {
   position: fixed;
   z-index: 1000;
   left: 0; top: 0; right: 0; bottom: 0;
@@ -939,7 +939,7 @@
   justify-content: center;
 }
 
-.modal-content {
+.profile-page-wrapper .modal-content {
   background: #fff;
   border-radius: 8px;
   padding: 32px 24px 24px 24px;
@@ -949,20 +949,20 @@
   text-align: center;
 }
 
-.modal-content h3 {
+.profile-page-wrapper .modal-content h3 {
   margin-top: 0;
   color: #af7928;
   font-size: 1.2rem;
   margin-bottom: 12px;
 }
 
-.modal-content p {
+.profile-page-wrapper .modal-content p {
   font-size: 14px;
   color: #333;
   margin-bottom: 24px;
 }
 
-.modal-actions {
+.profile-page-wrapper .modal-actions {
   display: flex;
   gap: 16px;
   justify-content: center;
