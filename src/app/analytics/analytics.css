@@ -1,3 +1,23 @@
+/* Prevent icon enlargement flash on first load (FontAwesome + React Icons only) */
+.fa-icon,
+.fa-solid,
+svg[data-icon],
+.react-icon {
+  width: 1rem !important;
+  height: 1rem !important;
+  font-size: 1rem !important;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.icon-stable {
+  width: 1rem !important;
+  height: 1rem !important;
+  font-size: 1rem !important;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .analytics-page-wrapper {
   padding: 24px 64px; 
   background-color: #f8f8f8;
@@ -250,31 +270,55 @@
   color: #af7928;
   margin-right: 8px;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
-.peso-symbol,
-.box-symbol,
-.warning-symbol,
-.person-icon,
-.add-person-icon,
+.box-symbol {
+  font-size: 1.2em;
+  margin-right: 8px;
+  vertical-align: middle;
+  color: #af7928;
+  flex-shrink: 0;
+}
+
+.warning-symbol {
+  font-size: 1.1em;
+  color: #e74c3c;
+  margin-right: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.alert-icon {
+  font-size: 1.1em;
+  color: #e74c3c;
+  margin-right: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.person-icon {
+  font-size: 1rem;
+  margin-right: 8px;
+  vertical-align: middle;
+  color: #2e3f36;
+  flex-shrink: 0;
+}
+
+.add-person-icon {
+  font-size: 1.2em;
+  margin-right: 8px;
+  vertical-align: middle;
+  color: #af7928;
+  flex-shrink: 0;
+}
+
 .star-icon {
   font-size: 1rem;
   margin-right: 8px;
   vertical-align: middle;
-  color: #af7928;
-}
-.warning-symbol,
-.alert-icon {
-  color: #e74c3c;
-}
-.star-icon {
   color: #dda756;
-}
-.add-person-icon {
-  color: #dda756;
-}
-.person-icon {
-  color: #2e3f36;
+  flex-shrink: 0;
 }
 
 .top-selling-table tbody tr:hover td {
@@ -297,12 +341,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.box-symbol {
-  font-size: 1.2em;
-  margin-right: 8px;
-  vertical-align: middle;
 }
 
 .product-management-grid {

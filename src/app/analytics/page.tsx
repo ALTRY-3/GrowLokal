@@ -318,7 +318,10 @@ export default function AnalyticsPage() {
 
                 {/* Shop Rating Display */}
                 <div className="shop-rating-container">
-                  <FontAwesomeIcon icon={faStar} className="shop-rating-star" />
+                  <FontAwesomeIcon
+                    icon={faStar}
+                    className="icon-stable shop-rating-star"
+                  />
                   <span className="shop-rating-value">
                     {shopRating.averageRating || "No ratings yet"}
                   </span>
@@ -355,6 +358,7 @@ export default function AnalyticsPage() {
                 >
                   <FontAwesomeIcon
                     icon={faMapMarkerAlt}
+                    className="icon-stable"
                     style={{ color: "#AF7928", fontSize: "1.1rem" }}
                   />
                   {shopInfo.location}

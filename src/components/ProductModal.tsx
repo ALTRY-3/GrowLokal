@@ -1,5 +1,11 @@
 "use client";
-import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   FaTimes,
   FaStar,
@@ -57,14 +63,14 @@ interface RecommendedProduct {
 
 // Storage keys for personalization
 const PERSONALIZATION_KEYS = {
-  recentViews: 'recentProductViews',
-  recentSearches: 'recentSearches',
-  interests: 'userInterests',
+  recentViews: "recentProductViews",
+  recentSearches: "recentSearches",
+  interests: "userInterests",
 };
 
 // Helper to get localStorage data
 function getStorageItem<T>(key: string, defaultValue: T): T {
-  if (typeof window === 'undefined') return defaultValue;
+  if (typeof window === "undefined") return defaultValue;
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -90,7 +96,7 @@ export default function ProductModal({
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [reviewText, setReviewText] = useState("");
-  
+
   // Review state
   const [reviewList, setReviewList] = useState<ProductReview[]>([]);
   const [reviewAverage, setReviewAverage] = useState<number | null>(null);
@@ -109,28 +115,30 @@ export default function ProductModal({
 
   // Use the wishlist hook
   const { isInWishlist, toggleWishlist } = useWishlist();
-  
+
   // Local state to track wishlist status for this modal instance
-  const [localWishlistState, setLocalWishlistState] = useState<boolean | null>(null);
-  
+  const [localWishlistState, setLocalWishlistState] = useState<boolean | null>(
+    null
+  );
+
   // Initialize local wishlist state when modal opens
   useEffect(() => {
     if (product.productId) {
       setLocalWishlistState(isInWishlist(product.productId));
     }
   }, [product.productId, isInWishlist]);
-  
+
   // Prevent rapid clicking
   const [isWishlistUpdating, setIsWishlistUpdating] = useState(false);
-  
+
   const handleWishlistToggle = async (productId: string) => {
     if (isWishlistUpdating) return; // Prevent double clicks
-    
+
     setIsWishlistUpdating(true);
-    
+
     // Optimistically update local state immediately
     setLocalWishlistState(!localWishlistState);
-    
+
     try {
       await toggleWishlist(productId);
       // Update local state with the actual result after toggle
@@ -145,7 +153,12 @@ export default function ProductModal({
   };
 
   // Use local state if available, otherwise fall back to hook state
-  const currentWishlistState = localWishlistState !== null ? localWishlistState : (product.productId ? isInWishlist(product.productId) : false);
+  const currentWishlistState =
+    localWishlistState !== null
+      ? localWishlistState
+      : product.productId
+      ? isInWishlist(product.productId)
+      : false;
 
   // Check if product has a valid MongoDB ObjectId
   const hasPersistedProductId = useMemo(() => {
@@ -181,7 +194,9 @@ export default function ProductModal({
       setReviewsLoading(true);
       setReviewsError(null);
       try {
-        const response = await fetch(`/api/products/${product.productId}/reviews`);
+        const response = await fetch(
+          `/api/products/${product.productId}/reviews`
+        );
         const payload = await response.json();
 
         if (!response.ok || !payload?.success) {
@@ -236,7 +251,9 @@ export default function ProductModal({
 
   // Helper to get reviewer avatar
   const getReviewerAvatar = (name: string) =>
-    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || "Reviewer")}`;
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+      name || "Reviewer"
+    )}`;
 
   // Close description on modal open
   useEffect(() => {
@@ -259,61 +276,84 @@ export default function ProductModal({
 
   const { addItem } = useCartStore();
 
-  const [recommendations, setRecommendations] = useState<RecommendedProduct[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendedProduct[]>(
+    []
+  );
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
-  const [addingRecommendation, setAddingRecommendation] = useState<string | null>(null);
-  const [successRecommendation, setSuccessRecommendation] = useState<string | null>(null);
+  const [addingRecommendation, setAddingRecommendation] = useState<
+    string | null
+  >(null);
+  const [successRecommendation, setSuccessRecommendation] = useState<
+    string | null
+  >(null);
 
   // Fetch personalized recommendations
   const fetchRecommendations = useCallback(async () => {
     if (!product.productId) return;
-    
+
     setRecommendationsLoading(true);
     try {
       // Get user behavior from localStorage
-      const recentViews = getStorageItem<string[]>(PERSONALIZATION_KEYS.recentViews, []);
-      const recentSearches = getStorageItem<string[]>(PERSONALIZATION_KEYS.recentSearches, []);
-      const interests = getStorageItem<string[]>(PERSONALIZATION_KEYS.interests, []);
-      
+      const recentViews = getStorageItem<string[]>(
+        PERSONALIZATION_KEYS.recentViews,
+        []
+      );
+      const recentSearches = getStorageItem<string[]>(
+        PERSONALIZATION_KEYS.recentSearches,
+        []
+      );
+      const interests = getStorageItem<string[]>(
+        PERSONALIZATION_KEYS.interests,
+        []
+      );
+
       // Build query params
       const params = new URLSearchParams();
-      params.set('limit', '6');
-      params.set('excludeIds', product.productId); // Exclude current product
-      
+      params.set("limit", "6");
+      params.set("excludeIds", product.productId); // Exclude current product
+
       // Add current product's category/craftType as interest for better recommendations
       if (product.category) {
-        const combinedInterests = [...new Set([product.category, ...interests])];
-        params.set('interests', combinedInterests.slice(0, 5).join(','));
+        const combinedInterests = [
+          ...new Set([product.category, ...interests]),
+        ];
+        params.set("interests", combinedInterests.slice(0, 5).join(","));
       } else if (interests.length > 0) {
-        params.set('interests', interests.slice(0, 5).join(','));
-      }
-      
-      if (recentViews.length > 0) {
-        params.set('recentViews', recentViews.slice(0, 10).join(','));
-      }
-      
-      if (recentSearches.length > 0) {
-        params.set('recentSearches', recentSearches.slice(0, 5).join(','));
+        params.set("interests", interests.slice(0, 5).join(","));
       }
 
-      const response = await fetch(`/api/products/personalized?${params.toString()}`);
+      if (recentViews.length > 0) {
+        params.set("recentViews", recentViews.slice(0, 10).join(","));
+      }
+
+      if (recentSearches.length > 0) {
+        params.set("recentSearches", recentSearches.slice(0, 5).join(","));
+      }
+
+      const response = await fetch(
+        `/api/products/personalized?${params.toString()}`
+      );
       const data = await response.json();
 
       if (data.success && data.data?.length > 0) {
         // Filter out current product just in case
-        const filtered = data.data.filter((p: RecommendedProduct) => p._id !== product.productId);
+        const filtered = data.data.filter(
+          (p: RecommendedProduct) => p._id !== product.productId
+        );
         setRecommendations(filtered.slice(0, 4));
       } else {
         // Fallback: fetch similar products by category
         const fallbackParams = new URLSearchParams();
-        fallbackParams.set('limit', '4');
+        fallbackParams.set("limit", "4");
         if (product.category) {
-          fallbackParams.set('category', product.category);
+          fallbackParams.set("category", product.category);
         }
-        
-        const fallbackResponse = await fetch(`/api/products?${fallbackParams.toString()}`);
+
+        const fallbackResponse = await fetch(
+          `/api/products?${fallbackParams.toString()}`
+        );
         const fallbackData = await fallbackResponse.json();
-        
+
         if (fallbackData.success) {
           const filtered = (fallbackData.data || []).filter(
             (p: RecommendedProduct) => p._id !== product.productId
@@ -322,7 +362,7 @@ export default function ProductModal({
         }
       }
     } catch (error) {
-      console.error('Failed to fetch recommendations:', error);
+      console.error("Failed to fetch recommendations:", error);
     } finally {
       setRecommendationsLoading(false);
     }
@@ -334,12 +374,15 @@ export default function ProductModal({
   }, [fetchRecommendations]);
 
   // Handle adding recommendation to cart
-  const handleAddRecommendationToCart = async (rec: RecommendedProduct, e: React.MouseEvent) => {
+  const handleAddRecommendationToCart = async (
+    rec: RecommendedProduct,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation(); // Prevent card click
-    
+
     if (!rec._id || rec.stock === 0 || !rec.isAvailable) return;
     if (addingRecommendation === rec._id) return;
-    
+
     try {
       setAddingRecommendation(rec._id);
       await addItem(rec._id, 1);
@@ -347,37 +390,44 @@ export default function ProductModal({
       setSuccessRecommendation(rec._id);
       setTimeout(() => setSuccessRecommendation(null), 1500);
     } catch (error) {
-      console.error('Failed to add recommendation to cart:', error);
+      console.error("Failed to add recommendation to cart:", error);
       setAddingRecommendation(null);
     }
   };
 
   // Handle clicking on a recommendation
-  const handleRecommendationClick = useCallback((rec: RecommendedProduct) => {
-    // Convert to legacy product format
-    const legacyProduct: Product = {
-      img: rec.images?.[0] || rec.thumbnailUrl || '/placeholder.png',
-      hoverImg: rec.images?.[1] || rec.images?.[0] || rec.thumbnailUrl || '/placeholder.png',
-      name: rec.name,
-      artist: rec.artistName || 'Local Artisan',
-      price: `₱${rec.price.toFixed(2)}`,
-      productId: rec._id,
-      maxStock: rec.stock || 99,
-      craftType: rec.craftType,
-      category: rec.category,
-      barangay: rec.barangay,
-      soldCount: 0,
-    };
-    
-    // Update main image and product
-    setMainImage(legacyProduct.img);
-    onProductChange(legacyProduct);
-    
-    // Scroll modal to top smoothly
-    if (modalBoxRef.current) {
-      modalBoxRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [onProductChange]);
+  const handleRecommendationClick = useCallback(
+    (rec: RecommendedProduct) => {
+      // Convert to legacy product format
+      const legacyProduct: Product = {
+        img: rec.images?.[0] || rec.thumbnailUrl || "/placeholder.png",
+        hoverImg:
+          rec.images?.[1] ||
+          rec.images?.[0] ||
+          rec.thumbnailUrl ||
+          "/placeholder.png",
+        name: rec.name,
+        artist: rec.artistName || "Local Artisan",
+        price: `₱${rec.price.toFixed(2)}`,
+        productId: rec._id,
+        maxStock: rec.stock || 99,
+        craftType: rec.craftType,
+        category: rec.category,
+        barangay: rec.barangay,
+        soldCount: 0,
+      };
+
+      // Update main image and product
+      setMainImage(legacyProduct.img);
+      onProductChange(legacyProduct);
+
+      // Scroll modal to top smoothly
+      if (modalBoxRef.current) {
+        modalBoxRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    },
+    [onProductChange]
+  );
 
   const handleRating = (rate: number) => {
     setRating(rate);
@@ -400,7 +450,8 @@ export default function ProductModal({
         setQuantity(1); // Reset quantity after success
       }, 1500);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to add to cart";
+      const message =
+        error instanceof Error ? error.message : "Failed to add to cart";
       alert(message);
     } finally {
       setAdding(false);
@@ -426,11 +477,14 @@ export default function ProductModal({
     setIsReviewSubmitting(true);
 
     try {
-      const response = await fetch(`/api/products/${product.productId}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating, comment: reviewText.trim() }),
-      });
+      const response = await fetch(
+        `/api/products/${product.productId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rating, comment: reviewText.trim() }),
+        }
+      );
 
       const payload = await response.json();
 
@@ -527,11 +581,13 @@ export default function ProductModal({
                     onClick={() => handleWishlistToggle(product.productId!)}
                     disabled={isWishlistUpdating}
                     aria-label={
-                      currentWishlistState ? "Remove from wishlist" : "Add to wishlist"
+                      currentWishlistState
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
                     }
                     style={{
                       opacity: isWishlistUpdating ? 0.6 : 1,
-                      cursor: isWishlistUpdating ? 'not-allowed' : 'pointer'
+                      cursor: isWishlistUpdating ? "not-allowed" : "pointer",
                     }}
                   >
                     {currentWishlistState ? (
@@ -612,7 +668,10 @@ export default function ProductModal({
                   <div className="reviews-footer">
                     <p className="reviews-count">{reviewSummaryText}</p>
                     {reviewsError && (
-                      <p className="reviews-error" style={{ color: "#dc2626", fontSize: "0.85rem" }}>
+                      <p
+                        className="reviews-error"
+                        style={{ color: "#dc2626", fontSize: "0.85rem" }}
+                      >
                         {reviewsError}
                       </p>
                     )}
@@ -669,8 +728,16 @@ export default function ProductModal({
                   </div>
                   <div className="description-item">
                     <span className="label">Stock:</span>
-                    <span className={`value ${maxStock <= 5 && maxStock > 0 ? 'low-stock' : ''}`}>
-                      {maxStock > 0 ? `${maxStock} ${maxStock === 1 ? 'item' : 'items'} available` : 'Out of stock'}
+                    <span
+                      className={`value ${
+                        maxStock <= 5 && maxStock > 0 ? "low-stock" : ""
+                      }`}
+                    >
+                      {maxStock > 0
+                        ? `${maxStock} ${
+                            maxStock === 1 ? "item" : "items"
+                          } available`
+                        : "Out of stock"}
                     </span>
                   </div>
                   <br />
@@ -691,7 +758,9 @@ export default function ProductModal({
                 <div className="ratings-header">
                   <div className="ratings-title">
                     <span className="ratings-count">
-                      {reviewAverage !== null ? reviewAverage.toFixed(1) : "0.0"}
+                      {reviewAverage !== null
+                        ? reviewAverage.toFixed(1)
+                        : "0.0"}
                     </span>
                     <FaStar className="rating-star" />
                     <span className="ratings-label">
@@ -704,7 +773,9 @@ export default function ProductModal({
                   </div>
                   <button
                     className="view-all-btn"
-                    onClick={() => reviewList.length > 1 && setShowAllReviews(true)}
+                    onClick={() =>
+                      reviewList.length > 1 && setShowAllReviews(true)
+                    }
                     disabled={reviewList.length <= 1}
                   >
                     View all
@@ -742,7 +813,9 @@ export default function ProductModal({
                           className="reviewer-avatar"
                         />
                         <div className="reviewer-details">
-                          <h4 className="reviewer-name">{reviewList[0].userName}</h4>
+                          <h4 className="reviewer-name">
+                            {reviewList[0].userName}
+                          </h4>
                           <div className="review-rating">
                             {[...Array(5)].map((_, index) => (
                               <FaStar
@@ -781,7 +854,9 @@ export default function ProductModal({
                                 className="reviewer-avatar"
                               />
                               <div className="reviewer-details">
-                                <h4 className="reviewer-name">{review.userName}</h4>
+                                <h4 className="reviewer-name">
+                                  {review.userName}
+                                </h4>
                                 <div className="review-rating">
                                   {[...Array(5)].map((_, index) => (
                                     <FaStar
@@ -855,10 +930,12 @@ export default function ProductModal({
             <h3 className="recommendations-title">
               <span>You May Also Like</span>
               {recommendations.length > 0 && (
-                <span className="recommendations-subtitle">Based on your interests</span>
+                <span className="recommendations-subtitle">
+                  Based on your interests
+                </span>
               )}
             </h3>
-            
+
             {recommendationsLoading ? (
               <div className="recommendations-loading">
                 <FaSpinner className="loading-spinner" />
@@ -874,28 +951,34 @@ export default function ProductModal({
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         handleRecommendationClick(rec);
                       }
                     }}
                   >
                     <div className="recommendation-image">
-                      <img 
-                        src={rec.images?.[0] || rec.thumbnailUrl || '/placeholder.png'} 
+                      <img
+                        src={
+                          rec.images?.[0] ||
+                          rec.thumbnailUrl ||
+                          "/placeholder.png"
+                        }
                         alt={rec.name}
                         loading="lazy"
                       />
-                      
+
                       {/* Quick add to cart button */}
                       <button
                         className={`recommendation-cart-btn ${
-                          addingRecommendation === rec._id ? 'loading' : ''
-                        } ${successRecommendation === rec._id ? 'success' : ''}`}
+                          addingRecommendation === rec._id ? "loading" : ""
+                        } ${
+                          successRecommendation === rec._id ? "success" : ""
+                        }`}
                         onClick={(e) => handleAddRecommendationToCart(rec, e)}
                         disabled={
-                          !rec.isAvailable || 
-                          rec.stock === 0 || 
+                          !rec.isAvailable ||
+                          rec.stock === 0 ||
                           addingRecommendation === rec._id
                         }
                         aria-label="Add to cart"
@@ -908,14 +991,14 @@ export default function ProductModal({
                           <FaShoppingCart />
                         )}
                       </button>
-                      
+
                       {/* Recommendation reason badge */}
                       {rec.recommendationReason && (
                         <span className="recommendation-reason">
                           {rec.recommendationReason}
                         </span>
                       )}
-                      
+
                       {/* Out of stock overlay */}
                       {(!rec.isAvailable || rec.stock === 0) && (
                         <div className="recommendation-unavailable">
@@ -923,11 +1006,13 @@ export default function ProductModal({
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="recommendation-info">
                       <h4 className="recommendation-name">{rec.name}</h4>
                       {rec.artistName && (
-                        <span className="recommendation-artist">{rec.artistName}</span>
+                        <span className="recommendation-artist">
+                          {rec.artistName}
+                        </span>
                       )}
                       <div className="recommendation-meta">
                         <span className="recommendation-price">
@@ -935,7 +1020,8 @@ export default function ProductModal({
                         </span>
                         {rec.averageRating && rec.averageRating > 0 && (
                           <span className="recommendation-rating">
-                            <FaStar /> {rec.averageRating.toFixed(1)}
+                            <FaStar className="icon-stable" />
+                            {rec.averageRating.toFixed(1)}
                           </span>
                         )}
                       </div>
