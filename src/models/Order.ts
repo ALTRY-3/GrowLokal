@@ -257,9 +257,10 @@ OrderSchema.methods.markAsPaid = async function(transactionId: string): Promise<
   this.paymentDetails.transactionId = transactionId;
   this.paymentDetails.paidAt = new Date();
   
-  // Auto-update order status to processing if it was pending
+  // Auto-update order status to delivered (completed) - bypassing shipping stages
+  // due to temporary absence of courier functionality
   if (this.status === 'pending') {
-    this.status = 'processing';
+    this.status = 'delivered';
   }
   
   await this.save();

@@ -2057,6 +2057,47 @@
   background: #e0e0e0;
 }
 
+/* Seller Section - Skeleton Loading */
+.skeleton-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin-right: 1rem;
+}
+
+.skeleton-text {
+  display: inline-block;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Disabled Visit Shop Button */
+.visit-shop-btn.disabled {
+  background: #ccc;
+  color: #888;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.visit-shop-btn.disabled:hover {
+  background: #ccc;
+  transform: none;
+}
+
 /* Recommendations Section */
 .recommendations-section {
   padding: 1.5rem 0;

@@ -5,6 +5,7 @@ export interface IUser extends mongoose.Document {
   name: string;
   email: string;
   password?: string;
+  dateOfBirth?: Date;
   emailVerified: boolean;
   emailVerificationToken: string | null;
   emailVerificationExpires: Date | null;
@@ -153,6 +154,7 @@ const UserSchema = new mongoose.Schema<IUser>(
       type: String,
       trim: true,
     },
+    dateOfBirth: { type: Date },
     phone: {
       type: String,
       trim: true,

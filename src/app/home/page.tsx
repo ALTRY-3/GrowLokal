@@ -672,10 +672,34 @@ export default function HomePage() {
   const newestUploadsRef = useRef<HTMLDivElement>(null);
   const travelerViewsRef = useRef<HTMLDivElement>(null);
 
-  // Fetch personalized recommendations
+  // Fetch personalized recommendations with caching
   const fetchRecommendations = useCallback(async () => {
     try {
       setRecommendationsLoading(true);
+
+      // Check cache first
+      const cacheKey = "homeRecommendationsCache";
+      const cacheTimeKey = "homeRecommendationsCacheTime";
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+      
+      const cachedTime = localStorage.getItem(cacheTimeKey);
+      const cachedData = localStorage.getItem(cacheKey);
+      
+      if (cachedTime && cachedData) {
+        const age = Date.now() - parseInt(cachedTime, 10);
+        if (age < CACHE_DURATION) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            setRecommendedEvents(parsed.events || []);
+            setRecommendedArtisans(parsed.artisans || []);
+            setRecommendationsLoading(false);
+            console.log("[Home] Using cached recommendations");
+            return;
+          } catch (e) {
+            // Invalid cache, continue to fetch
+          }
+        }
+      }
 
       // Get user preferences from localStorage
       const viewedCategories = JSON.parse(
@@ -697,17 +721,29 @@ export default function HomePage() {
         params.set("recentSearches", recentSearches.slice(0, 5).join(","));
       if (userLocation) params.set("userLocation", userLocation);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
       const response = await fetch(
-        `/api/home/recommendations?${params.toString()}`
+        `/api/home/recommendations?${params.toString()}`,
+        { signal: controller.signal }
       );
+      clearTimeout(timeoutId);
+      
       const data = await response.json();
 
       if (data.success) {
         setRecommendedEvents(data.data.events || []);
         setRecommendedArtisans(data.data.artisans || []);
+        
+        // Cache the results
+        localStorage.setItem(cacheKey, JSON.stringify(data.data));
+        localStorage.setItem(cacheTimeKey, Date.now().toString());
       }
-    } catch (error) {
-      console.error("Error fetching recommendations:", error);
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error("Error fetching recommendations:", error);
+      }
     } finally {
       setRecommendationsLoading(false);
     }

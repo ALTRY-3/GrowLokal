@@ -65,7 +65,8 @@ const MAX_RECENT_VIEWS = 50;
 const MAX_RECENT_SEARCHES = 20;
 const MAX_INTERESTS = 15;
 const VIEW_EXPIRY_DAYS = 30;
-const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes cache (increased from 5)
+const STALE_WHILE_REVALIDATE_MS = 30 * 1000; // Background refresh after 30s
 
 // Helper to safely access localStorage
 function getStorageItem<T>(key: string, defaultValue: T): T {
@@ -112,20 +113,23 @@ function cacheProducts(products: PersonalizedProduct[]): void {
 }
 
 // Get cached products if still valid
-function getCachedProducts(): PersonalizedProduct[] | null {
+function getCachedProducts(): { products: PersonalizedProduct[] | null; isStale: boolean } {
   const cacheTime = getStorageItem<number>(STORAGE_KEYS.cacheTimestamp, 0);
   const now = Date.now();
+  const age = now - cacheTime;
   
-  // Check if cache is still valid (within CACHE_EXPIRY_MS)
-  if (now - cacheTime < CACHE_EXPIRY_MS) {
+  // Check if cache exists and is not expired
+  if (age < CACHE_EXPIRY_MS) {
     const cached = getStorageItem<PersonalizedProduct[]>(STORAGE_KEYS.cachedProducts, []);
     if (cached.length > 0) {
-      console.log('[usePersonalization] Using cached products:', cached.length);
-      return cached;
+      const isStale = age > STALE_WHILE_REVALIDATE_MS;
+      console.log('[usePersonalization] Cache hit, age:', Math.round(age/1000), 's, stale:', isStale);
+      return { products: cached, isStale };
     }
   }
   
-  return null;
+  console.log('[usePersonalization] Cache miss or expired');
+  return { products: null, isStale: true };
 }
 
 // Load behavior from localStorage
@@ -162,14 +166,24 @@ export function usePersonalization(
 ): UsePersonalizationReturn {
   const { limit = 20, category, excludeIds = [] } = options;
 
-  // Initialize products from cache if available
+  // Initialize products from cache if available - use a function to avoid running on every render
   const [products, setProducts] = useState<PersonalizedProduct[]>(() => {
     if (typeof window !== 'undefined') {
-      return getCachedProducts() || [];
+      const { products: cached } = getCachedProducts();
+      return cached || [];
     }
     return [];
   });
-  const [loading, setLoading] = useState(true); // Start with loading true
+  
+  // Start loading as false if we have cached products, true otherwise
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const { products: cached } = getCachedProducts();
+      return !cached || cached.length === 0;
+    }
+    return true;
+  });
+  
   const [error, setError] = useState<string | null>(null);
   const [behavior, setBehavior] = useState<UserBehavior>(() => {
     // Initialize from localStorage on first render
@@ -189,6 +203,8 @@ export function usePersonalization(
   const isFetchingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
+  const hasInitializedRef = useRef(false);
+  const lastFetchTimeRef = useRef(0);
   
   // Store options in ref to use in fetch without causing re-renders
   const optionsRef = useRef({ limit, category, excludeIds });
@@ -204,10 +220,17 @@ export function usePersonalization(
   }, [behavior]);
 
   // Fetch function - stable reference, uses refs for data
-  const fetchPersonalizedProducts = useCallback(async () => {
+  const fetchPersonalizedProducts = useCallback(async (isBackgroundRefresh = false) => {
     // CRITICAL: Prevent concurrent fetches
     if (isFetchingRef.current) {
       console.log('[usePersonalization] Already fetching, skipping');
+      return;
+    }
+    
+    // Throttle fetches - minimum 5 seconds between fetches
+    const now = Date.now();
+    if (now - lastFetchTimeRef.current < 5000 && !isBackgroundRefresh) {
+      console.log('[usePersonalization] Throttled, too soon since last fetch');
       return;
     }
     
@@ -218,9 +241,13 @@ export function usePersonalization(
     
     abortControllerRef.current = new AbortController();
     isFetchingRef.current = true;
+    lastFetchTimeRef.current = now;
     
     try {
-      setLoading(true);
+      // Only show loading spinner if this is not a background refresh and we have no products
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
       setError(null);
 
       const currentBehavior = behaviorRef.current;
@@ -249,9 +276,14 @@ export function usePersonalization(
         params.set('excludeIds', currentOptions.excludeIds.join(','));
       }
 
-      console.log('[usePersonalization] Fetching products...');
+      console.log('[usePersonalization] Fetching products...', isBackgroundRefresh ? '(background)' : '');
+      
       const response = await fetch(`/api/products/personalized?${params.toString()}`, {
         signal: abortControllerRef.current.signal,
+        // Add cache headers to help with browser caching
+        headers: {
+          'Cache-Control': 'max-age=60',
+        },
       });
 
       if (!response.ok) {
@@ -261,6 +293,8 @@ export function usePersonalization(
       const data = await response.json();
       console.log('[usePersonalization] Fetch complete, products:', data.data?.length || 0);
 
+      if (!mountedRef.current) return;
+
       if (data.success && data.data && data.data.length > 0) {
         const fetchedProducts = data.data || [];
         setProducts(fetchedProducts);
@@ -269,15 +303,24 @@ export function usePersonalization(
       } else {
         // Fallback: if personalized returns no products, fetch popular products
         console.log('[usePersonalization] No personalized products, fetching popular products as fallback');
-        const fallbackResponse = await fetch(`/api/products?limit=${currentOptions.limit}&sort=popular`);
-        const fallbackData = await fallbackResponse.json();
         
-        if (fallbackData.success && fallbackData.data && fallbackData.data.length > 0) {
-          const fetchedProducts = fallbackData.data;
-          setProducts(fetchedProducts);
-          cacheProducts(fetchedProducts);
-        } else {
-          throw new Error('No products available');
+        try {
+          const fallbackResponse = await fetch(`/api/products?limit=${currentOptions.limit}&sort=popular`, {
+            signal: abortControllerRef.current.signal,
+          });
+          const fallbackData = await fallbackResponse.json();
+          
+          if (!mountedRef.current) return;
+          
+          if (fallbackData.success && fallbackData.data && fallbackData.data.length > 0) {
+            const fetchedProducts = fallbackData.data;
+            setProducts(fetchedProducts);
+            cacheProducts(fetchedProducts);
+          }
+        } catch (fallbackErr: any) {
+          if (fallbackErr.name !== 'AbortError') {
+            console.error('[usePersonalization] Fallback fetch error:', fallbackErr);
+          }
         }
       }
     } catch (err: any) {
@@ -286,7 +329,9 @@ export function usePersonalization(
         return;
       }
       console.error('[usePersonalization] Fetch error:', err);
-      setError(err.message);
+      if (mountedRef.current) {
+        setError(err.message);
+      }
     } finally {
       if (mountedRef.current) {
         setLoading(false);
@@ -296,6 +341,7 @@ export function usePersonalization(
   }, []); // Empty deps - uses refs for all data
 
   // Track if component is mounted
+  // Track if component is mounted
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -303,29 +349,38 @@ export function usePersonalization(
     };
   }, []);
 
-  // Initial fetch - runs on mount, always fetches if no products
+  // Initial fetch - runs on mount with stale-while-revalidate pattern
   useEffect(() => {
-    // If we already have products from cache, use them but still refresh
-    const cachedProducts = getCachedProducts();
+    // Prevent double initialization in StrictMode
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+    
+    const { products: cachedProducts, isStale } = getCachedProducts();
+    
     if (cachedProducts && cachedProducts.length > 0) {
+      // We have cached products - show them immediately
       setProducts(cachedProducts);
       setLoading(false);
-      console.log('[usePersonalization] Using cached products:', cachedProducts.length);
+      console.log('[usePersonalization] Showing cached products:', cachedProducts.length);
       
-      // Schedule a background refresh after a delay
-      const refreshTimeoutId = setTimeout(() => {
-        if (mountedRef.current) {
-          console.log('[usePersonalization] Background refresh starting');
-          fetchPersonalizedProducts();
-        }
-      }, 2000);
+      // If cache is stale, refresh in background
+      if (isStale) {
+        console.log('[usePersonalization] Cache stale, scheduling background refresh');
+        const refreshTimeoutId = setTimeout(() => {
+          if (mountedRef.current) {
+            fetchPersonalizedProducts(true); // Background refresh
+          }
+        }, 500); // Short delay to avoid blocking render
+        
+        return () => {
+          clearTimeout(refreshTimeoutId);
+          if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+          }
+        };
+      }
       
-      return () => {
-        clearTimeout(refreshTimeoutId);
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
-      };
+      return;
     }
     
     // No cached products, fetch immediately

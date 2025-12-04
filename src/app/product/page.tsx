@@ -16,7 +16,14 @@ import {
   FaShoppingCart,
   FaSpinner,
   FaCheck,
-  FaTimes
+  FaTimes,
+  FaFilter,
+  FaSort,
+  FaSearch,
+  FaCalendarAlt,
+  FaTag,
+  FaCubes,
+  FaStar
 } from "react-icons/fa";
 import "./product.css";
 
@@ -59,6 +66,12 @@ export default function ProductPage() {
   const [sortStockAsc, setSortStockAsc] = useState(true);
   const [activeSection, setActiveSection] = useState("live");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // Filter and sort states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [showFilters, setShowFilters] = useState(false);
   // Removed customer/seller view toggle
   
   // Add to cart states
@@ -162,19 +175,62 @@ export default function ProductPage() {
     }
   };
 
-  // Filter products by section
+  // Get unique categories from products
+  const categories = [...new Set(products.map(p => p.category))];
+
+  // Filter products by section, search, and category
   const filteredProducts = products.filter((p) => {
-    if (activeSection === "live") return p.isActive && p.isAvailable && p.stock > 0;
-    if (activeSection === "soldout") return p.isActive && p.isAvailable && p.stock === 0;
-    if (activeSection === "draft") return !p.isActive;
-    if (activeSection === "inactive") return p.isActive && !p.isAvailable;
+    // Section filter
+    let matchesSection = false;
+    if (activeSection === "live") matchesSection = p.isActive && p.isAvailable && p.stock > 0;
+    else if (activeSection === "soldout") matchesSection = p.isActive && p.isAvailable && p.stock === 0;
+    else if (activeSection === "draft") matchesSection = !p.isActive;
+    else if (activeSection === "inactive") matchesSection = p.isActive && !p.isAvailable;
+    else matchesSection = true;
+    
+    if (!matchesSection) return false;
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        p.name.toLowerCase().includes(query) ||
+        p.description.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+    }
+    
+    // Category filter
+    if (categoryFilter !== "all" && p.category !== categoryFilter) {
+      return false;
+    }
+    
     return true;
   });
 
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) =>
-    sortStockAsc ? a.stock - b.stock : b.stock - a.stock
-  );
+  // Sort products based on selected sort option
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case "newest":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "oldest":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "price-high":
+        return b.price - a.price;
+      case "price-low":
+        return a.price - b.price;
+      case "stock-high":
+        return b.stock - a.stock;
+      case "stock-low":
+        return a.stock - b.stock;
+      case "name-az":
+        return a.name.localeCompare(b.name);
+      case "name-za":
+        return b.name.localeCompare(a.name);
+      default:
+        return 0;
+    }
+  });
 
   // Calculate section counts
   const sectionCounts = {
@@ -368,20 +424,57 @@ export default function ProductPage() {
 
         {/* Filter Bar */}
         <div className="product-filter-bar">
-          <span className="filter-label recent-label">Recent</span>
-          <span className="filter-label stock-label">
-            Stock
-            <button
-              className="stock-sort-btn"
-              onClick={() => setSortStockAsc((asc) => !asc)}
-              aria-label="Sort by stock"
+          {/* Search Input */}
+          <div className="filter-search-container">
+            <FaSearch className="filter-search-icon" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="filter-search-input"
+            />
+          </div>
+          
+          {/* Category Filter */}
+          <div className="filter-select-container">
+            <FaTag className="filter-select-icon" />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="filter-select"
             >
-              {sortStockAsc ? (
-                <FaChevronUp style={{ marginLeft: 4 }} />
-              ) : (
-                <FaChevronDown style={{ marginLeft: 4 }} />
-              )}
-            </button>
+              <option value="all">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Sort Options */}
+          <div className="filter-select-container">
+            <FaSort className="filter-select-icon" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="filter-select"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="stock-high">Stock: High to Low</option>
+              <option value="stock-low">Stock: Low to High</option>
+              <option value="name-az">Name: A-Z</option>
+              <option value="name-za">Name: Z-A</option>
+            </select>
+          </div>
+          
+          {/* Results count */}
+          <span className="filter-results-count">
+            {sortedProducts.length} of {products.length} products
           </span>
         </div>
 
@@ -420,110 +513,110 @@ export default function ProductPage() {
             </div>
           ) : (
             sortedProducts.map((product) => (
-              <div className="product-card" key={product._id}>
-                <img
-                  src={product.images[0] || product.thumbnailUrl || "/default-product.png"}
-                  alt={product.name}
-                  className="product-card-img"
-                />
-                <div className="product-card-info">
-                  <div className="product-card-name">{product.name}</div>
-                  <div className="product-card-desc">{product.description}</div>
-                  <div className="product-card-meta">
-                    <span className="product-card-category">
-                      {product.category}
+              <div className="product-card-enhanced" key={product._id}>
+                {/* Product Image with Status Badge */}
+                <div className="product-card-image-container">
+                  <img
+                    src={product.images[0] || product.thumbnailUrl || "/default-product.png"}
+                    alt={product.name}
+                    className="product-card-img-enhanced"
+                  />
+                  {/* Status Badge on Image */}
+                  <div className="product-status-badge-container">
+                    {!product.isActive && (
+                      <span className="product-status-badge draft">Draft</span>
+                    )}
+                    {product.isActive && !product.isAvailable && (
+                      <span className="product-status-badge inactive">Inactive</span>
+                    )}
+                    {product.isActive && product.isAvailable && product.stock === 0 && (
+                      <span className="product-status-badge soldout">Sold Out</span>
+                    )}
+                    {product.isActive && product.isAvailable && product.stock > 0 && (
+                      <span className="product-status-badge live">Live</span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Product Info */}
+                <div className="product-card-info-enhanced">
+                  {/* Header: Name and Category */}
+                  <div className="product-card-header">
+                    <h3 className="product-card-name-enhanced">{product.name}</h3>
+                    <span className="product-card-category-badge">
+                      {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                     </span>
-                    <span className="product-card-price">
-                      ₱{product.price.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
-                    </span>
-                    <span className="product-card-stock">
-                      Stock: {product.stock}
-                    </span>
+                  </div>
+                  
+                  {/* Description */}
+                  <p className="product-card-desc-enhanced">
+                    {product.description.length > 80 
+                      ? product.description.substring(0, 80) + '...' 
+                      : product.description}
+                  </p>
+                  
+                  {/* Price and Stock Row */}
+                  <div className="product-card-price-stock-row">
+                    <div className="product-card-price-container">
+                      <span className="product-card-price-label">Price</span>
+                      <span className="product-card-price-value">
+                        ₱{product.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="product-card-stock-container">
+                      <span className="product-card-stock-label">Stock</span>
+                      <span className={`product-card-stock-value ${product.stock === 0 ? 'out-of-stock' : product.stock <= 5 ? 'low-stock' : ''}`}>
+                        <FaCubes style={{ marginRight: '4px', fontSize: '12px' }} />
+                        {product.stock} units
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Stats Row: Views, Rating */}
+                  <div className="product-card-stats-row">
+                    <div className="product-stat-item">
+                      <FaEye className="stat-icon" />
+                      <span>{product.viewCount || 0} views</span>
+                    </div>
+                    <div className="product-stat-item">
+                      <FaStar className="stat-icon star" />
+                      <span>{product.averageRating?.toFixed(1) || '0.0'} ({product.totalReviews || 0})</span>
+                    </div>
+                  </div>
+                  
+                  {/* Dates Row */}
+                  <div className="product-card-dates-row">
+                    <div className="product-date-item">
+                      <FaCalendarAlt className="date-icon" />
+                      <span>Added: {new Date(product.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                    {product.updatedAt !== product.createdAt && (
+                      <div className="product-date-item">
+                        <span>Updated: {new Date(product.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Action Buttons */}
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '0.5rem', 
-                    marginTop: '1rem',
-                    flexWrap: 'wrap'
-                  }}>
-                    {/* Seller View: Management Buttons only */}
-                    <>
-                      <button
-                        onClick={() => router.push(`/add-product?edit=${product._id}`)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.9rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}
-                      >
-                        <FaEdit /> Edit
-                      </button>
-                      <button
-                        onClick={() => deleteProduct(product._id, product.name)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          backgroundColor: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.9rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}
-                      >
-                        <FaTrash /> Delete
-                      </button>
-                    </>
-                  </div>
-                  
-                  {/* Status Indicators */}
-                  <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {!product.isActive && (
-                      <span style={{ 
-                        fontSize: '0.8rem', 
-                        backgroundColor: '#6c757d', 
-                        color: 'white', 
-                        padding: '2px 6px', 
-                        borderRadius: '4px' 
-                      }}>
-                        Draft
-                      </span>
-                    )}
-                    {!product.isAvailable && (
-                      <span style={{ 
-                        fontSize: '0.8rem', 
-                        backgroundColor: '#ffc107', 
-                        color: 'black', 
-                        padding: '2px 6px', 
-                        borderRadius: '4px' 
-                      }}>
-                        Hidden
-                      </span>
-                    )}
-                    {product.stock === 0 && (
-                      <span style={{ 
-                        fontSize: '0.8rem', 
-                        backgroundColor: '#e74c3c', 
-                        color: 'white', 
-                        padding: '2px 6px', 
-                        borderRadius: '4px' 
-                      }}>
-                        Out of Stock
-                      </span>
-                    )}
+                  <div className="product-card-actions">
+                    <button
+                      onClick={() => router.push(`/add-product?edit=${product._id}`)}
+                      className="product-action-btn edit-btn"
+                    >
+                      <FaEdit /> Edit
+                    </button>
+                    <button
+                      onClick={() => deleteProduct(product._id, product.name)}
+                      className="product-action-btn delete-btn"
+                    >
+                      <FaTrash /> Delete
+                    </button>
+                    <button
+                      onClick={() => window.open(`/marketplace?product=${product._id}`, '_blank')}
+                      className="product-action-btn view-btn"
+                    >
+                      <FaEye /> Preview
+                    </button>
                   </div>
                 </div>
               </div>

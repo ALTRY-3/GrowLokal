@@ -4,6 +4,57 @@ import Product from '@/models/Product';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
+// Category synonyms for better search relevance
+const CATEGORY_SYNONYMS: Record<string, string[]> = {
+  handicrafts: ['crafts', 'handmade', 'artisan', 'traditional', 'native', 'local', 'handcraft', 'craft', 'woven', 'weaving', 'pottery', 'carving', 'woodwork', 'basket', 'rattan'],
+  fashion: ['clothes', 'clothing', 'apparel', 'wear', 'outfit', 'dress', 'shirt', 'pants', 'accessories', 'jewelry', 'bag', 'bags', 'shoes'],
+  home: ['furniture', 'decor', 'decoration', 'interior', 'household', 'living', 'kitchen', 'bedroom', 'lamp', 'vase', 'pillow', 'curtain'],
+  food: ['snacks', 'delicacy', 'delicacies', 'edible', 'treats', 'pasalubong', 'kakanin', 'dried', 'preserved', 'specialty'],
+  beauty: ['skincare', 'cosmetics', 'personal care', 'soap', 'lotion', 'organic', 'natural', 'wellness', 'herbal'],
+};
+
+// Detect if search query matches a category or its synonyms
+function detectCategoryFromQuery(search: string): string | null {
+  const searchLower = search.toLowerCase().trim();
+  const searchTerms = searchLower.split(/\s+/);
+  
+  for (const [category, synonyms] of Object.entries(CATEGORY_SYNONYMS)) {
+    // Check if search term matches category directly
+    if (searchLower === category || searchTerms.includes(category)) {
+      return category;
+    }
+    // Check if search term matches any synonym
+    for (const synonym of synonyms) {
+      if (searchLower === synonym || searchTerms.includes(synonym) || searchLower.includes(synonym)) {
+        return category;
+      }
+    }
+  }
+  return null;
+}
+
+// Expand search query with synonyms for better matching
+function expandSearchQuery(search: string): string {
+  const searchLower = search.toLowerCase().trim();
+  const expandedTerms = new Set<string>([search]);
+  
+  // Add category name if a synonym was used
+  for (const [category, synonyms] of Object.entries(CATEGORY_SYNONYMS)) {
+    for (const synonym of synonyms) {
+      if (searchLower.includes(synonym)) {
+        expandedTerms.add(category);
+        break;
+      }
+    }
+    if (searchLower.includes(category)) {
+      // Add some synonyms for the category
+      synonyms.slice(0, 3).forEach(syn => expandedTerms.add(syn));
+    }
+  }
+  
+  return Array.from(expandedTerms).join(' ');
+}
+
 // GET /api/products - Get all products with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
@@ -37,9 +88,27 @@ export async function GET(request: NextRequest) {
       query.category = category.toLowerCase();
     }
 
+    // Track if we're using text search for sorting
+    let useTextScore = false;
+    let detectedCategory: string | null = null;
+
     if (search) {
-      // Text search
-      query.$text = { $search: search };
+      const searchTrimmed = search.trim();
+      
+      // Detect if search is for a specific category
+      detectedCategory = detectCategoryFromQuery(searchTrimmed);
+      
+      // If user is explicitly searching for a category term, filter by that category
+      if (detectedCategory && !category) {
+        query.category = detectedCategory;
+      }
+      
+      // Expand search query with synonyms for better text search matching
+      const expandedSearch = expandSearchQuery(searchTrimmed);
+      
+      // Use text search with expanded terms
+      query.$text = { $search: expandedSearch };
+      useTextScore = true;
     }
 
     if (minPrice || maxPrice) {
@@ -65,13 +134,30 @@ export async function GET(request: NextRequest) {
       query.isFeatured = true;
     }
 
-    // Execute query
-    const products = await Product.find(query)
-      .sort({ [sortBy]: sortOrder })
-      .skip(skip)
-      .limit(limit)
-      .select('-__v')
-      .lean();
+    // Execute query with relevance-based sorting for search
+    let products;
+    
+    if (useTextScore) {
+      // When searching, include text score and sort by relevance
+      products = await Product.find(query, { score: { $meta: 'textScore' } })
+        .sort({ 
+          score: { $meta: 'textScore' }, // Primary: relevance
+          isFeatured: -1,                 // Secondary: featured products
+          averageRating: -1               // Tertiary: rating
+        })
+        .skip(skip)
+        .limit(limit)
+        .select('-__v')
+        .lean();
+    } else {
+      // No search - use regular sorting
+      products = await Product.find(query)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .select('-__v')
+        .lean();
+    }
 
     // Get total count for pagination
     const total = await Product.countDocuments(query);
@@ -87,6 +173,8 @@ export async function GET(request: NextRequest) {
         hasNext: page * limit < total,
         hasPrev: page > 1,
       },
+      // Include detected category for debugging/UI purposes
+      ...(detectedCategory && { detectedCategory }),
     });
   } catch (error: any) {
     console.error('Error fetching products:', error);

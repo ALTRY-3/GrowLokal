@@ -83,10 +83,10 @@ export default function SignupPage() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
-  // Redirect authenticated users to marketplace
+  // Redirect authenticated users to home
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/marketplace");
+      router.push("/home");
     }
   }, [status, router]);
 
@@ -271,7 +271,7 @@ export default function SignupPage() {
     setError(""); // Clear previous errors
     try {
       const result = await signIn(provider, {
-        callbackUrl: "/marketplace",
+        callbackUrl: "/home",
         redirect: false,
       });
 
@@ -279,7 +279,7 @@ export default function SignupPage() {
         setError(getFriendlyErrorMessage(result.error));
         setSocialLoading(null);
       } else if (result?.ok) {
-        window.location.href = "/marketplace";
+        window.location.href = "/home";
       }
     } catch (error: any) {
       setError(getFriendlyErrorMessage(error?.message || error));

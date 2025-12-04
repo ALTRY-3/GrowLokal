@@ -27,11 +27,25 @@ interface Product {
   artist: string;
   price: string;
   productId?: string;
+  artistId?: string;
   maxStock?: number;
   craftType?: string;
   category?: string;
   barangay?: string;
   soldCount?: number;
+  description?: string;
+}
+
+// Interface for seller information
+interface SellerInfo {
+  id: string;
+  shopName: string;
+  artistName: string;
+  location: string;
+  avatar: string;
+  averageRating: number;
+  totalProducts: number;
+  isRegistered: boolean;
 }
 
 // Interface for fetched reviews
@@ -105,6 +119,10 @@ export default function ProductModal({
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [canReview, setCanReview] = useState(false);
+
+  // Seller info state
+  const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
+  const [sellerLoading, setSellerLoading] = useState(false);
 
   // Description should be closed when modal opens
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
@@ -240,6 +258,103 @@ export default function ProductModal({
       isCancelled = true;
     };
   }, [hasPersistedProductId, product.productId]);
+
+  // Fetch seller info when modal opens
+  useEffect(() => {
+    if (!product.artistId) {
+      // No artistId - show default/sample seller info
+      setSellerInfo({
+        id: "",
+        shopName: `${product.artist}'s Shop`,
+        artistName: product.artist,
+        location: product.barangay || "Olongapo City",
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`,
+        averageRating: 0,
+        totalProducts: 0,
+        isRegistered: false,
+      });
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchSellerInfo = async () => {
+      setSellerLoading(true);
+      try {
+        const response = await fetch(`/api/artisans/${product.artistId}`);
+        const data = await response.json();
+
+        if (!isCancelled && response.ok && data.success) {
+          const sellerData = data.data;
+          
+          // Calculate average rating from all products
+          const products = sellerData.products || [];
+          const totalProducts = products.length;
+          
+          // Calculate weighted average rating across all products
+          let totalRatingSum = 0;
+          let totalReviewsCount = 0;
+          products.forEach((p: { averageRating?: number; totalReviews?: number }) => {
+            if (p.averageRating && p.totalReviews) {
+              totalRatingSum += p.averageRating * p.totalReviews;
+              totalReviewsCount += p.totalReviews;
+            }
+          });
+          
+          const avgRating = totalReviewsCount > 0 
+            ? Math.round((totalRatingSum / totalReviewsCount) * 10) / 10 
+            : 0;
+
+          setSellerInfo({
+            id: sellerData.id,
+            shopName: sellerData.shopName || `${sellerData.artistName}'s Shop`,
+            artistName: sellerData.artistName,
+            location: sellerData.location || "Olongapo City",
+            avatar: sellerData.avatar,
+            averageRating: avgRating,
+            totalProducts: totalProducts,
+            isRegistered: true,
+          });
+        } else if (!isCancelled) {
+          // Seller not found or not registered - show sample data
+          setSellerInfo({
+            id: "",
+            shopName: `${product.artist}'s Shop`,
+            artistName: product.artist,
+            location: product.barangay || "Olongapo City",
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`,
+            averageRating: 0,
+            totalProducts: 0,
+            isRegistered: false,
+          });
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          // Error fetching - show sample data
+          setSellerInfo({
+            id: "",
+            shopName: `${product.artist}'s Shop`,
+            artistName: product.artist,
+            location: product.barangay || "Olongapo City",
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`,
+            averageRating: 0,
+            totalProducts: 0,
+            isRegistered: false,
+          });
+        }
+      } finally {
+        if (!isCancelled) {
+          setSellerLoading(false);
+        }
+      }
+    };
+
+    fetchSellerInfo();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [product.artistId, product.artist, product.barangay]);
 
   // Reset review form when product changes
   useEffect(() => {
@@ -742,7 +857,7 @@ export default function ProductModal({
                   </div>
                   <br />
                   <div className="description-text">
-                    <p>Product description goes here...</p>
+                    <p>{product.description || "No description available."}</p>
                   </div>
                 </div>
               )}
@@ -888,35 +1003,78 @@ export default function ProductModal({
           <div className="seller-section">
             <div className="seller-info">
               <div className="seller-main">
-                <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${product.artist}`}
-                  alt="Seller Avatar"
-                  className="seller-avatar"
-                />
+                {sellerLoading ? (
+                  <div className="seller-avatar skeleton-avatar"></div>
+                ) : (
+                  <img
+                    src={sellerInfo?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`}
+                    alt="Seller Avatar"
+                    className="seller-avatar"
+                  />
+                )}
                 <div className="seller-details">
-                  <h4 className="shop-name">{product.artist}&rsquo;s Shop</h4>
+                  <h4 className="shop-name">
+                    {sellerLoading ? (
+                      <span className="skeleton-text" style={{ width: '120px', height: '16px' }}></span>
+                    ) : (
+                      sellerInfo?.shopName || `${product.artist}'s Shop`
+                    )}
+                  </h4>
                   <div className="shop-location">
                     <i className="fa-solid fa-location-dot"></i>
-                    <span>Barangay Name</span>
+                    <span>
+                      {sellerLoading ? (
+                        <span className="skeleton-text" style={{ width: '80px', height: '14px' }}></span>
+                      ) : (
+                        sellerInfo?.location || product.barangay || "Olongapo City"
+                      )}
+                    </span>
                   </div>
                 </div>
-                {/* Redirect to artisan/[id] */}
-                <Link
-                  href={`/artisan/${product.productId}`}
-                  className="visit-shop-btn"
-                >
-                  <i className="fa-solid fa-shop"></i>
-                  Visit Shop
-                </Link>
+                {/* Redirect to artisan/[id] - only if registered seller */}
+                {sellerInfo?.isRegistered ? (
+                  <Link
+                    href={`/artisan/${sellerInfo.id}`}
+                    className="visit-shop-btn"
+                  >
+                    <i className="fa-solid fa-shop"></i>
+                    Visit Shop
+                  </Link>
+                ) : (
+                  <button
+                    className="visit-shop-btn disabled"
+                    disabled
+                    title="This is a sample seller"
+                  >
+                    <i className="fa-solid fa-shop"></i>
+                    Visit Shop
+                  </button>
+                )}
               </div>
               <div className="seller-stats">
                 <div className="stat-item">
-                  <span className="stat-value">4.8</span>
+                  <span className="stat-value">
+                    {sellerLoading ? (
+                      <span className="skeleton-text" style={{ width: '30px', height: '18px' }}></span>
+                    ) : sellerInfo?.isRegistered && sellerInfo.averageRating > 0 ? (
+                      sellerInfo.averageRating.toFixed(1)
+                    ) : (
+                      "N/A"
+                    )}
+                  </span>
                   <span className="stat-label">Rating</span>
                 </div>
                 <div className="stat-divider"></div>
                 <div className="stat-item">
-                  <span className="stat-value">42</span>
+                  <span className="stat-value">
+                    {sellerLoading ? (
+                      <span className="skeleton-text" style={{ width: '30px', height: '18px' }}></span>
+                    ) : sellerInfo?.isRegistered ? (
+                      sellerInfo.totalProducts
+                    ) : (
+                      "N/A"
+                    )}
+                  </span>
                   <span className="stat-label">Products</span>
                 </div>
               </div>

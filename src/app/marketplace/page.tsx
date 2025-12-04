@@ -64,12 +64,14 @@ interface LegacyProduct {
   artist: string;
   price: string;
   productId?: string;
+  artistId?: string;
   maxStock?: number;
   // Add these new properties
   craftType?: string;
   category?: string;
   barangay?: string;
   soldCount?: number;
+  description?: string;
 }
 
 // Update the FilterState interface
@@ -468,12 +470,14 @@ export default function Marketplace() {
     artist: product.artistName,
     price: `₱${product.price.toFixed(2)}`,
     productId: product._id,
+    artistId: product.artistId,
     maxStock: product.stock,
     // Add these new properties with proper formatting
     craftType: product.craftType || "Unspecified",
     category: formatCategory(product.category),
     barangay: product.barangay || "Unspecified",
     soldCount: 0, // Default to 0 since the API doesn't provide sold count yet
+    description: product.description || "",
   });
 
   const handleProductClick = (product: Product) => {
@@ -492,11 +496,13 @@ export default function Marketplace() {
       artist: product.artistName,
       price: `₱${product.price.toFixed(2)}`,
       productId: product._id,
+      artistId: product.artistId,
       maxStock: product.stock,
       craftType: product.craftType || "Unspecified",
       category: formatCategory(product.category),
       barangay: product.barangay || "Unspecified",
       soldCount: 0,
+      description: product.description || "",
     });
   };
 

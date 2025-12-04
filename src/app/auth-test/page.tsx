@@ -22,7 +22,7 @@ export default function AuthTest() {
         <button onClick={() => signOut()}>Sign out</button>
         <br />
         <br />
-        <a href="/marketplace">Go to Marketplace</a>
+        <a href="/home">Go to Home</a>
       </div>
     );
   }
@@ -30,12 +30,12 @@ export default function AuthTest() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>Not signed in</h2>
-      <button onClick={() => signIn("google", { callbackUrl: "/marketplace" })}>
+      <button onClick={() => signIn("google", { callbackUrl: "/home" })}>
         Sign in with Google
       </button>
       <br />
       <br />
-      <button onClick={() => signIn("facebook", { callbackUrl: "/marketplace" })}>
+      <button onClick={() => signIn("facebook", { callbackUrl: "/home" })}>
         Sign in with Facebook
       </button>
     </div>

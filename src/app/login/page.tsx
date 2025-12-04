@@ -24,10 +24,10 @@ export default function LoginPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // Redirect authenticated users to marketplace
+  // Redirect authenticated users to home
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/marketplace");
+      router.push("/home");
     }
   }, [status, router]);
 

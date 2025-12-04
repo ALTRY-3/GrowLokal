@@ -10,19 +10,19 @@ export default function SimpleAuthTest() {
 
   useEffect(() => {
     if (status === "authenticated" && session) {
-      console.log("User authenticated, redirecting to marketplace...");
-      router.push("/marketplace");
+      console.log("User authenticated, redirecting to home...");
+      router.push("/home");
     }
   }, [status, session, router]);
 
   const handleGoogleSignIn = () => {
     signIn("google", { 
-      callbackUrl: "/marketplace",
+      callbackUrl: "/home",
       redirect: false 
     }).then((result) => {
       console.log("SignIn result:", result);
       if (result?.ok) {
-        router.push("/marketplace");
+        router.push("/home");
       }
     });
   };
@@ -34,10 +34,10 @@ export default function SimpleAuthTest() {
   if (status === "authenticated") {
     return (
       <div style={{ padding: "20px" }}>
-        <h2>Authenticated! Redirecting to marketplace...</h2>
+        <h2>Authenticated! Redirecting to home...</h2>
         <p>Email: {session?.user?.email}</p>
-        <button onClick={() => router.push("/marketplace")}>
-          Go to Marketplace
+        <button onClick={() => router.push("/home")}>
+          Go to Home
         </button>
       </div>
     );

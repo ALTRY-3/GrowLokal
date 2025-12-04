@@ -228,10 +228,21 @@ export const authOptions: NextAuthOptions = {
         try {
           if (token.id) {
             await connectDB();
-            const userRecord = await User.findById(token.id).select('isSeller sellerProfile');
-            if (userRecord) {
-              user.isSeller = userRecord.isSeller || false;
-              user.shopName = userRecord.sellerProfile?.shopName || null;
+            // Only query if token.id is a valid MongoDB ObjectId (24 hex chars)
+            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(String(token.id));
+            if (isValidObjectId) {
+              const userRecord = await User.findById(token.id).select('isSeller sellerProfile');
+              if (userRecord) {
+                user.isSeller = userRecord.isSeller || false;
+                user.shopName = userRecord.sellerProfile?.shopName || null;
+              }
+            } else {
+              // For OAuth users with non-MongoDB IDs, query by email
+              const userRecord = await User.findOne({ email: token.email }).select('isSeller sellerProfile');
+              if (userRecord) {
+                user.isSeller = userRecord.isSeller || false;
+                user.shopName = userRecord.sellerProfile?.shopName || null;
+              }
             }
           }
         } catch (error) {
@@ -261,8 +272,8 @@ export const authOptions: NextAuthOptions = {
       if (url.startsWith("/")) {
         return `${baseUrl}${url}`;
       }
-      // Default redirect to marketplace for successful auth
-      return `${baseUrl}/marketplace`;
+      // Default redirect to home for successful auth
+      return `${baseUrl}/home`;
     },
   },
   cookies: {

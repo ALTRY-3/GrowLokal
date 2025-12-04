@@ -21,7 +21,21 @@ export async function POST(request: NextRequest) {
 
     // Get request body
     const body = await request.json();
-    const { name, email, password, recaptchaToken } = body;
+    const {
+      name,
+      email,
+      password,
+      recaptchaToken,
+      phone,
+      dateOfBirth,
+      gender,
+      street,
+      barangay,
+      city,
+      province,
+      region,
+      postalCode,
+    } = body;
 
     // Verify reCAPTCHA token
     if (recaptchaToken) {
@@ -85,6 +99,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate phone number format (10-11 digits)
+    if (phone && !/^\d{10,11}$/.test(phone)) {
+      return NextResponse.json(
+        { error: 'Phone number must be 10-11 digits' },
+        { status: 400 }
+      );
+    }
+
+    // Validate postal code format (4 digits for PH)
+    if (postalCode && !/^\d{4}$/.test(postalCode)) {
+      return NextResponse.json(
+        { error: 'Postal code must be 4 digits' },
+        { status: 400 }
+      );
+    }
+
+    // Validate age (must be at least 13 years old)
+    if (dateOfBirth) {
+      const dob = new Date(dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      if (age < 13) {
+        return NextResponse.json(
+          { error: 'You must be at least 13 years old to register' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -98,11 +145,35 @@ export async function POST(request: NextRequest) {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const tokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
+    // Normalize gender values coming from the frontend
+    let normalizedGender: 'male' | 'female' | 'other' | '' = '';
+    if (typeof gender === 'string') {
+      const g = gender.toLowerCase();
+      if (g === 'male') normalizedGender = 'male';
+      else if (g === 'female') normalizedGender = 'female';
+      else if (g === 'other' || g === 'prefer not to say' || g === 'prefer not to') normalizedGender = '';
+      else normalizedGender = g as any;
+    }
+
+    // Build address object from individual fields if present
+    const address = {
+      street: street || undefined,
+      barangay: barangay || undefined,
+      city: city || undefined,
+      province: province || undefined,
+      region: region || undefined,
+      postalCode: postalCode || undefined,
+    };
+
     // Create new user (email starts as unverified)
     const user = await User.create({
       name,
       email,
       password, // Password will be hashed by the pre-save middleware
+      phone: phone || undefined,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      gender: normalizedGender,
+      address,
       emailVerified: false,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: tokenExpires,
