@@ -268,7 +268,9 @@ export default function ProductModal({
         shopName: `${product.artist}'s Shop`,
         artistName: product.artist,
         location: product.barangay || "Olongapo City",
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+          product.artist
+        )}`,
         averageRating: 0,
         totalProducts: 0,
         isRegistered: false,
@@ -286,24 +288,27 @@ export default function ProductModal({
 
         if (!isCancelled && response.ok && data.success) {
           const sellerData = data.data;
-          
+
           // Calculate average rating from all products
           const products = sellerData.products || [];
           const totalProducts = products.length;
-          
+
           // Calculate weighted average rating across all products
           let totalRatingSum = 0;
           let totalReviewsCount = 0;
-          products.forEach((p: { averageRating?: number; totalReviews?: number }) => {
-            if (p.averageRating && p.totalReviews) {
-              totalRatingSum += p.averageRating * p.totalReviews;
-              totalReviewsCount += p.totalReviews;
+          products.forEach(
+            (p: { averageRating?: number; totalReviews?: number }) => {
+              if (p.averageRating && p.totalReviews) {
+                totalRatingSum += p.averageRating * p.totalReviews;
+                totalReviewsCount += p.totalReviews;
+              }
             }
-          });
-          
-          const avgRating = totalReviewsCount > 0 
-            ? Math.round((totalRatingSum / totalReviewsCount) * 10) / 10 
-            : 0;
+          );
+
+          const avgRating =
+            totalReviewsCount > 0
+              ? Math.round((totalRatingSum / totalReviewsCount) * 10) / 10
+              : 0;
 
           setSellerInfo({
             id: sellerData.id,
@@ -322,7 +327,9 @@ export default function ProductModal({
             shopName: `${product.artist}'s Shop`,
             artistName: product.artist,
             location: product.barangay || "Olongapo City",
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+              product.artist
+            )}`,
             averageRating: 0,
             totalProducts: 0,
             isRegistered: false,
@@ -336,7 +343,9 @@ export default function ProductModal({
             shopName: `${product.artist}'s Shop`,
             artistName: product.artist,
             location: product.barangay || "Olongapo City",
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+              product.artist
+            )}`,
             averageRating: 0,
             totalProducts: 0,
             isRegistered: false,
@@ -1007,7 +1016,12 @@ export default function ProductModal({
                   <div className="seller-avatar skeleton-avatar"></div>
                 ) : (
                   <img
-                    src={sellerInfo?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(product.artist)}`}
+                    src={
+                      sellerInfo?.avatar ||
+                      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+                        product.artist
+                      )}`
+                    }
                     alt="Seller Avatar"
                     className="seller-avatar"
                   />
@@ -1015,7 +1029,10 @@ export default function ProductModal({
                 <div className="seller-details">
                   <h4 className="shop-name">
                     {sellerLoading ? (
-                      <span className="skeleton-text" style={{ width: '120px', height: '16px' }}></span>
+                      <span
+                        className="skeleton-text"
+                        style={{ width: "120px", height: "16px" }}
+                      ></span>
                     ) : (
                       sellerInfo?.shopName || `${product.artist}'s Shop`
                     )}
@@ -1024,9 +1041,14 @@ export default function ProductModal({
                     <i className="fa-solid fa-location-dot"></i>
                     <span>
                       {sellerLoading ? (
-                        <span className="skeleton-text" style={{ width: '80px', height: '14px' }}></span>
+                        <span
+                          className="skeleton-text"
+                          style={{ width: "80px", height: "14px" }}
+                        ></span>
                       ) : (
-                        sellerInfo?.location || product.barangay || "Olongapo City"
+                        sellerInfo?.location ||
+                        product.barangay ||
+                        "Olongapo City"
                       )}
                     </span>
                   </div>
@@ -1055,8 +1077,12 @@ export default function ProductModal({
                 <div className="stat-item">
                   <span className="stat-value">
                     {sellerLoading ? (
-                      <span className="skeleton-text" style={{ width: '30px', height: '18px' }}></span>
-                    ) : sellerInfo?.isRegistered && sellerInfo.averageRating > 0 ? (
+                      <span
+                        className="skeleton-text"
+                        style={{ width: "30px", height: "18px" }}
+                      ></span>
+                    ) : sellerInfo?.isRegistered &&
+                      sellerInfo.averageRating > 0 ? (
                       sellerInfo.averageRating.toFixed(1)
                     ) : (
                       "N/A"
@@ -1068,7 +1094,10 @@ export default function ProductModal({
                 <div className="stat-item">
                   <span className="stat-value">
                     {sellerLoading ? (
-                      <span className="skeleton-text" style={{ width: '30px', height: '18px' }}></span>
+                      <span
+                        className="skeleton-text"
+                        style={{ width: "30px", height: "18px" }}
+                      ></span>
                     ) : sellerInfo?.isRegistered ? (
                       sellerInfo.totalProducts
                     ) : (

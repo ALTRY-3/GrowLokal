@@ -744,7 +744,7 @@
   gap: 0.25rem; /* Reduced from previous value */
 }
 
-.marketplace-page .product-name {
+.marketplace-page .market-product-name {
   font-size: 0.95rem;
   font-weight: 600;
   margin: 0;
@@ -1142,11 +1142,12 @@
 
 /* Marketplace-specific dropdown overrides removed - using global Navbar.css styles */
 
-.modal-overlay {
+/* ProductModal is rendered OUTSIDE marketplace-page, so these scoped styles won't affect it */
+.marketplace-page .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   background: rgba(0, 0, 0, 0.65); 
   backdrop-filter: blur(8px); 
@@ -1154,10 +1155,10 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
+  animation: marketplaceModalFadeIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes marketplaceModalFadeIn {
   from {
     opacity: 0;
   }
@@ -1166,7 +1167,7 @@
   }
 }
 
-.modal-box {
+.marketplace-page .modal-box {
   width: 70rem;
   max-height: 80vh;
   background: linear-gradient(135deg, #FFFFFF 0%, #FFF9F9 100%);
@@ -1180,10 +1181,10 @@
   position: relative;
   overflow-y: auto;      
   overflow-x: hidden;
-  animation: slideUp 0.4s ease-out;
+  animation: marketplaceModalSlideUp 0.4s ease-out;
 }
 
-@keyframes slideUp {
+@keyframes marketplaceModalSlideUp {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -1194,20 +1195,20 @@
   }
 }
 
-.modal-box::-webkit-scrollbar {
+.marketplace-page .modal-box::-webkit-scrollbar {
   width: 8px;
 }
-.modal-box::-webkit-scrollbar-track {
+.marketplace-page .modal-box::-webkit-scrollbar-track {
   background: #D9D9D9;
 }
-.modal-box::-webkit-scrollbar-thumb {
+.marketplace-page .modal-box::-webkit-scrollbar-thumb {
   background: #AF7928;
 }
-.modal-box::-webkit-scrollbar-thumb:hover {
+.marketplace-page .modal-box::-webkit-scrollbar-thumb:hover {
   background: #8D6020;
 }
 
-.modal-close {
+.marketplace-page .modal-close {
   position: absolute;
   top: 24px;
   right: 24px;
@@ -1229,26 +1230,26 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.modal-close:hover {
+.marketplace-page .modal-close:hover {
   background: #AF7928;
   color: #fff;
   transform: rotate(90deg);
   box-shadow: 0 4px 12px rgba(175, 121, 40, 0.3);
 }
 
-.modal-left {
+.marketplace-page .modal-left {
   width: 50%;
   display: flex;
   gap: 20px;
 }
 
-.modal-thumbs {
+.marketplace-page .modal-thumbs {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.modal-thumbs img {
+.marketplace-page .modal-thumbs img {
   width: 132px;
   height: 160px;
   border-radius: 12px;
@@ -1358,7 +1359,7 @@
   box-shadow: 0 4px 12px rgba(175, 121, 40, 0.3);
 }
 
-.modal-product-name {
+.modal-market-product-name {
   font-size: 1.8rem;
   font-weight: 700;
   color: #1a1a1a;
@@ -2057,47 +2058,6 @@
   background: #e0e0e0;
 }
 
-/* Seller Section - Skeleton Loading */
-.skeleton-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  margin-right: 1rem;
-}
-
-.skeleton-text {
-  display: inline-block;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-/* Disabled Visit Shop Button */
-.visit-shop-btn.disabled {
-  background: #ccc;
-  color: #888;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.visit-shop-btn.disabled:hover {
-  background: #ccc;
-  transform: none;
-}
-
 /* Recommendations Section */
 .recommendations-section {
   padding: 1.5rem 0;
@@ -2425,7 +2385,7 @@
     overflow: visible;
   }
 
-  .marketplace-page .product-name {
+  .marketplace-page .market-product-name {
     font-size: 0.9rem;
   }
 
@@ -2512,7 +2472,7 @@
     padding: 0.6rem 0.8rem;
   }
 
-  .marketplace-page .product-name {
+  .marketplace-page .market-product-name {
     font-size: 0.85rem;
     line-height: 1.1;
   }
@@ -2646,7 +2606,7 @@
     margin-bottom: 0.05rem;
   }
 
-  .marketplace-page .product-name {
+  .marketplace-page .market-product-name {
     font-size: 0.8rem;
     line-height: 1;
   }
@@ -2845,7 +2805,7 @@
     padding-top: 0.2rem;
   }
 
-  .marketplace-page .product-name {
+  .marketplace-page .market-product-name {
     font-size: 0.75rem;
     line-height: 1;
     -webkit-line-clamp: 2;
@@ -3048,7 +3008,7 @@
     margin-top: 1rem;
   }
 
-  .modal-product-name {
+  .modal-market-product-name {
     font-size: 1.3rem;
   }
 
@@ -3190,7 +3150,7 @@
     margin-bottom: 0.02rem;
   }
 
-  .marketplace-page .product-name {
+  .marketplace-page .market-product-name {
     font-size: 0.55rem;
     line-height: 1.1;
   }
@@ -3409,7 +3369,7 @@
     padding-left: 0;
   }
 
-  .modal-product-name {
+  .modal-market-product-name {
     font-size: 1.1rem;
     line-height: 1.2;
   }
@@ -3661,7 +3621,7 @@
     gap: 15px;
   }
 
-  .modal-product-name {
+  .modal-market-product-name {
     font-size: 1.5rem;
   }
 
@@ -3787,7 +3747,7 @@
     height: 85px;
   }
 
-  .modal-product-name {
+  .modal-market-product-name {
     font-size: 1.3rem;
   }
 
@@ -3941,7 +3901,7 @@
     height: 75px;
   }
 
-  .modal-product-name {
+  .modal-market-product-name {
     font-size: 1.2rem;
   }
 
