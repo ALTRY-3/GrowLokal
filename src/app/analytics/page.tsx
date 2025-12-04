@@ -174,6 +174,11 @@ const shopInfo = {
     "Authentic local crafts and festival products. Proudly Olongapenios.",
 };
 
+const shopRating = {
+  averageRating: 4.8,
+  totalReviews: 120,
+};
+
 // Add mock data for Marketing Insights
 const marketingStats = {
   totalCustomers: 142,
@@ -310,6 +315,22 @@ export default function AnalyticsPage() {
                   <span className="shop-name">{shopInfo.name}</span>
                   <span className="artisan-name">{shopInfo.owner}</span>
                 </div>
+
+                {/* Shop Rating Display */}
+                <div className="shop-rating-container">
+                  <FontAwesomeIcon icon={faStar} className="shop-rating-star" />
+                  <span className="shop-rating-value">
+                    {shopRating.averageRating || "No ratings yet"}
+                  </span>
+                  {shopRating.totalReviews > 0 && (
+                    <span className="shop-rating-reviews">
+                      ({shopRating.totalReviews}{" "}
+                      {shopRating.totalReviews === 1 ? "review" : "reviews"})
+                    </span>
+                  )}
+                </div>
+
+                {/* Category and Craft Type Badges */}
                 <div
                   style={{
                     display: "flex",
