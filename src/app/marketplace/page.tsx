@@ -1304,8 +1304,11 @@ function PersonalizedSection({
     }
   };
 
-  // Don't render section if no products and not loading
+  // Always show on first load (loading state with skeletons)
+  // Only hide if: done loading AND no products AND no products will load (not first render)
   if (!isLoading && products.length === 0) {
+    // Don't render if truly no products (after all loading attempts)
+    // But this should rarely happen - we should always try to show discover products
     return null;
   }
 
@@ -1323,7 +1326,7 @@ function PersonalizedSection({
         </div>
       </div>
 
-      {isLoading && products.length === 0 ? (
+      {isLoading || products.length === 0 ? (
         <div className="product-grid personalized-grid">
           {/* Skeleton loading cards */}
           {[1, 2, 3, 4].map((i) => (

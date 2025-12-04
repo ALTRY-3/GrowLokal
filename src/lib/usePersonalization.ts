@@ -261,13 +261,24 @@ export function usePersonalization(
       const data = await response.json();
       console.log('[usePersonalization] Fetch complete, products:', data.data?.length || 0);
 
-      if (data.success) {
+      if (data.success && data.data && data.data.length > 0) {
         const fetchedProducts = data.data || [];
         setProducts(fetchedProducts);
         // Cache the products for navigation persistence
         cacheProducts(fetchedProducts);
       } else {
-        throw new Error(data.message || 'Failed to fetch products');
+        // Fallback: if personalized returns no products, fetch popular products
+        console.log('[usePersonalization] No personalized products, fetching popular products as fallback');
+        const fallbackResponse = await fetch(`/api/products?limit=${currentOptions.limit}&sort=popular`);
+        const fallbackData = await fallbackResponse.json();
+        
+        if (fallbackData.success && fallbackData.data && fallbackData.data.length > 0) {
+          const fetchedProducts = fallbackData.data;
+          setProducts(fetchedProducts);
+          cacheProducts(fetchedProducts);
+        } else {
+          throw new Error('No products available');
+        }
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
