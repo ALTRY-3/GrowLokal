@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/Order";
+import mongoose from "mongoose";
 
 // PUT - Confirm order receipt
 export async function PUT(
@@ -20,10 +21,33 @@ export async function PUT(
 
     await connectDB();
 
-    const order = await Order.findOne({
-      _id: params.orderId,
-      userId: session.user.id,
-    });
+    const { orderId } = await params;
+
+    // Build query to find by either MongoDB _id or readable orderId
+    // Also check by email for legacy orders
+    const userIdentifiers = [session.user.id];
+    if (session.user.email) {
+      userIdentifiers.push(session.user.email);
+      userIdentifiers.push(session.user.email.toLowerCase());
+    }
+
+    let order = null;
+
+    // Try finding by MongoDB ObjectId first
+    if (mongoose.Types.ObjectId.isValid(orderId)) {
+      order = await Order.findOne({
+        _id: orderId,
+        userId: { $in: userIdentifiers },
+      });
+    }
+
+    // If not found, try finding by readable orderId
+    if (!order) {
+      order = await Order.findOne({
+        orderId: orderId,
+        userId: { $in: userIdentifiers },
+      });
+    }
 
     if (!order) {
       return NextResponse.json(

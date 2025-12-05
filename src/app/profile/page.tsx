@@ -33,10 +33,10 @@ import {
 } from "react-icons/fa";
 
 const ORDER_STATUS_LABELS: Record<string, string> = {
-  pending: "To Pay",
-  processing: "To Ship",
-  shipped: "To Receive",
-  delivered: "Completed",
+  pending: "To Ship",      // Waiting for seller to confirm
+  processing: "To Ship",   // Legacy: same as pending
+  shipped: "To Receive",   // Seller confirmed, waiting for buyer to confirm receipt
+  delivered: "Completed",  // Buyer confirmed receipt
   cancelled: "Cancelled",
   failed: "Failed",
 };
@@ -3627,11 +3627,162 @@ export default function ProfilePage() {
 
   const [orderRating, setOrderRating] = useState<number | null>(5);
 
+  // Review Modal State
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewOrder, setReviewOrder] = useState<ProfileOrder | null>(null);
+  const [productReviews, setProductReviews] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [reviewHoverRatings, setReviewHoverRatings] = useState<Record<string, number>>({});
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Open review modal when clicking "Order Received"
   const handleConfirmReceipt = (orderId: string) => {
-    setPendingOrderId(orderId);
-    setShowConfirmModal(true);
+    const order = orders.find(o => o._id === orderId);
+    if (order) {
+      setReviewOrder(order);
+      // Initialize reviews for each product
+      const initialReviews: Record<string, { rating: number; comment: string }> = {};
+      order.items?.forEach(item => {
+        const productId = resolveProductId(item.productId);
+        if (productId) {
+          initialReviews[productId] = { rating: 5, comment: "" };
+        }
+      });
+      setProductReviews(initialReviews);
+      setShowReviewModal(true);
+    }
   };
 
+  // Update product rating
+  const handleProductRating = (productId: string, rating: number) => {
+    setProductReviews(prev => ({
+      ...prev,
+      [productId]: { ...prev[productId], rating }
+    }));
+  };
+
+  // Update product comment
+  const handleProductComment = (productId: string, comment: string) => {
+    setProductReviews(prev => ({
+      ...prev,
+      [productId]: { ...prev[productId], comment }
+    }));
+  };
+
+  // Submit all reviews and confirm receipt
+  const handleSubmitReviewsAndConfirm = async () => {
+    if (!reviewOrder?._id) return;
+
+    setIsSubmittingReview(true);
+
+    try {
+      // Submit reviews for each product
+      const reviewPromises = Object.entries(productReviews).map(async ([productId, review]) => {
+        if (review.rating > 0) {
+          try {
+            const response = await fetch(`/api/products/${productId}/reviews`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                rating: review.rating,
+                comment: review.comment.trim() || `Great product! ${review.rating} stars.`,
+                orderId: reviewOrder._id,
+              }),
+            });
+            const data = await response.json();
+            return { productId, success: data.success };
+          } catch (err) {
+            console.error(`Failed to submit review for product ${productId}:`, err);
+            return { productId, success: false };
+          }
+        }
+        return { productId, success: true };
+      });
+
+      await Promise.all(reviewPromises);
+
+      // Confirm order receipt
+      const confirmResponse = await fetch(`/api/user/orders/${reviewOrder._id}/confirm`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const confirmData = await confirmResponse.json();
+
+      if (confirmData.success) {
+        setConfirmedOrders((prev) => new Set(prev).add(reviewOrder._id!));
+        setShowReviewModal(false);
+        setReviewOrder(null);
+        setProductReviews({});
+        setActiveOrdersTab("Completed");
+        setSuccessMessage("Thank you for your review! Order marked as completed.");
+        setShowSuccessModal(true);
+
+        // Refresh orders
+        const statusParam = activeOrdersTab === "All" ? "all" : activeOrdersTab.toLowerCase();
+        const ordersResponse = await fetch(`/api/user/orders?status=${statusParam}`);
+        const ordersData = await ordersResponse.json();
+        if (ordersData.success) {
+          setOrders(ordersData.data || []);
+        }
+      } else {
+        alert(confirmData.message || "Failed to confirm order");
+      }
+    } catch (error) {
+      console.error("Error submitting reviews:", error);
+      alert("Failed to submit reviews. Please try again.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  // Skip review and just confirm
+  const handleSkipReview = async () => {
+    if (!reviewOrder?._id) return;
+
+    setIsSubmittingReview(true);
+
+    try {
+      const confirmResponse = await fetch(`/api/user/orders/${reviewOrder._id}/confirm`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const confirmData = await confirmResponse.json();
+
+      if (confirmData.success) {
+        setConfirmedOrders((prev) => new Set(prev).add(reviewOrder._id!));
+        setShowReviewModal(false);
+        setReviewOrder(null);
+        setProductReviews({});
+        setActiveOrdersTab("Completed");
+        setSuccessMessage("Order marked as completed!");
+        setShowSuccessModal(true);
+
+        // Refresh orders
+        const statusParam = activeOrdersTab === "All" ? "all" : activeOrdersTab.toLowerCase();
+        const ordersResponse = await fetch(`/api/user/orders?status=${statusParam}`);
+        const ordersData = await ordersResponse.json();
+        if (ordersData.success) {
+          setOrders(ordersData.data || []);
+        }
+      } else {
+        alert(confirmData.message || "Failed to confirm order");
+      }
+    } catch (error) {
+      console.error("Error confirming order:", error);
+      alert("Failed to confirm order. Please try again.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const cancelReviewModal = () => {
+    setShowReviewModal(false);
+    setReviewOrder(null);
+    setProductReviews({});
+  };
+
+  // Legacy handlers (kept for compatibility)
   const confirmReceipt = async () => {
     if (!pendingOrderId) return;
 
@@ -3709,6 +3860,54 @@ export default function ProfilePage() {
   const [agreedToCommission, setAgreedToCommission] = useState(false);
   const [agreedToShipping, setAgreedToShipping] = useState(false);
   const [craftType, setCraftType] = useState<string>("");
+
+  // Seller Order Status Counts
+  const [sellerOrderCounts, setSellerOrderCounts] = useState({
+    toShip: 0,
+    cancelled: 0,
+    returned: 0,
+    pendingReview: 0,
+  });
+  const [isLoadingSellerOrders, setIsLoadingSellerOrders] = useState(false);
+
+  // Fetch seller order counts
+  const fetchSellerOrderCounts = useCallback(async () => {
+    if (!isSeller) return;
+    
+    setIsLoadingSellerOrders(true);
+    try {
+      const response = await fetch("/api/seller/orders");
+      const data = await response.json();
+      
+      if (data.success && Array.isArray(data.data)) {
+        const orders = data.data;
+        const counts = {
+          toShip: orders.filter((o: { status: string }) => 
+            ["pending", "confirmed", "processing"].includes(o.status?.toLowerCase())
+          ).length,
+          cancelled: orders.filter((o: { status: string }) => 
+            o.status?.toLowerCase() === "cancelled"
+          ).length,
+          returned: 0, // Placeholder for returns feature
+          pendingReview: orders.filter((o: { status: string }) => 
+            o.status?.toLowerCase() === "delivered"
+          ).length,
+        };
+        setSellerOrderCounts(counts);
+      }
+    } catch (error) {
+      console.error("Error fetching seller order counts:", error);
+    } finally {
+      setIsLoadingSellerOrders(false);
+    }
+  }, [isSeller]);
+
+  // Fetch seller orders when isSeller changes or on myshop tab
+  useEffect(() => {
+    if (isSeller && activeSection === "myshop") {
+      fetchSellerOrderCounts();
+    }
+  }, [isSeller, activeSection, fetchSellerOrderCounts]);
 
   // Add this state
   const [agreeToAll, setAgreeToAll] = useState(false);
@@ -4453,10 +4652,9 @@ export default function ProfilePage() {
                 <div className="orders-nav">
                   {[
                     "All",
-                    "To Pay",
-                    "To Ship",
-                    "To Receive",
-                    "Completed",
+                    "To Ship",       // Waiting for seller confirmation
+                    "To Receive",    // Seller confirmed, waiting for buyer
+                    "Completed",     // Buyer confirmed receipt
                     "Cancelled",
                   ].map((tab) => (
                     <div
@@ -4630,9 +4828,9 @@ export default function ProfilePage() {
                                   onClick={() =>
                                     handleConfirmReceipt(order._id!)
                                   }
-                                  disabled={loadingConfirm}
+                                  disabled={loadingConfirm || isSubmittingReview}
                                 >
-                                  {loadingConfirm &&
+                                  {(loadingConfirm || isSubmittingReview) &&
                                   pendingOrderId === order._id
                                     ? "Processing..."
                                     : "Order Received"}
@@ -4643,6 +4841,174 @@ export default function ProfilePage() {
                       );
                     })}
                 </div>
+
+                {/* Review Modal */}
+                {showReviewModal && reviewOrder && (
+                  <div className="modal-overlay" style={{ zIndex: 1000 }}>
+                    <div 
+                      className="modal-content" 
+                      style={{ 
+                        maxWidth: "600px", 
+                        maxHeight: "80vh", 
+                        overflow: "auto",
+                        padding: "24px"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                        <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#333" }}>
+                          Rate Your Purchase
+                        </h3>
+                        <button
+                          onClick={cancelReviewModal}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            fontSize: "1.5rem",
+                            cursor: "pointer",
+                            color: "#666",
+                            padding: "4px"
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      
+                      <p style={{ color: "#666", marginBottom: "24px", fontSize: "0.9rem" }}>
+                        Please rate the products you received. Your feedback helps other buyers!
+                      </p>
+
+                      {reviewOrder.items?.map((item, index) => {
+                        const productId = resolveProductId(item.productId);
+                        const currentReview = productReviews[productId] || { rating: 5, comment: "" };
+                        const hoverRating = reviewHoverRatings[productId] || 0;
+                        
+                        return (
+                          <div 
+                            key={productId || index}
+                            style={{
+                              background: "#f9f9f9",
+                              borderRadius: "12px",
+                              padding: "16px",
+                              marginBottom: "16px"
+                            }}
+                          >
+                            <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+                              <img
+                                src={item.image || "https://placehold.co/60x60?text=Product"}
+                                alt={item.name || "Product"}
+                                style={{
+                                  width: "60px",
+                                  height: "60px",
+                                  borderRadius: "8px",
+                                  objectFit: "cover"
+                                }}
+                              />
+                              <div>
+                                <p style={{ fontWeight: "600", margin: "0 0 4px 0", color: "#333" }}>
+                                  {item.name || "Product"}
+                                </p>
+                                <p style={{ fontSize: "0.85rem", color: "#666", margin: 0 }}>
+                                  {item.artistName || "Artisan"} • Qty: {item.quantity || 1}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div style={{ marginBottom: "12px" }}>
+                              <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "8px" }}>
+                                Your Rating:
+                              </p>
+                              <div style={{ display: "flex", gap: "4px" }}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => handleProductRating(productId, star)}
+                                    onMouseEnter={() => setReviewHoverRatings(prev => ({ ...prev, [productId]: star }))}
+                                    onMouseLeave={() => setReviewHoverRatings(prev => ({ ...prev, [productId]: 0 }))}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      cursor: "pointer",
+                                      fontSize: "1.5rem",
+                                      color: star <= (hoverRating || currentReview.rating) ? "#FFC107" : "#ddd",
+                                      transition: "color 0.2s, transform 0.2s",
+                                      padding: "2px"
+                                    }}
+                                  >
+                                    ★
+                                  </button>
+                                ))}
+                                <span style={{ marginLeft: "8px", color: "#666", fontSize: "0.9rem" }}>
+                                  {currentReview.rating}/5
+                                </span>
+                              </div>
+                            </div>
+
+                            <div>
+                              <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "8px" }}>
+                                Your Review (optional):
+                              </p>
+                              <textarea
+                                value={currentReview.comment}
+                                onChange={(e) => handleProductComment(productId, e.target.value)}
+                                placeholder="Share your experience with this product..."
+                                style={{
+                                  width: "100%",
+                                  minHeight: "80px",
+                                  padding: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid #ddd",
+                                  fontSize: "0.9rem",
+                                  resize: "vertical",
+                                  fontFamily: "inherit",
+                                  boxSizing: "border-box"
+                                }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                        <button
+                          onClick={handleSkipReview}
+                          disabled={isSubmittingReview}
+                          style={{
+                            flex: 1,
+                            padding: "12px 20px",
+                            borderRadius: "8px",
+                            border: "1px solid #ddd",
+                            background: "#fff",
+                            color: "#666",
+                            fontSize: "0.9rem",
+                            cursor: isSubmittingReview ? "not-allowed" : "pointer",
+                            opacity: isSubmittingReview ? 0.7 : 1
+                          }}
+                        >
+                          Skip Review
+                        </button>
+                        <button
+                          onClick={handleSubmitReviewsAndConfirm}
+                          disabled={isSubmittingReview}
+                          style={{
+                            flex: 2,
+                            padding: "12px 20px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "#AF7928",
+                            color: "#fff",
+                            fontSize: "0.9rem",
+                            fontWeight: "600",
+                            cursor: isSubmittingReview ? "not-allowed" : "pointer",
+                            opacity: isSubmittingReview ? 0.7 : 1
+                          }}
+                        >
+                          {isSubmittingReview ? "Submitting..." : "Submit Review & Complete Order"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -6410,37 +6776,105 @@ export default function ProfilePage() {
                 >
                   <div
                     style={{
-                      fontWeight: 600,
-                      fontSize: 18,
-                      color: "#2e3f36",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                       marginBottom: 18,
                     }}
                   >
-                    Order Status
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 18,
+                        color: "#2e3f36",
+                      }}
+                    >
+                      Order Status
+                    </div>
+                    <button
+                      onClick={() => router.push("/myorders")}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#af7928",
+                        fontWeight: 500,
+                        fontSize: 14,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                    >
+                      View All →
+                    </button>
                   </div>
-                  <div style={{ display: "flex", gap: "32px" }}>
+                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                     {[
-                      { label: "To Ship", value: 0, color: "#af7928" },
-                      { label: "Cancelled", value: 0, color: "#e74c3c" },
-                      { label: "Return", value: 0, color: "#888" },
-                      { label: "Review", value: 0, color: "#45956a" },
+                      { 
+                        label: "To Ship", 
+                        value: isLoadingSellerOrders ? "..." : sellerOrderCounts.toShip, 
+                        color: "#af7928",
+                        bgColor: "#FFF8E1",
+                        tab: "To Ship",
+                        icon: "📦"
+                      },
+                      { 
+                        label: "Cancelled", 
+                        value: isLoadingSellerOrders ? "..." : sellerOrderCounts.cancelled, 
+                        color: "#e74c3c",
+                        bgColor: "#FFEBEE",
+                        tab: "Cancelled",
+                        icon: "❌"
+                      },
+                      { 
+                        label: "Returns", 
+                        value: isLoadingSellerOrders ? "..." : sellerOrderCounts.returned, 
+                        color: "#888",
+                        bgColor: "#f5f5f5",
+                        tab: "All",
+                        icon: "↩️"
+                      },
+                      { 
+                        label: "Completed", 
+                        value: isLoadingSellerOrders ? "..." : sellerOrderCounts.pendingReview, 
+                        color: "#45956a",
+                        bgColor: "#E8F5E9",
+                        tab: "Completed",
+                        icon: "✅"
+                      },
                     ].map((stat) => (
                       <div
                         key={stat.label}
+                        onClick={() => router.push(`/myorders?tab=${encodeURIComponent(stat.tab)}`)}
                         style={{
-                          flex: 1,
-                          background: "#faf8f5",
-                          border: "1px solid rgba(175,121,40,0.3)",
+                          flex: "1 1 calc(25% - 12px)",
+                          minWidth: "100px",
+                          background: stat.bgColor,
+                          border: `1px solid ${stat.color}30`,
                           borderRadius: 8,
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "center",
-                          padding: "18px 0",
+                          padding: "18px 12px",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
                         }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`View ${stat.label} orders`}
                       >
+                        <span style={{ fontSize: 20, marginBottom: 4 }}>{stat.icon}</span>
                         <span
                           style={{
-                            fontSize: 20,
+                            fontSize: 24,
                             fontWeight: 700,
                             color: stat.color,
                             marginBottom: 4,
@@ -6450,9 +6884,10 @@ export default function ProfilePage() {
                         </span>
                         <span
                           style={{
-                            fontSize: 14,
+                            fontSize: 13,
                             color: "#2e3f36",
                             fontWeight: 500,
+                            textAlign: "center",
                           }}
                         >
                           {stat.label}

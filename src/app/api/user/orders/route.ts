@@ -38,18 +38,26 @@ export async function GET(request: Request) {
     
     if (status && status !== "all") {
       // Map frontend status to backend status
-      const statusMap: Record<string, string> = {
+      // Flow: pending (To Ship/To Pay) -> shipped (To Receive) -> delivered (Completed)
+      const statusMap: Record<string, string | string[]> = {
         pending: "pending",
         "to pay": "pending",
-        processing: "processing",
-        "to ship": "processing",
+        "to ship": "pending",           // Waiting for seller to confirm
+        processing: ["pending"],        // Legacy: show pending orders
         shipping: "shipped",
-        "to receive": "shipped",
+        "to receive": "shipped",        // Seller confirmed, waiting for buyer
         completed: "delivered",
         delivered: "delivered",
         cancelled: "cancelled",
       };
-      query.status = statusMap[status.toLowerCase()] || status;
+      const mappedStatus = statusMap[status.toLowerCase()];
+      if (Array.isArray(mappedStatus)) {
+        query.status = { $in: mappedStatus };
+      } else if (mappedStatus) {
+        query.status = mappedStatus;
+      } else {
+        query.status = status;
+      }
     }
 
     const orders = await Order.find(query)

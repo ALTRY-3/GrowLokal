@@ -147,15 +147,10 @@ export async function POST(
       );
     }
 
-    if (!comment || typeof comment !== "string" || comment.trim().length < 10) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Review comment must be at least 10 characters",
-        },
-        { status: 400 }
-      );
-    }
+    // Comment is optional - if not provided or too short, use a default
+    const reviewComment = (comment && typeof comment === "string" && comment.trim().length >= 10)
+      ? comment.trim()
+      : `Great product! Rated ${rating} stars.`;
 
     await dbConnect();
 
@@ -200,7 +195,6 @@ export async function POST(
     }
 
     const reviewerName = user.fullName || user.name || "GrowLokal User";
-    const sanitizedComment = comment.trim();
 
     const existingReview = await ProductReview.findOne({
       productId: id,
@@ -209,7 +203,7 @@ export async function POST(
 
     if (existingReview) {
       existingReview.rating = rating;
-      existingReview.comment = sanitizedComment;
+      existingReview.comment = reviewComment;
       await existingReview.save();
     } else {
       await ProductReview.create({
@@ -218,7 +212,7 @@ export async function POST(
         userName: reviewerName,
         userEmail: user.email,
         rating,
-        comment: sanitizedComment,
+        comment: reviewComment,
       });
     }
 
