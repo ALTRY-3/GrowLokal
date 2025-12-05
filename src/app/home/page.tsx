@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
@@ -275,7 +281,7 @@ const announcements = [
 ];
 
 // Replace the existing artisanStories array with this:
-const artisanStories = [
+const artisanStories: StoryItem[] = [
   {
     id: "1",
     title: "A Journey to the Home of Rattan Furniture Making",
@@ -369,7 +375,7 @@ const trendingCrafts = [
 ];
 
 // Trending Artisan Shops data
-const trendingArtisans = [
+const trendingArtisans: TrendingArtisanItem[] = [
   {
     id: 201,
     name: "Aba Dela Cruz",
@@ -578,6 +584,27 @@ interface RecommendedArtisan {
   matchScore: number;
 }
 
+type StoryItem = {
+  id: string;
+  title: string;
+  artistName: string;
+  story: string;
+  image: string;
+  storeUrl?: string;
+};
+
+type TrendingArtisanItem = {
+  id: string | number;
+  name: string;
+  avatar: string;
+  craftType: string;
+  category: string;
+  location: string;
+  rating: number;
+  productsCount: number;
+  viewsThisWeek?: number;
+};
+
 export default function HomePage() {
   const [eventReminders, setEventReminders] = useState<string[]>([]);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -600,11 +627,35 @@ export default function HomePage() {
   const [dynamicTrendingCrafts, setDynamicTrendingCrafts] = useState<any[]>([]);
   const [dynamicNewestUploads, setDynamicNewestUploads] = useState<any[]>([]);
   const [dynamicMostViewed, setDynamicMostViewed] = useState<any[]>([]);
-  const [dynamicTrendingArtisans, setDynamicTrendingArtisans] = useState<any[]>(
-    []
-  );
+  const [dynamicTrendingArtisans, setDynamicTrendingArtisans] = useState<
+    TrendingArtisanItem[]
+  >([]);
   const [dynamicTrendingEvents, setDynamicTrendingEvents] = useState<any[]>([]);
   const [trendingDataLoading, setTrendingDataLoading] = useState(true);
+  const [dynamicStories, setDynamicStories] = useState<StoryItem[]>([]);
+
+  // Stories ordering: keep static samples first, append new ones after
+  const orderedStories: StoryItem[] = useMemo(() => {
+    if (!dynamicStories.length) return artisanStories;
+
+    const baseIds = new Set(artisanStories.map((s) => s.id));
+    const newOnes = dynamicStories
+      .map((s: StoryItem) => s)
+      .filter((s: StoryItem) => !baseIds.has(s.id));
+    return [...artisanStories, ...newOnes];
+  }, [dynamicStories]);
+
+  // Trending artisans ordering: keep static defaults first, append dynamic results
+  const combinedTrendingArtisans: TrendingArtisanItem[] = useMemo(() => {
+    if (!dynamicTrendingArtisans.length) return trendingArtisans;
+
+    const baseIds = new Set(trendingArtisans.map((a) => String(a.id)));
+    const newOnes = dynamicTrendingArtisans.filter(
+      (a) => !baseIds.has(String(a.id))
+    );
+
+    return [...trendingArtisans, ...newOnes];
+  }, [dynamicTrendingArtisans]);
 
   // Use wishlist hook instead of local state
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -831,10 +882,49 @@ export default function HomePage() {
     }
   }, []);
 
+  // Fetch artisan stories (new ones will appear after the static set)
+  const fetchStories = useCallback(async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const response = await fetch("/api/stories", { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+      if (data.success && Array.isArray(data.data)) {
+        const mapped: StoryItem[] = data.data.map((story: any) => ({
+          id: story.id,
+          title: story.title,
+          artistName: story.artist,
+          story: story.excerpt || "",
+          image: story.img || "/artisans4.jpeg",
+          storeUrl: story.storeUrl || `/artisan/${story.id}`,
+        }));
+        setDynamicStories(mapped);
+      }
+    } catch (error: any) {
+      if (error.name !== "AbortError") {
+        console.error("[Home] Error fetching stories:", error);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     fetchRecommendations();
     fetchTrendingData();
-  }, [fetchRecommendations, fetchTrendingData]);
+    fetchStories();
+  }, [fetchRecommendations, fetchTrendingData, fetchStories]);
+
+  // Re-evaluate stories carousel scroll when list changes
+  useEffect(() => {
+    checkScrollPosition(storiesRef.current, setCanScrollStories);
+  }, [orderedStories.length]);
+
+  // Re-evaluate trending artisans carousel scroll when data changes
+  useEffect(() => {
+    checkScrollPosition(trendingArtisansRef.current, setCanScrollTrendingArtisans);
+  }, [combinedTrendingArtisans.length]);
 
   // Recheck scroll position when recommendations finish loading
   useEffect(() => {
@@ -1221,9 +1311,6 @@ export default function HomePage() {
                         <span className="recommendation-tag craft-type">
                           {artisan.craftType}
                         </span>
-                        <span className="recommendation-tag category">
-                          {artisan.category}
-                        </span>
                       </div>
                       <div className="recommendation-location">
                         <MapPin size={12} />
@@ -1326,9 +1413,6 @@ export default function HomePage() {
                             <div className="recommendation-tags">
                               <span className="recommendation-tag craft-type">
                                 {artisan.craftType}
-                              </span>
-                              <span className="recommendation-tag category">
-                                {artisan.category}
                               </span>
                             </div>
                             <div className="recommendation-location">
@@ -1511,10 +1595,7 @@ export default function HomePage() {
                 </button>
               )}
               <div className="home-artisan-carousel" ref={trendingArtisansRef}>
-                {(dynamicTrendingArtisans.length > 0
-                  ? dynamicTrendingArtisans
-                  : trendingArtisans
-                ).map((artisan) => (
+                {combinedTrendingArtisans.map((artisan: TrendingArtisanItem) => (
                   <div className="home-artisan-card" key={artisan.id}>
                     <Link
                       href={`/artisan/${artisan.id}`}
@@ -1850,7 +1931,7 @@ export default function HomePage() {
             )}
 
             <div className="home-stories-carousel" ref={storiesRef}>
-              {artisanStories.map((story) => (
+              {orderedStories.map((story: StoryItem) => (
                 <div className="home-story-card" key={story.id}>
                   <div className="home-story-image-container">
                     <img
@@ -1868,7 +1949,7 @@ export default function HomePage() {
                         : story.story}
                     </p>
                     <Link
-                      href={`/stories?storyId=${story.id}`}
+                      href={story.storeUrl || `/stories?storyId=${story.id}`}
                       className="home-story-read-more"
                     >
                       Read More

@@ -186,6 +186,7 @@ export function usePersonalization(
   const lastFetchTimeRef = useRef(0);
   const retryCountRef = useRef(0);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const behaviorRefreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Store options in ref to use in fetch without causing re-renders
   const optionsRef = useRef({ limit, category, excludeIds });
@@ -251,6 +252,10 @@ export function usePersonalization(
       
       if (currentBehavior.interests.length > 0) {
         params.set('interests', currentBehavior.interests.join(','));
+      }
+
+      if (currentBehavior.viewedCategories.length > 0) {
+        params.set('viewedCategories', currentBehavior.viewedCategories.slice(0, 8).join(','));
       }
       
       if (currentOptions.excludeIds.length > 0) {
@@ -334,6 +339,18 @@ export function usePersonalization(
     }
   }, [products.length]); // Include products.length to check for retry necessity
 
+  // Debounced refresh when behavior changes (views/searches/interests)
+  const scheduleBehaviorRefresh = useCallback((delay = 400) => {
+    if (behaviorRefreshTimeoutRef.current) {
+      clearTimeout(behaviorRefreshTimeoutRef.current);
+    }
+
+    behaviorRefreshTimeoutRef.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+      fetchPersonalizedProducts(true); // background refresh to avoid UI flicker
+    }, delay);
+  }, [fetchPersonalizedProducts]);
+
   // Track if component is mounted
   useEffect(() => {
     mountedRef.current = true;
@@ -342,6 +359,9 @@ export function usePersonalization(
       // Clear any pending retries
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
+      }
+      if (behaviorRefreshTimeoutRef.current) {
+        clearTimeout(behaviorRefreshTimeoutRef.current);
       }
     };
   }, []);
@@ -394,8 +414,8 @@ export function usePersonalization(
       return;
     }
     
-    // No cached products, fetch immediately
-    console.log('[usePersonalization] No cache, starting initial fetch');
+    // No cached products (or cache empty), fetch immediately
+    console.log('[usePersonalization] No cache or empty cache, starting initial fetch');
     fetchPersonalizedProducts();
     
     return () => {
@@ -441,15 +461,19 @@ export function usePersonalization(
         setStorageItem(STORAGE_KEYS.interests, newInterests);
       }
 
-      return {
+      const updated = {
         ...prev,
         recentViews: newViews,
         viewTimestamps: newTimestamps,
         viewedCategories: newCategories,
         interests: newInterests,
       };
+
+      behaviorRef.current = updated;
+      return updated;
     });
-  }, []);
+    scheduleBehaviorRefresh();
+  }, [scheduleBehaviorRefresh]);
 
   // Track search
   const trackSearch = useCallback((query: string) => {
@@ -462,12 +486,16 @@ export function usePersonalization(
       
       setStorageItem(STORAGE_KEYS.recentSearches, newSearches);
 
-      return {
+      const updated = {
         ...prev,
         recentSearches: newSearches,
       };
+
+      behaviorRef.current = updated;
+      return updated;
     });
-  }, []);
+    scheduleBehaviorRefresh();
+  }, [scheduleBehaviorRefresh]);
 
   // Add interest
   const addInterest = useCallback((interest: string) => {
@@ -480,12 +508,16 @@ export function usePersonalization(
       const newInterests = [...prev.interests, trimmedInterest].slice(0, MAX_INTERESTS);
       setStorageItem(STORAGE_KEYS.interests, newInterests);
 
-      return {
+      const updated = {
         ...prev,
         interests: newInterests,
       };
+
+      behaviorRef.current = updated;
+      return updated;
     });
-  }, []);
+    scheduleBehaviorRefresh();
+  }, [scheduleBehaviorRefresh]);
 
   // Remove interest
   const removeInterest = useCallback((interest: string) => {
@@ -493,12 +525,16 @@ export function usePersonalization(
       const newInterests = prev.interests.filter(i => i !== interest);
       setStorageItem(STORAGE_KEYS.interests, newInterests);
 
-      return {
+      const updated = {
         ...prev,
         interests: newInterests,
       };
+
+      behaviorRef.current = updated;
+      return updated;
     });
-  }, []);
+    scheduleBehaviorRefresh();
+  }, [scheduleBehaviorRefresh]);
 
   // Clear all history
   const clearHistory = useCallback(() => {
@@ -513,7 +549,17 @@ export function usePersonalization(
     Object.values(STORAGE_KEYS).forEach(key => {
       localStorage.removeItem(key);
     });
-  }, []);
+
+    behaviorRef.current = {
+      recentViews: [],
+      recentSearches: [],
+      interests: [],
+      viewedCategories: [],
+      viewTimestamps: {},
+    };
+
+    scheduleBehaviorRefresh();
+  }, [scheduleBehaviorRefresh]);
 
   return {
     products,

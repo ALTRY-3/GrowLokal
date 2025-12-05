@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { getServerSession } from "next-auth";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 import ProductReview from "@/models/ProductReview";
-import Order from "@/models/Order";
 import User from "@/models/User";
+import Order from "@/models/Order";
 import { authOptions } from "@/lib/auth";
 
 const isValidObjectId = (value: string) =>
@@ -13,6 +13,7 @@ const isValidObjectId = (value: string) =>
 
 interface ReviewDoc {
   _id: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
   userName: string;
   rating: number;
   comment: string;
@@ -49,7 +50,7 @@ export async function GET(
     if (session?.user?.email) {
       const user = await User.findOne({ email: session.user.email })
         .select("_id email")
-        .lean() as { _id: mongoose.Types.ObjectId; email: string } | null;
+        .lean<{ _id: Types.ObjectId; email: string }>();
       
       if (user) {
         const hasPurchased = await Order.exists({
@@ -90,6 +91,30 @@ export async function GET(
       ? (rawReviews as ReviewDoc[])
       : [];
 
+    // Fetch reviewer avatars to show real profile photos
+    const userIds = Array.from(
+      new Set(
+        reviews
+          .map((r) => r.userId)
+          .filter((id): id is Types.ObjectId => Boolean(id))
+      )
+    );
+
+    let userAvatars: Record<string, string | undefined> = {};
+    if (userIds.length) {
+      const users = await User.find({ _id: { $in: userIds } })
+        .select({ profilePicture: 1, image: 1 })
+        .lean();
+      userAvatars = users.reduce<Record<string, string | undefined>>(
+        (acc, user) => {
+          const key = (user._id as Types.ObjectId).toString();
+          acc[key] = (user as any).profilePicture || (user as any).image || undefined;
+          return acc;
+        },
+        {}
+      );
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -99,6 +124,7 @@ export async function GET(
           rating: review.rating,
           comment: review.comment,
           createdAt: review.createdAt,
+          avatarUrl: userAvatars[review.userId.toString()],
         })),
         averageRating: product?.averageRating ?? 0,
         totalReviews: product?.totalReviews ?? reviews.length,

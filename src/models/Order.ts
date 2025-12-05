@@ -28,6 +28,8 @@ export interface IPaymentDetails {
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   transactionId?: string;
   paidAt?: Date;
+  provider?: string; // e.g., paymongo, gcash-mock
+  reference?: string;
 }
 
 // Order Document Interface
@@ -157,6 +159,14 @@ const PaymentDetailsSchema = new Schema<IPaymentDetails>(
       default: 'pending',
     },
     transactionId: {
+      type: String,
+      trim: true,
+    },
+    provider: {
+      type: String,
+      trim: true,
+    },
+    reference: {
       type: String,
       trim: true,
     },

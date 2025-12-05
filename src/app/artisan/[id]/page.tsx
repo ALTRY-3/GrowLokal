@@ -114,7 +114,12 @@ export default function ArtisanProfilePage() {
       <div>
         <Navbar />
         <main className="artisan-profile-main">
-          <div className="artisan-state">Loading artisan profile…</div>
+          <div className="artisan-loading-wrapper">
+            <div className="artisan-loading">
+              <i className="fas fa-spinner fa-spin artisan-loading-spinner"></i>
+              <p className="artisan-loading-text">Loading artisan profile...</p>
+            </div>
+          </div>
         </main>
         <Footer />
       </div>
@@ -193,9 +198,6 @@ export default function ArtisanProfilePage() {
               >
                 {artisan.category && (
                   <span className="artisan-category-type">{artisan.category}</span>
-                )}
-                {artisan.craftType && (
-                  <span className="artisan-craft-type">{artisan.craftType}</span>
                 )}
                 {computedShopRating && (
                   <span

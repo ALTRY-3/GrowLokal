@@ -2817,6 +2817,16 @@ export default function ProfilePage() {
   const searchParams = useSearchParams();
   const querySection = searchParams?.get("section") ?? "profile";
 
+  const getCachedSellerStatus = () => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("seller_status") === "approved";
+  };
+
+  const cacheSellerStatus = (value: boolean) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("seller_status", value ? "approved" : "not_seller");
+  };
+
   // UI State
   const [activeSection, setActiveSection] = useState<string>("profile");
   const [expandedSection, setExpandedSection] = useState<string | null>(
@@ -2828,7 +2838,7 @@ export default function ProfilePage() {
   );
 
   // Loading States
-  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -2858,7 +2868,8 @@ export default function ProfilePage() {
     DEFAULT_PROFILE_PICTURE
   );
   const [isProfilePictureLoaded, setIsProfilePictureLoaded] = useState(false);
-  const [isSeller, setIsSeller] = useState(false); // Track if user is a seller
+  const [isSeller, setIsSeller] = useState<boolean>(getCachedSellerStatus());
+  const [sellerStatusResolved, setSellerStatusResolved] = useState(false); // Track when seller status is known
 
   // Orders Data
   const [orders, setOrders] = useState<ProfileOrder[]>([]);
@@ -2903,6 +2914,15 @@ export default function ProfilePage() {
       router.push("/login");
     }
   }, [status, router]);
+
+  useEffect(() => {
+    const sessionSeller = (session?.user as any)?.isSeller;
+    if (sessionSeller) {
+      setIsSeller(true);
+      cacheSellerStatus(true);
+      setSellerStatusResolved(true);
+    }
+  }, [session?.user]);
 
   useEffect(() => {
     if (querySection) {
@@ -2953,14 +2973,17 @@ export default function ProfilePage() {
   // Fetch profile data
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!session?.user) return;
+      if (!session?.user) {
+        setIsLoadingProfile(false);
+        setSellerStatusResolved(true);
+        return;
+      }
 
       setIsLoadingProfile(true);
       setProfileError("");
 
       try {
         const response = await fetch("/api/user/profile", {
-          // Add cache control for faster subsequent loads
           headers: {
             "Cache-Control": "max-age=300", // Cache for 5 minutes
           },
@@ -2980,15 +3003,12 @@ export default function ProfilePage() {
           setSelectedGender(data.data.gender || "");
           setDateOfBirth(data.data.dateOfBirth || "");
 
-          // Only update profile picture if we have a new one
           const newProfilePicture =
             data.data.profilePicture || session?.user?.image || "";
           if (newProfilePicture && newProfilePicture !== profilePicture) {
-            // Preload the image before setting it
             const img = document.createElement("img");
             img.onload = () => {
               setProfilePicture(newProfilePicture);
-              // Cache in localStorage for instant load next time
               if (typeof window !== "undefined") {
                 localStorage.setItem(
                   "cached_profile_picture",
@@ -3005,36 +3025,38 @@ export default function ProfilePage() {
             setIsProfilePictureLoaded(true);
           }
 
-          // Check seller status more thoroughly
-          const userIsSeller = data.data.isSeller || false;
-          setIsSeller(userIsSeller);
+          // Determine seller status with minimal flicker: start with profile flag, then verify
+          let finalSellerFlag = Boolean(data.data.isSeller);
 
-          // If user claims to be a seller, verify their status
-          if (userIsSeller) {
+          if (finalSellerFlag) {
             try {
               const sellerStatusResponse = await fetch("/api/seller/status");
               const sellerStatusData = await sellerStatusResponse.json();
 
               if (sellerStatusData.success) {
-                // Only consider them a seller if application is approved
                 const isApprovedSeller =
                   sellerStatusData.data.isSeller &&
                   sellerStatusData.data.applicationStatus === "approved";
-                setIsSeller(isApprovedSeller);
+                finalSellerFlag = isApprovedSeller;
               }
             } catch (sellerError) {
               console.error("Error fetching seller status:", sellerError);
-              // Fall back to the original isSeller value
             }
           }
+
+          setIsSeller(finalSellerFlag);
+          cacheSellerStatus(finalSellerFlag);
+          setSellerStatusResolved(true);
         } else {
           setProfileError(data.message || "Failed to load profile");
           setIsProfilePictureLoaded(true);
+          setSellerStatusResolved(true);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
         setProfileError("Failed to load profile");
         setIsProfilePictureLoaded(true);
+        setSellerStatusResolved(true);
       } finally {
         setIsLoadingProfile(false);
       }
@@ -3053,6 +3075,8 @@ export default function ProfilePage() {
         const isApprovedSeller =
           data.data.isSeller && data.data.applicationStatus === "approved";
         setIsSeller(isApprovedSeller);
+        cacheSellerStatus(isApprovedSeller);
+        setSellerStatusResolved(true);
 
         // If user became a seller, switch to My Shop
         if (isApprovedSeller && activeSection === "selling") {
@@ -3064,6 +3088,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error refreshing seller status:", error);
     }
+    setSellerStatusResolved(true);
     return false;
   };
 
@@ -3240,6 +3265,8 @@ export default function ProfilePage() {
       if (data.success) {
         // Update seller status immediately
         setIsSeller(true);
+        cacheSellerStatus(true);
+        setSellerStatusResolved(true);
 
         // Fetch the updated seller profile
         await fetchSellerProfile();
@@ -5037,7 +5064,7 @@ export default function ProfilePage() {
           )}
 
           {/* Selling Section */}
-          {activeSection === "selling" && !isSeller && (
+          {activeSection === "selling" && !isSeller && sellerStatusResolved && (
             <>
               <div className="profile-details-title">
                 <FaTags
@@ -6532,6 +6559,12 @@ export default function ProfilePage() {
                 )}
               </div>
             </>
+          )}
+
+          {activeSection === "selling" && !sellerStatusResolved && (
+            <div className="profile-details-inner-box" style={{ padding: "24px" }}>
+              Loading seller status…
+            </div>
           )}
 
           {/******** MY SHOP (visible after registering) ********/}

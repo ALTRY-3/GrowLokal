@@ -23,7 +23,30 @@
 .artisan-card-top {
   display: flex;
   align-items: flex-start;
-  gap: 0;
+  gap: 32px;
+}
+
+.artisan-loading-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+}
+
+.artisan-loading {
+  text-align: center;
+}
+
+.artisan-loading-spinner {
+  font-size: 48px;
+  color: #af7928;
+}
+
+.artisan-loading-text {
+  margin-top: 20px;
+  color: #2e3f36;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .artisan-avatar {
@@ -72,6 +95,25 @@
 .artisan-story-image {
   display: block;
   margin: 0 auto;
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  .artisan-story-image {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .artisan-story-image {
+    width: 130px;
+    height: 130px;
+  }
 }
 
 @media (max-width: 1000px) {

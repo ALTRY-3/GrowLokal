@@ -91,16 +91,16 @@ const shippingOptions: ShippingOption[] = [
   },
 ];
 
-const FALLBACK_ADDRESS: UserAddress = {
-  fullName: "Guest User",
-  email: "guest@growlokal.app",
-  street: "123 Test Street",
-  barangay: "Barangay Sample",
-  city: "Manila",
-  province: "Metro Manila",
-  postalCode: "1000",
-  phone: "+63 912 345 6789",
-  region: "NCR",
+const EMPTY_ADDRESS: UserAddress = {
+  fullName: "",
+  email: "",
+  street: "",
+  barangay: "",
+  city: "",
+  province: "",
+  postalCode: "",
+  phone: "",
+  region: "",
 };
 
 export default function CheckoutPage() {
@@ -110,11 +110,9 @@ export default function CheckoutPage() {
 
   const [checkoutItems, setCheckoutItems] = React.useState<CheckoutItem[]>([]);
   const [userAddress, setUserAddress] = React.useState<UserAddress | null>(
-    FALLBACK_ADDRESS
+    null
   );
-  const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([
-    FALLBACK_ADDRESS,
-  ]);
+  const [savedAddresses, setSavedAddresses] = React.useState<UserAddress[]>([]);
   const [showAddressModal, setShowAddressModal] = React.useState(false);
 
   const [isLoading, setIsLoading] = React.useState(true);
@@ -286,8 +284,8 @@ export default function CheckoutPage() {
 
   const loadUserProfile = React.useCallback(async () => {
     if (!session?.user?.id) {
-      setUserAddress(FALLBACK_ADDRESS);
-      setSavedAddresses([FALLBACK_ADDRESS]);
+      setUserAddress(null);
+      setSavedAddresses([]);
       return;
     }
 
@@ -300,13 +298,9 @@ export default function CheckoutPage() {
       }
 
       const normalizedAddress: UserAddress = {
-        fullName:
-          profile.data.fullName ||
-          session?.user?.name ||
-          FALLBACK_ADDRESS.fullName,
-        email:
-          profile.data.email || session?.user?.email || FALLBACK_ADDRESS.email,
-        phone: profile.data.phone || FALLBACK_ADDRESS.phone,
+        fullName: profile.data.fullName || session?.user?.name || "",
+        email: profile.data.email || session?.user?.email || "",
+        phone: profile.data.phone || "",
         street: profile.data.address?.street || "",
         barangay: profile.data.address?.barangay || "",
         city: profile.data.address?.city || "",
@@ -319,11 +313,11 @@ export default function CheckoutPage() {
       setSavedAddresses([normalizedAddress]);
     } catch (profileError) {
       console.warn(
-        "Using fallback address due to profile fetch issue:",
+        "Using empty address due to profile fetch issue:",
         profileError
       );
-      setUserAddress(FALLBACK_ADDRESS);
-      setSavedAddresses([FALLBACK_ADDRESS]);
+      setUserAddress(null);
+      setSavedAddresses([]);
     }
   }, [session?.user?.email, session?.user?.id, session?.user?.name]);
 
@@ -337,20 +331,20 @@ export default function CheckoutPage() {
   }, [loadUserProfile]);
 
   const buildShippingAddress = React.useCallback((): OrderShippingAddress => {
-    const baseAddress = userAddress || FALLBACK_ADDRESS;
-    const fallbackName = session?.user?.name || FALLBACK_ADDRESS.fullName;
-    const fallbackEmail = session?.user?.email || FALLBACK_ADDRESS.email;
+    const baseAddress = userAddress || EMPTY_ADDRESS;
+    const fallbackName = session?.user?.name || "";
+    const fallbackEmail = session?.user?.email || "";
 
     return {
       fullName: baseAddress.fullName || fallbackName,
       email: baseAddress.email || fallbackEmail,
-      phone: baseAddress.phone || FALLBACK_ADDRESS.phone,
+      phone: baseAddress.phone || "",
       address: [baseAddress.street, baseAddress.barangay]
         .filter(Boolean)
         .join(", "),
-      city: baseAddress.city || FALLBACK_ADDRESS.city,
-      province: baseAddress.province || FALLBACK_ADDRESS.province,
-      postalCode: baseAddress.postalCode || FALLBACK_ADDRESS.postalCode,
+      city: baseAddress.city || "",
+      province: baseAddress.province || "",
+      postalCode: baseAddress.postalCode || "",
       country: "Philippines",
     };
   }, [session?.user?.email, session?.user?.name, userAddress]);
@@ -376,6 +370,24 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!selectedPayment) {
       alert("Please select a payment method");
+      return;
+    }
+
+    // Basic address validation to avoid sending placeholder data
+    const address = userAddress || EMPTY_ADDRESS;
+    const requiredAddressFields = [
+      address.fullName || session?.user?.name,
+      address.email || session?.user?.email,
+      address.phone,
+      address.street,
+      address.barangay,
+      address.city,
+      address.province,
+      address.postalCode,
+    ];
+
+    if (requiredAddressFields.some((field) => !field)) {
+      setError("Please complete your delivery address before placing the order.");
       return;
     }
 
@@ -567,13 +579,14 @@ export default function CheckoutPage() {
             <div className="address-details">
               <div className="address-left">
                 <div className="address-name">
-                  {userAddress.fullName || session?.user?.name || "Guest User"}
+                  {userAddress.fullName || session?.user?.name || ""}
                 </div>
                 <div className="address-phone">{userAddress.phone}</div>
               </div>
               <div className="address-right">
-                {userAddress.street}, {userAddress.barangay}, {userAddress.city}
-                , {userAddress.province} {userAddress.postalCode}
+                {[userAddress.street, userAddress.barangay, userAddress.city, userAddress.province, userAddress.postalCode]
+                  .filter(Boolean)
+                  .join(", ")}
               </div>
             </div>
           )}
@@ -747,7 +760,7 @@ export default function CheckoutPage() {
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => setSelectedPayment("ewallet")}
                 >
-                  E-Wallet
+                  GCash
                 </button>
               </div>
             </div>
@@ -778,17 +791,10 @@ export default function CheckoutPage() {
                     checked={true}
                     readOnly
                   />
-                  <img
-                    src="/paymongo-logo.png"
-                    alt="PayMongo"
-                    className="paymongo-logo"
-                  />
                   <div className="paymongo-info">
-                    <span className="paymongo-title">PayMongo</span>
+                    <span className="paymongo-title">GCash</span>
                     <span className="paymongo-note">
-                      Complete your PayMongo e-wallet payment within 30 mins.{" "}
-                      <br />
-                      Min. ₱50, available 24/7, with a 2% processing fee.
+                      Pay securely with GCash. You will be redirected to complete your payment.
                     </span>
                   </div>
                 </label>

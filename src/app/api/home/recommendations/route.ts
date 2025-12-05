@@ -36,6 +36,37 @@ interface RecommendedArtisan {
   matchScore: number;
 }
 
+interface TrendingCraft {
+  category: string;
+  craftType?: string;
+  productCount: number;
+  orderCount: number;
+}
+
+interface TrendingArtisanShop {
+  id: string;
+  shopName: string;
+  ownerName: string;
+  avatar: string;
+  primaryCategory?: string;
+  craftType?: string;
+  productsCount: number;
+  orderCount: number;
+  avgRating?: number;
+}
+
+interface HighlightProduct {
+  _id: string;
+  name: string;
+  price: number;
+  averageRating: number;
+  totalReviews: number;
+  category: string;
+  craftType?: string;
+  thumbnailUrl: string;
+  artistName: string;
+}
+
 // Barangay list for location matching
 const BARANGAYS = [
   'Asinan', 'Banicain', 'Baretto', 'East Bajac-Bajac', 'East Tapinac',
@@ -69,6 +100,10 @@ export async function GET(request: NextRequest) {
     const userLocation = searchParams.get('userLocation') || '';
     const recentSearches = searchParams.get('recentSearches')?.split(',').filter(Boolean) || [];
     
+    const now = new Date();
+    const THIRTY_DAYS_AGO = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const SEVEN_DAYS_AGO = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     // Fetch user's purchase history if logged in
     let purchasedCategories: string[] = [];
     let purchasedCraftTypes: string[] = [];
@@ -116,7 +151,6 @@ export async function GET(request: NextRequest) {
     ])].filter(Boolean).map(l => l.toLowerCase());
     
     // Score and recommend events
-    const now = new Date();
     const upcomingEvents = events
       .filter(event => new Date(event.date) >= now)
       .map(event => {
@@ -184,6 +218,71 @@ export async function GET(request: NextRequest) {
       })
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 6);
+
+    // Trending crafts (by orders in last 30 days, fallback to inventory)
+    const trendingCraftsPipeline = [
+      { $match: { createdAt: { $gte: THIRTY_DAYS_AGO }, status: { $ne: 'cancelled' } } },
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.productId',
+          foreignField: '_id',
+          as: 'productInfo'
+        }
+      },
+      { $unwind: '$productInfo' },
+      {
+        $group: {
+          _id: {
+            category: '$productInfo.category',
+            craftType: '$productInfo.craftType'
+          },
+          orderCount: { $sum: 1 },
+          productCount: { $addToSet: '$productInfo._id' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          category: { $ifNull: ['$_id.category', 'crafts'] },
+          craftType: '$_id.craftType',
+          orderCount: 1,
+          productCount: { $size: '$productCount' }
+        }
+      },
+      { $sort: { orderCount: -1, productCount: -1 } },
+      { $limit: 8 }
+    ];
+
+    const trendingCrafts: TrendingCraft[] = await Order.aggregate(trendingCraftsPipeline as any).catch(() => []);
+
+    // Fallback if no order data
+    let trendingCraftsResult = trendingCrafts;
+    if (!trendingCraftsResult || trendingCraftsResult.length === 0) {
+      const fallback = await Product.aggregate([
+        { $match: { isActive: true, isAvailable: true } },
+        {
+          $group: {
+            _id: { category: '$category', craftType: '$craftType' },
+            productCount: { $sum: 1 },
+            orderCount: { $sum: '$viewCount' }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            category: { $ifNull: ['$_id.category', 'crafts'] },
+            craftType: '$_id.craftType',
+            productCount: 1,
+            orderCount: 1
+          }
+        },
+        { $sort: { orderCount: -1, productCount: -1 } },
+        { $limit: 8 }
+      ]);
+      trendingCraftsResult = fallback as TrendingCraft[];
+    }
     
     // Fetch and score artisans (sellers)
     const sellers = await User.find({
@@ -307,12 +406,162 @@ export async function GET(request: NextRequest) {
       .filter((a: RecommendedArtisan) => a.productsCount > 0)
       .sort((a: RecommendedArtisan, b: RecommendedArtisan) => b.matchScore - a.matchScore)
       .slice(0, 6);
+
+    // Trending artisan shops (orders last 30 days; fallback to inventory)
+    const trendingArtisansPipeline = [
+      { $match: { createdAt: { $gte: THIRTY_DAYS_AGO }, status: { $ne: 'cancelled' } } },
+      { $unwind: '$items' },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.productId',
+          foreignField: '_id',
+          as: 'productInfo'
+        }
+      },
+      { $unwind: '$productInfo' },
+      {
+        $group: {
+          _id: '$productInfo.artistId',
+          orderCount: { $sum: 1 },
+          products: { $addToSet: '$productInfo._id' },
+          categories: { $addToSet: '$productInfo.category' },
+          craftTypes: { $addToSet: '$productInfo.craftType' }
+        }
+      },
+      { $sort: { orderCount: -1, 'products.length': -1 } },
+      { $limit: 8 }
+    ];
+
+    const trendingArtisanAgg = await Order.aggregate(trendingArtisansPipeline as any).catch(() => []);
+    const trendingArtisanIds = trendingArtisanAgg.map((a: any) => a._id);
+    const trendingArtisanUsers = trendingArtisanIds.length
+      ? await User.find({ _id: { $in: trendingArtisanIds } })
+          .select({
+            name: 1,
+            fullName: 1,
+            profilePicture: 1,
+            'sellerProfile.shopName': 1,
+            'sellerProfile.businessType': 1,
+          })
+          .lean()
+      : [];
+    const artisanUserMap = new Map(trendingArtisanUsers.map((u: any) => [u._id.toString(), u]));
+
+    let trendingArtisans: TrendingArtisanShop[] = trendingArtisanAgg.map((a: any) => {
+      const user = artisanUserMap.get(a._id.toString());
+      return {
+        id: a._id.toString(),
+        shopName: user?.sellerProfile?.shopName || user?.fullName || 'Artisan Shop',
+        ownerName: user?.fullName || user?.name || 'Artisan',
+        avatar: user?.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${a._id}`,
+        primaryCategory: (a.categories || [])[0],
+        craftType: (a.craftTypes || [])[0],
+        productsCount: (a.products || []).length,
+        orderCount: a.orderCount || 0,
+        avgRating: undefined,
+      } as TrendingArtisanShop;
+    });
+
+    // Fallback: use top product view counts per artist
+    if (trendingArtisans.length === 0) {
+      const fallbackAgg = await Product.aggregate([
+        { $match: { isActive: true, isAvailable: true } },
+        {
+          $group: {
+            _id: '$artistId',
+            productsCount: { $sum: 1 },
+            orderCount: { $sum: '$viewCount' },
+            primaryCategory: { $first: '$category' },
+            craftType: { $first: '$craftType' },
+            sampleProduct: { $first: '$$ROOT' }
+          }
+        },
+        { $sort: { orderCount: -1, productsCount: -1 } },
+        { $limit: 8 }
+      ]);
+
+      const fallbackIds = fallbackAgg.map((f: any) => f._id);
+      const fallbackUsers = fallbackIds.length
+        ? await User.find({ _id: { $in: fallbackIds } })
+            .select({
+              name: 1,
+              fullName: 1,
+              profilePicture: 1,
+              'sellerProfile.shopName': 1,
+              'sellerProfile.businessType': 1,
+            })
+            .lean()
+        : [];
+      const fallbackMap = new Map(fallbackUsers.map((u: any) => [u._id.toString(), u]));
+
+      trendingArtisans = fallbackAgg.map((f: any) => {
+        const user = fallbackMap.get(f._id.toString());
+        return {
+          id: f._id.toString(),
+          shopName: user?.sellerProfile?.shopName || user?.fullName || 'Artisan Shop',
+          ownerName: user?.fullName || user?.name || 'Artisan',
+          avatar: user?.profilePicture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${f._id}`,
+          primaryCategory: f.primaryCategory,
+          craftType: f.craftType,
+          productsCount: f.productsCount || 0,
+          orderCount: f.orderCount || 0,
+          avgRating: undefined,
+        } as TrendingArtisanShop;
+      });
+    }
+
+    // Newest uploads (fresh inventory)
+    const newestUploadsDocs = await Product.find({ isActive: true, isAvailable: true })
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .select({
+        name: 1,
+        price: 1,
+        averageRating: 1,
+        totalReviews: 1,
+        category: 1,
+        craftType: 1,
+        thumbnailUrl: 1,
+        artistName: 1,
+      })
+      .lean();
+
+    const newestUploads: HighlightProduct[] = newestUploadsDocs.map((p: any) => ({
+      ...p,
+      _id: p._id.toString(),
+    }));
+
+    // Most viewed (popular this week-ish) - approximate with top viewCount, recent skew
+    const mostViewedDocs = await Product.find({ isActive: true, isAvailable: true, createdAt: { $gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } })
+      .sort({ viewCount: -1, averageRating: -1 })
+      .limit(8)
+      .select({
+        name: 1,
+        price: 1,
+        averageRating: 1,
+        totalReviews: 1,
+        category: 1,
+        craftType: 1,
+        thumbnailUrl: 1,
+        artistName: 1,
+      })
+      .lean();
+
+    const mostViewed: HighlightProduct[] = mostViewedDocs.map((p: any) => ({
+      ...p,
+      _id: p._id.toString(),
+    }));
     
     return NextResponse.json({
       success: true,
       data: {
         events: upcomingEvents,
         artisans: scoredArtisans,
+        trendingCrafts: trendingCraftsResult,
+        trendingArtisans,
+        newestUploads,
+        mostViewed,
         personalizationFactors: {
           interests: allInterests.slice(0, 5),
           locations: allLocations.slice(0, 3),

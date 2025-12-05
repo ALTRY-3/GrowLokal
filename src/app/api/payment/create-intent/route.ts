@@ -72,6 +72,39 @@ export async function POST(request: NextRequest) {
         },
       });
     } else if (normalizedMethod === 'gcash' || normalizedMethod === 'grab_pay') {
+      const useMockGcash =
+        normalizedMethod === 'gcash' && process.env.GCASH_MOCK === 'true';
+
+      if (useMockGcash) {
+        // Simulated GCash flow: mark as paid and return a local success URL
+        order.paymentDetails = {
+          ...(order.paymentDetails || {}),
+          status: 'paid',
+          method: 'gcash',
+          provider: 'gcash-mock',
+          reference: `mock-gcash-${order.orderId}`,
+        };
+        await order.save();
+
+        const baseUrl =
+          process.env.NEXTAUTH_URL || process.env.APP_URL || 'http://localhost:3000';
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            sourceId: 'mock-gcash',
+            checkoutUrl: `${baseUrl}/payment/ewallet/success?orderId=${order.orderId}&mock=1`,
+            status: 'paid',
+            metadata: {
+              orderId: order.orderId,
+              orderMongoId: order._id.toString(),
+              userId: order.userId?.toString?.() || String(order.userId),
+              mock: true,
+            },
+          },
+        });
+      }
+
       const baseUrl =
         process.env.NEXTAUTH_URL ||
         process.env.APP_URL ||

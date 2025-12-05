@@ -228,45 +228,66 @@ export async function GET(request: NextRequest) {
         .filter(Boolean);
     }
 
-    // Trending Local Events - Get from stories/events (sellers with stories)
+    // Trending Local Events - use curated/static events (until events model exists)
     if (section === "all" || section === "events") {
-      const sellersWithStories = await User.find({
-        isSeller: true,
-        "sellerProfile.applicationStatus": "approved",
-        "sellerProfile.sellerStory": { $exists: true, $ne: "" },
-      })
-        .select({
-          "sellerProfile.sellerStoryTitle": 1,
-          "sellerProfile.pickupAddress.barangay": 1,
-          "sellerProfile.businessType": 1,
-          "sellerProfile.approvedAt": 1,
-        })
-        .sort({ "sellerProfile.approvedAt": -1 })
-        .limit(8)
-        .lean();
-
-      // Generate mock events based on seller activity (since there's no dedicated events model)
-      const eventTypes = ["Workshop", "Market", "Tour", "Fair", "Exhibition"];
       const today = new Date();
+      const baseEvents = [
+        {
+          id: "e1",
+          title: "Handcraft Workshop: Buri Weaving",
+          dateOffsetDays: 3,
+          location: "Asinan Community Center",
+          type: "Workshop",
+          viewsThisWeek: 234,
+        },
+        {
+          id: "e2",
+          title: "Olongapo Artisan Market",
+          dateOffsetDays: 6,
+          location: "Subic Bay Freeport Zone",
+          type: "Market",
+          viewsThisWeek: 189,
+        },
+        {
+          id: "e3",
+          title: "Cultural Heritage Tour",
+          dateOffsetDays: 9,
+          location: "Downtown Olongapo",
+          type: "Tour",
+          viewsThisWeek: 156,
+        },
+        {
+          id: "e4",
+          title: "Local Craft Fair 2024",
+          dateOffsetDays: 14,
+          location: "Olongapo Convention Center",
+          type: "Fair",
+          viewsThisWeek: 312,
+        },
+        {
+          id: "e5",
+          title: "Sip and Sketch 'Gapo",
+          dateOffsetDays: 18,
+          location: "Sibul Kapihan, Olongapo",
+          type: "Exhibition",
+          viewsThisWeek: 205,
+        },
+      ];
 
-      results.trendingEvents = sellersWithStories.map((seller: any, index: number) => {
+      results.trendingEvents = baseEvents.map((evt) => {
         const eventDate = new Date(today);
-        eventDate.setDate(today.getDate() + (index + 1) * 3); // Space events 3 days apart
-
+        eventDate.setDate(today.getDate() + evt.dateOffsetDays);
         return {
-          id: seller._id.toString(),
-          title:
-            seller.sellerProfile?.sellerStoryTitle ||
-            `${seller.sellerProfile?.businessType || "Artisan"} Showcase`,
+          id: evt.id,
+          title: evt.title,
           date: eventDate.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
           }),
-          location:
-            seller.sellerProfile?.pickupAddress?.barangay || "Olongapo City Center",
-          type: eventTypes[index % eventTypes.length],
-          viewsThisWeek: Math.floor(Math.random() * 200) + 100,
+          location: evt.location,
+          type: evt.type,
+          viewsThisWeek: evt.viewsThisWeek,
         };
       });
     }

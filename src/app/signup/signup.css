@@ -666,12 +666,26 @@ select.form-input.disabled-select ~ .input-icon {
   background: white;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  position: relative;
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkmark {
   background: #AF7928;
   border-color: #AF7928;
   color: white;
+}
+
+.checkmark::after {
+  content: "\2713";
+  position: absolute;
+  color: white;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: none;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark::after {
+  display: block;
 }
 
 .checkmark i {
@@ -1166,6 +1180,10 @@ input[type="date"]::-webkit-clear-button {
   max-width: 480px;
   padding: 2.5rem;
   text-align: center;
+  background: #fff;
+  border: 1px solid #f1e8d6;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(46, 63, 54, 0.18);
 }
 
 .email-sent-icon {
@@ -1197,31 +1215,34 @@ input[type="date"]::-webkit-clear-button {
 }
 
 .email-sent-modal h2 {
-  font-size: 1.5rem;
-  color: #1a1a1a;
-  margin-bottom: 0.75rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  color: #2E3F36;
+  margin-bottom: 0.85rem;
+  font-weight: 700;
 }
 
 .email-sent-message {
-  color: #6b7280;
+  color: #4b5563;
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
 }
 
 .email-address-display {
   color: #AF7928;
-  font-weight: 600;
-  font-size: 1rem;
+  font-weight: 700;
+  font-size: 1.05rem;
   margin-bottom: 1rem;
   word-break: break-all;
 }
 
 .email-sent-instructions {
-  color: #6b7280;
+  color: #4b5563;
   font-size: 0.875rem;
   line-height: 1.6;
   margin-bottom: 1.5rem;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .resend-message {
@@ -1268,10 +1289,12 @@ input[type="date"]::-webkit-clear-button {
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Poppins', sans-serif;
+  box-shadow: inset 0 0 0 0 rgba(175, 121, 40, 0.08);
 }
 
 .resend-btn:hover:not(:disabled) {
   background: rgba(175, 121, 40, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(175, 121, 40, 0.25);
 }
 
 .resend-btn:disabled {
@@ -1293,33 +1316,13 @@ input[type="date"]::-webkit-clear-button {
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Poppins', sans-serif;
+  box-shadow: 0 6px 18px rgba(175, 121, 40, 0.35);
 }
 
 .go-to-login-btn:hover {
   background: linear-gradient(135deg, #956621 0%, #AF7928 100%);
   transform: translateY(-1px);
-}
-
-.dev-link-section {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px dashed #e5e5e5;
-}
-
-.dev-link-label {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  margin-bottom: 0.25rem;
-}
-
-.dev-link {
-  font-size: 0.8rem;
-  color: #6366f1;
-  text-decoration: underline;
-}
-
-.dev-link:hover {
-  color: #4f46e5;
+  box-shadow: 0 10px 24px rgba(175, 121, 40, 0.35);
 }
 
 @media (max-width: 480px) {

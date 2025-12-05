@@ -10,6 +10,7 @@ interface PersonalizationParams {
   recentViews?: string[];      // Product IDs the user recently viewed
   recentSearches?: string[];   // Recent search terms
   interests?: string[];        // User interests (categories, craftTypes)
+  viewedCategories?: string[]; // Categories visited/browsed
   purchasedCategories?: string[]; // Categories user has purchased from
   excludeIds?: string[];       // Products to exclude (already in cart, etc.)
 }
@@ -19,12 +20,15 @@ const WEIGHTS = {
   recentlyViewed: 50,       // Boost products similar to recently viewed
   searchMatch: 40,          // Boost products matching search history
   interestMatch: 35,        // Boost products matching user interests
+  viewedCategory: 32,       // Boost categories the user browsed
   purchaseHistory: 30,      // Boost categories user has bought from
   trending: 25,             // Boost trending/popular products
   newArrival: 20,           // Boost new products
   highRating: 15,           // Boost highly rated products
   inStock: 10,              // Boost in-stock items
 };
+
+const MARKETPLACE_CATEGORIES = ['handicrafts', 'fashion', 'home', 'food', 'beauty'];
 
 // GET /api/products/personalized - Get personalized product recommendations
 export async function GET(request: NextRequest) {
@@ -38,6 +42,7 @@ export async function GET(request: NextRequest) {
     const recentViews = searchParams.get('recentViews')?.split(',').filter(Boolean) || [];
     const recentSearches = searchParams.get('recentSearches')?.split(',').filter(Boolean) || [];
     const interests = searchParams.get('interests')?.split(',').filter(Boolean) || [];
+    const viewedCategories = searchParams.get('viewedCategories')?.split(',').filter(Boolean) || [];
     const excludeIds = searchParams.get('excludeIds')?.split(',').filter(Boolean) || [];
     const category = searchParams.get('category');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -46,7 +51,8 @@ export async function GET(request: NextRequest) {
     const baseQuery: any = { 
       isActive: true,
       isAvailable: true,
-      stock: { $gt: 0 }
+      stock: { $gt: 0 },
+      category: { $in: MARKETPLACE_CATEGORIES }, // Ensure we stay in Marketplace inventory
     };
     
     if (category) {
@@ -128,6 +134,15 @@ export async function GET(request: NextRequest) {
                   else: 0
                 }
               },
+
+              // Boost for categories the user recently browsed (viewed categories)
+              {
+                $cond: {
+                  if: { $in: ['$category', viewedCategories.map(c => c.toLowerCase())] },
+                  then: WEIGHTS.viewedCategory,
+                  else: 0
+                }
+              },
               
               // Boost for high ratings
               {
@@ -184,16 +199,67 @@ export async function GET(request: NextRequest) {
         .slice(0, 10); // Limit to last 10 views
       
       if (validViewIds.length > 0) {
+        const recentViewObjectIds = validViewIds.map(id => new mongoose.Types.ObjectId(id));
+
         // Fetch recently viewed products to get their attributes
         const viewedProducts = await Product.find({
-          _id: { $in: validViewIds.map(id => new mongoose.Types.ObjectId(id)) }
+          _id: { $in: recentViewObjectIds }
         }).select('category craftType artistName tags').lean();
         
         const viewedCategories = [...new Set(viewedProducts.map((p: any) => p.category))];
         const viewedCraftTypes = [...new Set(viewedProducts.map((p: any) => p.craftType).filter(Boolean))];
         const viewedArtists = [...new Set(viewedProducts.map((p: any) => p.artistName).filter(Boolean))];
-        
-        // Add boost for similarity to viewed products
+
+        // Weight recent categories/craft types by recency (newest view gets largest boost)
+        const categoryWeights: Record<string, number> = {};
+        const craftTypeWeights: Record<string, number> = {};
+        viewedProducts.forEach((p: any, index: number) => {
+          const positionWeight = Math.max(WEIGHTS.recentlyViewed - index * 5, 20);
+          if (p.category) {
+            categoryWeights[p.category] = Math.max(categoryWeights[p.category] || 0, positionWeight * 0.5);
+          }
+          if (p.craftType) {
+            craftTypeWeights[p.craftType] = Math.max(craftTypeWeights[p.craftType] || 0, positionWeight * 0.35);
+          }
+        });
+
+        // Strong boost if the exact product was recently viewed (surfacing revisits)
+        pipeline[1].$addFields.personalizationScore.$add.push({
+          $cond: {
+            if: { $in: ['$_id', recentViewObjectIds] },
+            then: WEIGHTS.recentlyViewed,
+            else: 0
+          }
+        });
+
+        // Add weighted boosts per category/craftType (top 3 each)
+        Object.entries(categoryWeights)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .forEach(([cat, weight]) => {
+            pipeline[1].$addFields.personalizationScore.$add.push({
+              $cond: {
+                if: { $eq: ['$category', cat] },
+                then: Math.floor(weight),
+                else: 0
+              }
+            });
+          });
+
+        Object.entries(craftTypeWeights)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .forEach(([craft, weight]) => {
+            pipeline[1].$addFields.personalizationScore.$add.push({
+              $cond: {
+                if: { $eq: ['$craftType', craft] },
+                then: Math.floor(weight),
+                else: 0
+              }
+            });
+          });
+
+        // Keep the broader similarity boosts
         pipeline[1].$addFields.personalizationScore.$add.push({
           $cond: {
             if: { $in: ['$category', viewedCategories] },
@@ -220,23 +286,42 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Search history matching
+    // Search history matching (boost on first token and full phrase)
     if (recentSearches.length > 0) {
-      const searchTerms = recentSearches.slice(0, 5).join(' ').toLowerCase();
-      
-      // Add text matching boost
-      pipeline[1].$addFields.personalizationScore.$add.push({
-        $cond: {
-          if: {
-            $or: [
-              { $regexMatch: { input: { $toLower: '$name' }, regex: searchTerms.split(' ')[0] || '' } },
-              { $regexMatch: { input: { $toLower: '$description' }, regex: searchTerms.split(' ')[0] || '' } }
-            ]
-          },
-          then: WEIGHTS.searchMatch,
-          else: 0
-        }
-      });
+      const searchTokens = recentSearches
+        .slice(0, 5)
+        .flatMap(term => term.toLowerCase().split(/\s+/).filter(Boolean))
+        .slice(0, 6);
+      const firstToken = searchTokens[0] || '';
+
+      if (firstToken) {
+        pipeline[1].$addFields.personalizationScore.$add.push({
+          $cond: {
+            if: {
+              $or: [
+                { $regexMatch: { input: { $toLower: '$name' }, regex: firstToken } },
+                { $regexMatch: { input: { $toLower: '$description' }, regex: firstToken } },
+                { $regexMatch: { input: { $toLower: '$craftType' }, regex: firstToken } },
+                { $regexMatch: { input: { $toLower: '$category' }, regex: firstToken } }
+              ]
+            },
+            then: WEIGHTS.searchMatch,
+            else: 0
+          }
+        });
+      }
+
+      if (searchTokens.length > 1) {
+        pipeline[1].$addFields.personalizationScore.$add.push({
+          $cond: {
+            if: {
+              $regexMatch: { input: { $toLower: '$description' }, regex: searchTokens.join('|') }
+            },
+            then: Math.floor(WEIGHTS.searchMatch * 0.6),
+            else: 0
+          }
+        });
+      }
     }
     
     // Sort by personalization score, then by rating
@@ -275,7 +360,8 @@ export async function GET(request: NextRequest) {
         interests,
         recentViews,
         recentSearches,
-        purchasedCategories
+        purchasedCategories,
+        viewedCategories
       })
     }));
     
@@ -346,7 +432,8 @@ function getRecommendationReason(
     interests: string[], 
     recentViews: string[], 
     recentSearches: string[],
-    purchasedCategories: string[]
+    purchasedCategories: string[],
+    viewedCategories: string[]
   }
 ): string | null {
   const reasons: string[] = [];
@@ -362,6 +449,11 @@ function getRecommendationReason(
   // Check if from a category user has purchased
   if (context.purchasedCategories.includes(product.category)) {
     reasons.push('Based on your purchases');
+  }
+
+  // Browsed categories
+  if (context.viewedCategories.some(c => c.toLowerCase() === product.category?.toLowerCase())) {
+    reasons.push('Hot pick for you');
   }
   
   // High rating

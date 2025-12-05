@@ -64,12 +64,14 @@ interface LegacyProduct {
   artist: string;
   price: string;
   productId?: string;
+  artistId?: string;
   maxStock?: number;
   // Add these new properties
   craftType?: string;
   category?: string;
   barangay?: string;
   soldCount?: number;
+  description?: string;
 }
 
 // Update the FilterState interface
@@ -426,12 +428,14 @@ export default function Marketplace() {
                 artist: product.artistName,
                 price: `₱${product.price.toFixed(2)}`,
                 productId: product._id,
+                artistId: product.artistId,
                 maxStock: product.stock,
                 craftType: product.craftType || "Unspecified",
                 category:
                   categoryMap[product.category?.toLowerCase()] || "General",
                 barangay: product.barangay || "Unspecified",
                 soldCount: 0,
+                description: product.description,
               });
             }
           })
@@ -468,12 +472,14 @@ export default function Marketplace() {
     artist: product.artistName,
     price: `₱${product.price.toFixed(2)}`,
     productId: product._id,
+    artistId: product.artistId,
     maxStock: product.stock,
     // Add these new properties with proper formatting
     craftType: product.craftType || "Unspecified",
     category: formatCategory(product.category),
     barangay: product.barangay || "Unspecified",
     soldCount: 0, // Default to 0 since the API doesn't provide sold count yet
+    description: product.description,
   });
 
   const handleProductClick = (product: Product) => {
@@ -492,11 +498,13 @@ export default function Marketplace() {
       artist: product.artistName,
       price: `₱${product.price.toFixed(2)}`,
       productId: product._id,
+      artistId: product.artistId,
       maxStock: product.stock,
       craftType: product.craftType || "Unspecified",
       category: formatCategory(product.category),
       barangay: product.barangay || "Unspecified",
       soldCount: 0,
+      description: product.description,
     });
   };
 
@@ -935,6 +943,9 @@ export default function Marketplace() {
             hasUserHistory={
               behavior.recentViews.length > 0 || behavior.interests.length > 0
             }
+            onProductEngage={(p) =>
+              trackProductView(p._id, p.category, p.craftType)
+            }
           />
         </div>
       )}
@@ -945,6 +956,9 @@ export default function Marketplace() {
             title="HANDICRAFTS"
             products={handicrafts}
             onProductClick={handleProductClick}
+            onProductEngage={(p) =>
+              trackProductView(p._id, p.category, p.craftType)
+            }
           />
         </div>
       )}
@@ -955,6 +969,9 @@ export default function Marketplace() {
             title="FASHION"
             products={fashion}
             onProductClick={handleProductClick}
+            onProductEngage={(p) =>
+              trackProductView(p._id, p.category, p.craftType)
+            }
           />
         </div>
       )}
@@ -965,6 +982,9 @@ export default function Marketplace() {
             title="HOME"
             products={home}
             onProductClick={handleProductClick}
+            onProductEngage={(p) =>
+              trackProductView(p._id, p.category, p.craftType)
+            }
           />
         </div>
       )}
@@ -975,6 +995,9 @@ export default function Marketplace() {
             title="FOOD"
             products={food}
             onProductClick={handleProductClick}
+            onProductEngage={(p) =>
+              trackProductView(p._id, p.category, p.craftType)
+            }
           />
         </div>
       )}
@@ -985,6 +1008,9 @@ export default function Marketplace() {
             title="BEAUTY & WELLNESS"
             products={beauty}
             onProductClick={handleProductClick}
+            onProductEngage={(p) =>
+              trackProductView(p._id, p.category, p.craftType)
+            }
           />
         </div>
       )}
@@ -1110,10 +1136,12 @@ function Section({
   title,
   products,
   onProductClick,
+  onProductEngage,
 }: {
   title: string;
   products: Product[];
   onProductClick: (product: Product) => void;
+  onProductEngage?: (product: Product) => void;
 }) {
   const { addItem } = useCartStore();
   const [addingProduct, setAddingProduct] = useState<string | null>(null);
@@ -1123,6 +1151,9 @@ function Section({
 
   const handleAddToCart = async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
+
+    // Treat add-to-cart as a strong interest signal for personalization
+    onProductEngage?.(product);
 
     if (!product.isAvailable || product.stock === 0) return;
     if (addingProduct === product._id) return; // Prevent double-click
@@ -1269,11 +1300,13 @@ function PersonalizedSection({
   onProductClick,
   isLoading,
   hasUserHistory,
+  onProductEngage,
 }: {
   products: PersonalizedProduct[];
   onProductClick: (product: PersonalizedProduct) => void;
   isLoading: boolean;
   hasUserHistory: boolean;
+  onProductEngage?: (product: PersonalizedProduct) => void;
 }) {
   const { addItem } = useCartStore();
   const [addingProduct, setAddingProduct] = useState<string | null>(null);
@@ -1286,6 +1319,9 @@ function PersonalizedSection({
     e: React.MouseEvent
   ) => {
     e.stopPropagation();
+
+    // Treat add-to-cart as engagement to refresh recommendations
+    onProductEngage?.(product);
 
     if (!product.isAvailable || product.stock === 0) return;
     if (addingProduct === product._id) return;

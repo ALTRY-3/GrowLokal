@@ -13,7 +13,7 @@ import { getFriendlyErrorMessage } from "@/lib/authErrors";
 import type { PasswordStrength } from "@/lib/passwordPolicy";
 import "./signup.css";
 
-// Barangay data for Olongapo
+// Barangay data for Olongapo (kept as detailed set)
 const BARANGAYS = [
   "Asinan",
   "Banicain",
@@ -35,9 +35,212 @@ const BARANGAYS = [
   "West Tapinac",
 ];
 
-const CITIES = ["Olongapo"];
-const PROVINCES = ["Zambales"];
-const REGIONS = ["Central Luzon (Region III)"];
+// Expanded PH location dataset (balanced for coverage without huge payload)
+const LOCATION_DATA: Record<
+  string,
+  {
+    provinces: Record<string, { cities: Record<string, string[]> }>;
+  }
+> = {
+  "National Capital Region (NCR)": {
+    provinces: {
+      "Metro Manila": {
+        cities: {
+          "Quezon City": ["Batasan Hills", "Commonwealth", "Bagumbayan"],
+          Manila: ["Ermita", "Malate", "Sampaloc"],
+          Makati: ["Bel-Air", "Poblacion", "San Lorenzo"],
+          Pasig: ["Kapitolyo", "Ugong", "Manggahan"],
+          Taguig: ["Fort Bonifacio", "Bagumbayan", "Pinagsama"],
+          Mandaluyong: ["Plainview", "Mauway", "Barangka"],
+          "San Juan": ["Greenhills", "Kabayanan", "Batis"],
+          Pasay: ["Baclaran", "San Rafael", "Sto. Niño"],
+          Parañaque: ["BF Homes", "San Dionisio", "Don Bosco"],
+          Muntinlupa: ["Alabang", "Bayanan", "Tunasan"],
+          "Las Piñas": ["Pilar", "Pamplona", "Talon"],
+          Caloocan: ["Bagong Silang", "Grace Park", "Maypajo"],
+          Malabon: ["Concepcion", "Muzon", "Tinajeros"],
+          Navotas: ["San Roque", "North Bay", "Daanghari"],
+          Valenzuela: ["Karuhatan", "Malinta", "Gen. T. de Leon"],
+          Marikina: ["Sto. Niño", "Concepcion Uno", "Industrial Valley"],
+          Pateros: ["Aguho", "Magtanggol", "Sta. Ana"],
+        },
+      },
+    },
+  },
+  "Ilocos Region (Region I)": {
+    provinces: {
+      "Ilocos Norte": { cities: { Laoag: ["Barangay 1", "Barangay 2"] } },
+      "Ilocos Sur": { cities: { Vigan: ["Barangay I", "Barangay II"] } },
+      "La Union": { cities: { "San Fernando": ["Poro", "Tanqui", "Dalumpinas"], Bauang: ["Poblacion", "Central East"] } },
+      Pangasinan: { cities: { Lingayen: ["Poblacion", "Baay"], Dagupan: ["Poblacion Oeste", "Pogo"] } },
+    },
+  },
+  "Cagayan Valley (Region II)": {
+    provinces: {
+      Batanes: { cities: { Basco: ["Kayvaluganan", "Kaychanarianan"] } },
+      Cagayan: { cities: { Tuguegarao: ["Caritan Centro", "Pengue-Ruyu"] } },
+      Isabela: { cities: { Ilagan: ["Alibagu", "Bagumbayan"], Cauayan: ["District I", "District II"] } },
+      "Nueva Vizcaya": { cities: { Bayombong: ["Don Domingo Maddela", "Salvacion"] } },
+      Quirino: { cities: { Cabarroguis: ["Gumilab", "Poblacion"] } },
+    },
+  },
+  "Central Luzon (Region III)": {
+    provinces: {
+      Aurora: { cities: { Baler: ["Poblacion", "Obligacion"] } },
+      Bataan: { cities: { Balanga: ["Poblacion", "Cupang"], Dinalupihan: ["Poblacion", "San Ramon"] } },
+      Bulacan: { cities: { Malolos: ["Longos", "Tikay", "Bagong Bayan"], Meycauayan: ["Bahay Pare", "Pandayan", "Saluysoy"], Baliuag: ["Bagong Nayon", "Poblacion", "Tiaong"] } },
+      "Nueva Ecija": { cities: { Palayan: ["Abar", "Ganaderia"], Cabanatuan: ["Barangay I", "Barangay II"], Gapan: ["Pambuan", "San Vicente"] } },
+      Pampanga: { cities: { "San Fernando": ["Del Pilar", "Sindalan", "Sto. Niño"], "Angeles City": ["Balibago", "Cutcut", "Pulungbulu"], Mabalacat: ["Dau", "Mawaque", "Dolores"] } },
+      Tarlac: { cities: { "Tarlac City": ["San Roque", "San Sebastian"], Concepcion: ["San Nicolas", "Sta. Rita"] } },
+      Zambales: {
+        cities: {
+          Olongapo: BARANGAYS,
+          Subic: ["Aningway-Sacatihan", "Asinan Poblacion", "Calapacuan", "Matain"],
+          Castillejos: ["San Agustin", "San Pablo", "San Jose"],
+          Iba: ["Dirita", "Sto. Rosario"]
+        },
+      },
+    },
+  },
+  "CALABARZON (Region IV-A)": {
+    provinces: {
+      Cavite: { cities: { "Trece Martires": ["Aguado", "De Ocampo"], Imus: ["Medicion", "Pag-asa", "Anabu"], Bacoor: ["Molino", "Talaba", "Niog"] } },
+      Laguna: { cities: { "Santa Cruz": ["Bagumbayan", "Gatid"], Calamba: ["Halang", "Real", "Pansol"], "Biñan": ["Sto. Tomas", "Canlalay", "San Vicente"] } },
+      Batangas: { cities: { "Batangas City": ["Alangilan", "Kumintang Ibaba", "Pallocan"], Lipa: ["Balintawak", "Sabang", "Santo Toribio"], Tanauan: ["Darasa", "Sala", "Sulpoc"] } },
+      Rizal: { cities: { Antipolo: ["San Roque", "Mambugan", "Bagong Nayon"], Cainta: ["San Andres", "Sto. Domingo"], Taytay: ["Dolores", "San Juan"] } },
+      Quezon: { cities: { Lucena: ["Gulang-Gulang", "Ibabang Iyam"], Tayabas: ["Abo-Abo", "Alitao"] } },
+    },
+  },
+  "MIMAROPA (Region IV-B)": {
+    provinces: {
+      "Occidental Mindoro": { cities: { Mamburao: ["Barangay 1", "Barangay 2"] } },
+      "Oriental Mindoro": { cities: { Calapan: ["Guinobatan", "Comunal"] } },
+      Marinduque: { cities: { Boac: ["Poblacion", "Isok"], Gasan: ["Bachao Ibaba", "Tapuyan"] } },
+      Romblon: { cities: { Romblon: ["Agpanabat", "Cajimos"] } },
+      Palawan: { cities: { "Puerto Princesa": ["San Pedro", "San Manuel"], Coron: ["Barangay I", "Barangay II"] } },
+    },
+  },
+  "Bicol Region (Region V)": {
+    provinces: {
+      Albay: { cities: { Legazpi: ["Albay District", "Bgy 1"], Ligao: ["Binatagan", "Batang"] } },
+      "Camarines Norte": { cities: { Daet: ["Gahonon", "Lag-on"] } },
+      "Camarines Sur": { cities: { Pili: ["San Juan", "San Jose"], Naga: ["Triangulo", "Peñafrancia"] } },
+      Catanduanes: { cities: { Virac: ["San Isidro", "San Jose"] } },
+      Masbate: { cities: { "Masbate City": ["Pating", "Espinosa"] } },
+      Sorsogon: { cities: { "Sorsogon City": ["Abuyog", "Bacon District"] } },
+    },
+  },
+  "Western Visayas (Region VI)": {
+    provinces: {
+      Aklan: { cities: { Kalibo: ["Poblacion", "Andagao"] } },
+      Antique: { cities: { "San Jose": ["Barangay 1", "Barangay 2"] } },
+      Capiz: { cities: { "Roxas City": ["Baybay", "Poblacion"] } },
+      Guimaras: { cities: { Jordan: ["Poblacion", "San Miguel"] } },
+      Iloilo: { cities: { "Iloilo City": ["Jaro", "La Paz", "Mandurriao"] } },
+      "Negros Occidental": { cities: { "Bacolod City": ["Mandalagan", "Singcang"], Bago: ["Balingasag", "Abuanan"] } },
+    },
+  },
+  "Central Visayas (Region VII)": {
+    provinces: {
+      Bohol: { cities: { Tagbilaran: ["Cogon", "Dao"] } },
+      Cebu: { cities: { "Cebu City": ["Lahug", "Mabolo", "Guadalupe"], Mandaue: ["Banilad", "Basak"] } },
+      "Negros Oriental": { cities: { Dumaguete: ["Bagacay", "Bantayan"] } },
+      Siquijor: { cities: { Siquijor: ["Barangay I", "Barangay II"] } },
+    },
+  },
+  "Eastern Visayas (Region VIII)": {
+    provinces: {
+      Biliran: { cities: { Naval: ["Sto. Niño", "Caraycaray"] } },
+      "Eastern Samar": { cities: { Borongan: ["Can-aga", "Lalawigan"] } },
+      Leyte: { cities: { Tacloban: ["Abucay", "Apitong"] } },
+      "Northern Samar": { cities: { Catarman: ["Airport Village", "Bangkerohan"] } },
+      Samar: { cities: { Catbalogan: ["Mercedes", "Maulong"] } },
+      "Southern Leyte": { cities: { Maasin: ["Asuncion", "Ibarra"] } },
+    },
+  },
+  "Zamboanga Peninsula (Region IX)": {
+    provinces: {
+      "Zamboanga del Norte": { cities: { Dipolog: ["Sta. Filomena", "Minaog"] } },
+      "Zamboanga del Sur": { cities: { Pagadian: ["Balangasan", "Santiago"] } },
+      "Zamboanga Sibugay": { cities: { Ipil: ["Pangi", "Sanito"] } },
+    },
+  },
+  "Northern Mindanao (Region X)": {
+    provinces: {
+      Bukidnon: { cities: { Malaybalay: ["Aglayan", "Casisang"] } },
+      Camiguin: { cities: { Mambajao: ["Poblacion", "Agoho"] } },
+      "Lanao del Norte": { cities: { Tubod: ["Poblacion", "Baroy"] } },
+      "Misamis Occidental": { cities: { Oroquieta: ["Poblacion I", "Talic"] } },
+      "Misamis Oriental": { cities: { "Cagayan de Oro": ["Bugo", "Carmen", "Macasandig"] } },
+    },
+  },
+  "Davao Region (Region XI)": {
+    provinces: {
+      "Davao de Oro": { cities: { Nabunturan: ["Poblacion", "Santa Maria"] } },
+      "Davao del Norte": { cities: { Tagum: ["Apokon", "Visayan Village"] } },
+      "Davao del Sur": { cities: { Digos: ["Aplaya", "Cogon"] } },
+      "Davao Occidental": { cities: { Malita: ["Poblacion", "Fishing Village"] } },
+      "Davao Oriental": { cities: { Mati: ["Central", "Dahican"] } },
+    },
+  },
+  "SOCCSKSARGEN (Region XII)": {
+    provinces: {
+      Cotabato: { cities: { Kidapawan: ["Sudapin", "Poblacion"] } },
+      Sarangani: { cities: { Alabel: ["Alegria", "Bagacay"] } },
+      "South Cotabato": { cities: { Koronadal: ["Zone I", "Zone III"] } },
+      "Sultan Kudarat": { cities: { Isulan: ["Kalawag I", "Kalawag II"] } },
+    },
+  },
+  "Caraga (Region XIII)": {
+    provinces: {
+      "Agusan del Norte": { cities: { Cabadbaran: ["Poblacion 1", "Poblacion 2"] } },
+      "Agusan del Sur": { cities: { Prosperidad: ["Poblacion", "San Pedro"] } },
+      "Dinagat Islands": { cities: { "San Jose": ["Justiniana", "Don Ruben"] } },
+      "Surigao del Norte": { cities: { "Surigao City": ["Taft", "Washington"] } },
+      "Surigao del Sur": { cities: { Tandag: ["San Agustin", "Awasian"] } },
+    },
+  },
+  "Bangsamoro (BARMM)": {
+    provinces: {
+      Basilan: { cities: { Lamitan: ["Malakas", "Malinis"] } },
+      "Lanao del Sur": { cities: { Marawi: ["Bangon", "Daguduban"] } },
+      "Maguindanao del Norte": { cities: { "Datu Odin Sinsuat": ["Tamontaka", "Dalican"] } },
+      "Maguindanao del Sur": { cities: { Buluan: ["Poblacion", "Popoyon"] } },
+      Sulu: { cities: { Jolo: ["Alat", "Busbus"] } },
+      "Tawi-Tawi": { cities: { Bongao: ["Luuk Pandan", "Poblacion"] } },
+    },
+  },
+  "Cordillera (CAR)": {
+    provinces: {
+      Abra: { cities: { Bangued: ["Zone 1", "Zone 2"] } },
+      Apayao: { cities: { Kabugao: ["Poblacion", "Nagtipunan"] } },
+      Benguet: { cities: { "La Trinidad": ["Alapang", "Poblacion"], Baguio: ["Loakan", "Irisan", "Aurora Hill"] } },
+      Ifugao: { cities: { Lagawe: ["Poblacion", "Burnay"] } },
+      Kalinga: { cities: { Tabuk: ["Bulanao", "Dagupan"] } },
+      "Mountain Province": { cities: { Bontoc: ["Poblacion", "Caluttit"] } },
+    },
+  },
+};
+
+const REGION_OPTIONS = Object.keys(LOCATION_DATA);
+
+const getProvinceOptions = (region: string) => {
+  if (!region || !LOCATION_DATA[region]) return [] as string[];
+  return Object.keys(LOCATION_DATA[region].provinces);
+};
+
+const getCityOptions = (region: string, province: string) => {
+  if (!region || !province) return [] as string[];
+  const provinceData = LOCATION_DATA[region]?.provinces?.[province];
+  if (!provinceData) return [] as string[];
+  return Object.keys(provinceData.cities || {});
+};
+
+const getBarangayOptions = (region: string, province: string, city: string) => {
+  if (!region || !province || !city) return [] as string[];
+  const cityBarangays = LOCATION_DATA[region]?.provinces?.[province]?.cities?.[city];
+  return cityBarangays || [];
+};
 
 export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -54,9 +257,9 @@ export default function SignupPage() {
     // Step 3
     street: "",
     barangay: "",
-    city: "Olongapo",
-    province: "Zambales",
-    region: "Central Luzon (Region III)",
+    city: "",
+    province: "",
+    region: "",
     postalCode: "",
   });
 
@@ -777,9 +980,11 @@ export default function SignupPage() {
                         }}
                       >
                         <option value="">Select Region</option>
-                        <option value="Central Luzon (Region III)">
-                          Central Luzon (Region III)
-                        </option>
+                        {REGION_OPTIONS.map((region) => (
+                          <option key={region} value={region}>
+                            {region}
+                          </option>
+                        ))}
                       </select>
                       <i className="fas fa-chevron-down input-icon"></i>
                     </div>
@@ -815,9 +1020,11 @@ export default function SignupPage() {
                         disabled={!formData.region}
                       >
                         <option value="">Select Province</option>
-                        {formData.region && (
-                          <option value="Zambales">Zambales</option>
-                        )}
+                        {getProvinceOptions(formData.region).map((prov) => (
+                          <option key={prov} value={prov}>
+                            {prov}
+                          </option>
+                        ))}
                       </select>
                       <i className="fas fa-chevron-down input-icon"></i>
                     </div>
@@ -854,8 +1061,12 @@ export default function SignupPage() {
                         disabled={!formData.province}
                       >
                         <option value="">Select City</option>
-                        {formData.province && (
-                          <option value="Olongapo">Olongapo</option>
+                        {getCityOptions(formData.region, formData.province).map(
+                          (city) => (
+                            <option key={city} value={city}>
+                              {city}
+                            </option>
+                          )
                         )}
                       </select>
                       <i className="fas fa-chevron-down input-icon"></i>
@@ -878,12 +1089,15 @@ export default function SignupPage() {
                         required
                       >
                         <option value="">Select Barangay</option>
-                        {formData.city &&
-                          BARANGAYS.map((b) => (
-                            <option key={b} value={b}>
-                              {b}
-                            </option>
-                          ))}
+                        {getBarangayOptions(
+                          formData.region,
+                          formData.province,
+                          formData.city
+                        ).map((b: string) => (
+                          <option key={b} value={b}>
+                            {b}
+                          </option>
+                        ))}
                       </select>
                       <i className="fas fa-chevron-down input-icon"></i>
                     </div>
@@ -1083,14 +1297,6 @@ export default function SignupPage() {
               </button>
             </div>
             
-            {devVerificationLink && (
-              <div className="dev-link-section">
-                <p className="dev-link-label">Development Link:</p>
-                <a href={devVerificationLink} className="dev-link">
-                  Click here to verify (Dev only)
-                </a>
-              </div>
-            )}
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, {
   useEffect,
   useState,
@@ -311,7 +311,7 @@ export default function ProductModal({
               : 0;
 
           setSellerInfo({
-            id: sellerData.id,
+            id: sellerData.id || sellerData._id || product.artistId || "",
             shopName: sellerData.shopName || `${sellerData.artistName}'s Shop`,
             artistName: sellerData.artistName,
             location: sellerData.location || "Olongapo City",
@@ -373,11 +373,16 @@ export default function ProductModal({
     setReviewText("");
   }, [product.productId]);
 
-  // Helper to get reviewer avatar
-  const getReviewerAvatar = (name: string) =>
-    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
-      name || "Reviewer"
-    )}`;
+  // Helper to get reviewer avatar (prefer backend-provided avatarUrl)
+  const getReviewerAvatar = (
+    name: string,
+    avatarUrl?: string | null
+  ) =>
+    avatarUrl && avatarUrl.trim()
+      ? avatarUrl
+      : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(
+          name || "Reviewer"
+        )}`;
 
   // Close description on modal open
   useEffect(() => {
@@ -650,6 +655,7 @@ export default function ProductModal({
   };
 
   const maxStock = product.maxStock || 99;
+  const madeInBarangay = sellerInfo?.location || product.barangay || "Unspecified";
 
   return (
     <div className="modal-overlay">
@@ -683,11 +689,6 @@ export default function ProductModal({
             <h3 className="modal-product-name">{product.name}</h3>
 
             <div className="modal-tags">
-              {product.craftType && product.craftType !== "Unspecified" && (
-                <span className="modal-tag craft-type">
-                  {product.craftType}
-                </span>
-              )}
               {product.category && product.category !== "Unspecified" && (
                 <span className="modal-tag category">{product.category}</span>
               )}
@@ -843,12 +844,8 @@ export default function ProductModal({
                     <span className="value">{product.category || "N/A"}</span>
                   </div>
                   <div className="description-item">
-                    <span className="label">Craft Type:</span>
-                    <span className="value">{product.craftType || "N/A"}</span>
-                  </div>
-                  <div className="description-item">
                     <span className="label">Made In Barangay:</span>
-                    <span className="value">{product.barangay || "N/A"}</span>
+                    <span className="value">{madeInBarangay}</span>
                   </div>
                   <div className="description-item">
                     <span className="label">Stock:</span>
@@ -873,140 +870,134 @@ export default function ProductModal({
             </div>
           </div>
 
-          {canReview && (
-            <>
-              <div className="modal-section-gap"></div>
+          <div className="modal-section-gap"></div>
 
-              {/* Product Ratings Section - Only visible to users who purchased */}
-              <div className="ratings-section">
-                <div className="ratings-header">
-                  <div className="ratings-title">
-                    <span className="ratings-count">
-                      {reviewAverage !== null
-                        ? reviewAverage.toFixed(1)
-                        : "0.0"}
-                    </span>
-                    <FaStar className="rating-star" />
-                    <span className="ratings-label">
-                      {reviewCount === 0
-                        ? "No reviews yet"
-                        : reviewCount === 1
-                        ? "Average from 1 review"
-                        : `Average from ${reviewCount} reviews`}
-                    </span>
+          {/* Product Ratings & Reviews - visible to all; submission gated by canReview */}
+          <div className="ratings-section">
+            <div className="ratings-header">
+              <div className="ratings-title">
+                <span className="ratings-count">
+                  {reviewAverage !== null ? reviewAverage.toFixed(1) : "0.0"}
+                </span>
+                <FaStar className="rating-star" />
+                <span className="ratings-label">
+                  {reviewCount === 0
+                    ? "No reviews yet"
+                    : reviewCount === 1
+                    ? "Average from 1 review"
+                    : `Average from ${reviewCount} reviews`}
+                </span>
+              </div>
+              <button
+                className="view-all-btn"
+                onClick={() => reviewList.length > 1 && setShowAllReviews(true)}
+                disabled={reviewList.length <= 1}
+              >
+                View all
+                <i className="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+
+            <div className="modal-divider-ratings"></div>
+
+            <div className="ratings-list">
+              {reviewsLoading ? (
+                <div className="review-card">
+                  <div className="reviewer-info">
+                    <div className="reviewer-details">
+                      <p className="review-text">Loading reviews...</p>
+                    </div>
                   </div>
-                  <button
-                    className="view-all-btn"
-                    onClick={() =>
-                      reviewList.length > 1 && setShowAllReviews(true)
-                    }
-                    disabled={reviewList.length <= 1}
-                  >
-                    View all
-                    <i className="fa-solid fa-chevron-right"></i>
-                  </button>
                 </div>
-
-                <div className="modal-divider-ratings"></div>
-
-                <div className="ratings-list">
-                  {reviewsLoading ? (
-                    <div className="review-card">
-                      <div className="reviewer-info">
-                        <div className="reviewer-details">
-                          <p className="review-text">Loading reviews...</p>
-                        </div>
-                      </div>
+              ) : reviewList.length === 0 ? (
+                <div className="review-card">
+                  <div className="reviewer-info">
+                    <div className="reviewer-details">
+                      <p className="review-text">
+                        No reviews yet. Be the first to share your thoughts!
+                      </p>
                     </div>
-                  ) : reviewList.length === 0 ? (
-                    <div className="review-card">
-                      <div className="reviewer-info">
-                        <div className="reviewer-details">
-                          <p className="review-text">
-                            No reviews yet. Be the first to share your thoughts!
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : !showAllReviews ? (
-                    <div className="review-card">
-                      <div className="reviewer-info">
-                        <img
-                          src={getReviewerAvatar(reviewList[0].userName)}
-                          alt={reviewList[0].userName}
-                          className="reviewer-avatar"
-                        />
-                        <div className="reviewer-details">
-                          <h4 className="reviewer-name">
-                            {reviewList[0].userName}
-                          </h4>
-                          <div className="review-rating">
-                            {[...Array(5)].map((_, index) => (
-                              <FaStar
-                                key={index}
-                                className={
-                                  index < reviewList[0].rating
-                                    ? "star-filled"
-                                    : "star-empty"
-                                }
-                              />
-                            ))}
-                          </div>
-                          <p className="review-text">{reviewList[0].comment}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="all-reviews-modal">
-                      <div className="all-reviews-header">
-                        <h3>All Product Reviews</h3>
-                        <button
-                          className="modal-close"
-                          style={{ position: "static", marginLeft: "auto" }}
-                          onClick={() => setShowAllReviews(false)}
-                        >
-                          <FaTimes />
-                        </button>
-                      </div>
-                      <div className="all-reviews-list">
-                        {reviewList.map((review) => (
-                          <div className="review-card" key={review.id}>
-                            <div className="reviewer-info">
-                              <img
-                                src={getReviewerAvatar(review.userName)}
-                                alt={review.userName}
-                                className="reviewer-avatar"
-                              />
-                              <div className="reviewer-details">
-                                <h4 className="reviewer-name">
-                                  {review.userName}
-                                </h4>
-                                <div className="review-rating">
-                                  {[...Array(5)].map((_, index) => (
-                                    <FaStar
-                                      key={index}
-                                      className={
-                                        index < review.rating
-                                          ? "star-filled"
-                                          : "star-empty"
-                                      }
-                                    />
-                                  ))}
-                                </div>
-                                <p className="review-text">{review.comment}</p>
-                              </div>
-                            </div>
-                          </div>
+                  </div>
+                </div>
+              ) : !showAllReviews ? (
+                <div className="review-card">
+                  <div className="reviewer-info">
+                    <img
+                      src={getReviewerAvatar(
+                        reviewList[0].userName,
+                        (reviewList[0] as any).avatarUrl
+                      )}
+                      alt={reviewList[0].userName}
+                      className="reviewer-avatar"
+                    />
+                    <div className="reviewer-details">
+                      <h4 className="reviewer-name">{reviewList[0].userName}</h4>
+                      <div className="review-rating">
+                        {[...Array(5)].map((_, index) => (
+                          <FaStar
+                            key={index}
+                            className={
+                              index < reviewList[0].rating
+                                ? "star-filled"
+                                : "star-empty"
+                            }
+                          />
                         ))}
                       </div>
+                      <p className="review-text">{reviewList[0].comment}</p>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="all-reviews-modal">
+                  <div className="all-reviews-header">
+                    <h3>All Product Reviews</h3>
+                    <button
+                      className="modal-close"
+                      style={{ position: "static", marginLeft: "auto" }}
+                      onClick={() => setShowAllReviews(false)}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                  <div className="all-reviews-list">
+                    {reviewList.map((review) => (
+                      <div className="review-card" key={review.id}>
+                        <div className="reviewer-info">
+                          <img
+                                src={getReviewerAvatar(
+                                  review.userName,
+                                  (review as any).avatarUrl
+                                )}
+                            alt={review.userName}
+                            className="reviewer-avatar"
+                          />
+                          <div className="reviewer-details">
+                            <h4 className="reviewer-name">{review.userName}</h4>
+                            <div className="review-rating">
+                              {[...Array(5)].map((_, index) => (
+                                <FaStar
+                                  key={index}
+                                  className={
+                                    index < review.rating
+                                      ? "star-filled"
+                                      : "star-empty"
+                                  }
+                                />
+                              ))}
+                            </div>
+                            <p className="review-text">{review.comment}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
-              <div className="modal-section-gap"></div>
-            </>
-          )}
+          <div className="modal-section-gap"></div>
 
           {/* Seller/Artist Section */}
           <div className="seller-section">
