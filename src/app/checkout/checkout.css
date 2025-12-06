@@ -894,12 +894,9 @@
 }
 
 .checkout-loading-spinner {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 4px solid rgba(175, 121, 40, 0.2);
-  border-top-color: #af7928;
-  animation: checkout-spinner-rotate 0.8s linear infinite;
+  font-size: 48px;
+  color: #2E3F36;
+  animation: spin 0.6s linear infinite;
 }
 
 .checkout-loading p {
@@ -908,7 +905,7 @@
   color: #2e3f36;
 }
 
-@keyframes checkout-spinner-rotate {
+@keyframes spin {
   to {
     transform: rotate(360deg);
   }

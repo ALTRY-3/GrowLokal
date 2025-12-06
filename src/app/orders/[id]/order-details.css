@@ -20,6 +20,11 @@
   text-align: center;
 }
 
+/* Prevent global spinner animation from affecting this wrapper */
+.order-details-page .loading-spinner {
+  animation: none;
+}
+
 .loading-spinner i,
 .error-state i {
   font-size: 64px;

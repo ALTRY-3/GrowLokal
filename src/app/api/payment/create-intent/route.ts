@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           success: true,
           data: {
             sourceId: 'mock-gcash',
-            checkoutUrl: `${baseUrl}/payment/ewallet/success?orderId=${order.orderId}&mock=1`,
+            checkoutUrl: `${baseUrl}/payment/ewallet/success?orderId=${order.orderId}&mock=1&sourceId=mock-gcash`,
             status: 'paid',
             metadata: {
               orderId: order.orderId,

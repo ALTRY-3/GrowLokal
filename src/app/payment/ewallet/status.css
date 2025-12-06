@@ -44,6 +44,17 @@
   color: #c77800;
 }
 
+.loading-spinner {
+  animation: spin 0.6s linear infinite;
+  color: #2E3F36;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .payment-status-card h1 {
   font-size: 24px;
   margin-bottom: 12px;

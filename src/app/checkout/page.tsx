@@ -3,7 +3,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { FaShoppingCart, FaMapMarkerAlt } from "react-icons/fa";
+import { FaShoppingCart, FaMapMarkerAlt, FaSpinner } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCartStore } from "@/store/cartStore";
@@ -522,7 +522,10 @@ export default function CheckoutPage() {
         <Navbar />
         <div className="checkout-wrapper">
           <div className="checkout-loading" role="status" aria-live="polite">
-            <span className="checkout-loading-spinner" aria-hidden="true" />
+            <FaSpinner
+              className="loading-spinner checkout-loading-spinner"
+              aria-hidden="true"
+            />
             <p>Loading checkout...</p>
           </div>
         </div>

@@ -4900,9 +4900,29 @@ export default function ProfilePage() {
                         </button>
                       </div>
                       
-                      <p style={{ color: "#666", marginBottom: "24px", fontSize: "0.9rem" }}>
-                        Please rate the products you received. Your feedback helps other buyers!
-                      </p>
+                      <div
+                        style={{
+                          background: "linear-gradient(135deg, #fff9f2, #ffffff)",
+                          border: "1px solid #f1e4d5",
+                          borderRadius: "16px",
+                          padding: "16px 18px",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: "#2e3f36",
+                            margin: 0,
+                            fontSize: "1rem",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Share quick feedback for this order
+                        </p>
+                        <p style={{ color: "#55615a", margin: "4px 0 0", fontSize: "0.9rem" }}>
+                          Ratings help artisans and other buyers. Comments are optional.
+                        </p>
+                      </div>
 
                       {reviewOrder.items?.map((item, index) => {
                         const productId = resolveProductId(item.productId);
@@ -4913,38 +4933,48 @@ export default function ProfilePage() {
                           <div 
                             key={productId || index}
                             style={{
-                              background: "#f9f9f9",
-                              borderRadius: "12px",
-                              padding: "16px",
-                              marginBottom: "16px"
+                              background: "#fff",
+                              borderRadius: "14px",
+                              padding: "18px",
+                              marginBottom: "16px",
+                              border: "1px solid #eef0ed",
+                              boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
                             }}
                           >
-                            <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+                            <div style={{ display: "flex", gap: "14px", marginBottom: "14px" }}>
                               <img
                                 src={item.image || "https://placehold.co/60x60?text=Product"}
                                 alt={item.name || "Product"}
                                 style={{
-                                  width: "60px",
-                                  height: "60px",
-                                  borderRadius: "8px",
-                                  objectFit: "cover"
+                                  width: "72px",
+                                  height: "72px",
+                                  borderRadius: "10px",
+                                  objectFit: "cover",
+                                  border: "1px solid #f0f0f0",
                                 }}
                               />
                               <div>
-                                <p style={{ fontWeight: "600", margin: "0 0 4px 0", color: "#333" }}>
+                                <p style={{ fontWeight: 700, margin: "0 0 6px 0", color: "#2e3f36" }}>
                                   {item.name || "Product"}
                                 </p>
-                                <p style={{ fontSize: "0.85rem", color: "#666", margin: 0 }}>
+                                <p style={{ fontSize: "0.9rem", color: "#55615a", margin: 0 }}>
                                   {item.artistName || "Artisan"} • Qty: {item.quantity || 1}
                                 </p>
                               </div>
                             </div>
 
                             <div style={{ marginBottom: "12px" }}>
-                              <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "8px" }}>
+                              <p
+                                style={{
+                                  fontSize: "0.9rem",
+                                  color: "#55615a",
+                                  marginBottom: "8px",
+                                  textAlign: "left",
+                                }}
+                              >
                                 Your Rating:
                               </p>
-                              <div style={{ display: "flex", gap: "4px" }}>
+                              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                                 {[1, 2, 3, 4, 5].map((star) => (
                                   <button
                                     key={star}
@@ -4956,7 +4986,7 @@ export default function ProfilePage() {
                                       background: "none",
                                       border: "none",
                                       cursor: "pointer",
-                                      fontSize: "1.5rem",
+                                      fontSize: "1.65rem",
                                       color: star <= (hoverRating || currentReview.rating) ? "#FFC107" : "#ddd",
                                       transition: "color 0.2s, transform 0.2s",
                                       padding: "2px"
@@ -4972,7 +5002,14 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                              <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "8px" }}>
+                              <p
+                                style={{
+                                  fontSize: "0.9rem",
+                                  color: "#55615a",
+                                  marginBottom: "8px",
+                                  textAlign: "left",
+                                }}
+                              >
                                 Your Review (optional):
                               </p>
                               <textarea
@@ -4981,14 +5018,15 @@ export default function ProfilePage() {
                                 placeholder="Share your experience with this product..."
                                 style={{
                                   width: "100%",
-                                  minHeight: "80px",
-                                  padding: "12px",
-                                  borderRadius: "8px",
-                                  border: "1px solid #ddd",
-                                  fontSize: "0.9rem",
+                                  minHeight: "90px",
+                                  padding: "12px 14px",
+                                  borderRadius: "10px",
+                                  border: "1px solid #d7dcd8",
+                                  fontSize: "0.95rem",
                                   resize: "vertical",
                                   fontFamily: "inherit",
-                                  boxSizing: "border-box"
+                                  boxSizing: "border-box",
+                                  background: "#fcfcfb",
                                 }}
                               />
                             </div>
@@ -5003,11 +5041,11 @@ export default function ProfilePage() {
                           style={{
                             flex: 1,
                             padding: "12px 20px",
-                            borderRadius: "8px",
-                            border: "1px solid #ddd",
+                            borderRadius: "10px",
+                            border: "1px solid #e3e7e4",
                             background: "#fff",
-                            color: "#666",
-                            fontSize: "0.9rem",
+                            color: "#55615a",
+                            fontSize: "0.95rem",
                             cursor: isSubmittingReview ? "not-allowed" : "pointer",
                             opacity: isSubmittingReview ? 0.7 : 1
                           }}
@@ -5020,12 +5058,13 @@ export default function ProfilePage() {
                           style={{
                             flex: 2,
                             padding: "12px 20px",
-                            borderRadius: "8px",
+                            borderRadius: "10px",
                             border: "none",
-                            background: "#AF7928",
+                            background: "linear-gradient(135deg, #af7928, #8f6322)",
+                            boxShadow: "0 6px 16px rgba(175, 121, 40, 0.35)",
                             color: "#fff",
-                            fontSize: "0.9rem",
-                            fontWeight: "600",
+                            fontSize: "0.95rem",
+                            fontWeight: 700,
                             cursor: isSubmittingReview ? "not-allowed" : "pointer",
                             opacity: isSubmittingReview ? 0.7 : 1
                           }}

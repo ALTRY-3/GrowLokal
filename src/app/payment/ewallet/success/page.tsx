@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { FaSpinner } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "../status.css";
@@ -12,16 +13,33 @@ export default function PayMongoSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
-  const sourceId = searchParams.get("id") || searchParams.get("sourceId");
+  const sourceId =
+    searchParams.get("id") ||
+    searchParams.get("sourceId") ||
+    searchParams.get("checkout_reference");
+  const isMock = searchParams.get("mock") === "1";
 
   const [status, setStatus] = useState<StatusState>("verifying");
   const [message, setMessage] = useState("Confirming your payment with PayMongo...");
   const [shouldPoll, setShouldPoll] = useState(false);
 
   useEffect(() => {
-    if (!orderId || !sourceId) {
+    if (!orderId) {
       setStatus("error");
-      setMessage("Missing order or payment reference.");
+      setMessage("Missing order reference.");
+      return;
+    }
+
+    if (isMock && orderId) {
+      setStatus("success");
+      setMessage("Payment confirmed! Redirecting to your order...");
+      setTimeout(() => router.push(`/orders/${orderId}`), 1200);
+      return;
+    }
+
+    if (!sourceId) {
+      setStatus("error");
+      setMessage("Missing payment reference. Please retry the payment.");
       return;
     }
 
@@ -98,7 +116,7 @@ export default function PayMongoSuccessPage() {
   const renderIcon = () => {
     if (status === "success") return "✅";
     if (status === "error") return "⚠️";
-    return "⏳";
+    return <FaSpinner className="loading-spinner" aria-hidden="true" />;
   };
 
   return (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { FaSpinner, FaCheckCircle } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "./payment.css";
@@ -14,6 +15,7 @@ export default function PaymentPage() {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [clientKey, setClientKey] = useState<string | null>(null);
@@ -270,8 +272,9 @@ export default function PaymentPage() {
       }
 
       if (confirmData.success && paymentStatus === 'paid') {
-        alert('Payment successful!');
-        router.push(`/orders/${order.orderId}`);
+        setRedirecting(true);
+        setProcessing(false);
+        setTimeout(() => router.push(`/orders/${order.orderId}`), 1000);
         return;
       }
 
@@ -312,8 +315,28 @@ export default function PaymentPage() {
         <main className="payment-page">
           <div className="payment-container">
             <div className="payment-loading" role="status" aria-live="polite">
-              <span className="payment-loading-spinner" aria-hidden="true" />
+                <FaSpinner
+                  className="loading-spinner payment-loading-spinner"
+                  aria-hidden="true"
+                />
               <p>Loading payment...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (redirecting) {
+    return (
+      <>
+        <Navbar />
+        <main className="payment-page">
+          <div className="payment-container">
+            <div className="payment-loading success" role="status" aria-live="polite">
+              <FaCheckCircle className="payment-success-icon" aria-hidden="true" />
+              <p>Payment successful! Redirecting to your order...</p>
             </div>
           </div>
         </main>
@@ -466,7 +489,7 @@ export default function PaymentPage() {
 
                 {!paymentIntentId && !error && (
                   <div className="loading-payment-intent" style={{ padding: '15px', background: '#fff3cd', borderRadius: '8px', marginBottom: '15px', textAlign: 'center' }}>
-                    <i className="fas fa-spinner"></i>
+                    <FaSpinner className="loading-spinner inline-spinner" aria-hidden="true" />
                     <p style={{ margin: '10px 0 0 0' }}>Initializing payment...</p>
                   </div>
                 )}
@@ -479,12 +502,12 @@ export default function PaymentPage() {
                 >
                   {processing ? (
                     <>
-                      <i className="fas fa-spinner"></i>
+                      <FaSpinner className="loading-spinner inline-spinner" aria-hidden="true" />
                       Processing...
                     </>
                   ) : !paymentIntentId ? (
                     <>
-                      <i className="fas fa-spinner"></i>
+                      <FaSpinner className="loading-spinner inline-spinner" aria-hidden="true" />
                       Initializing...
                     </>
                   ) : (

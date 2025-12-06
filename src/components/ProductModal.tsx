@@ -119,6 +119,17 @@ export default function ProductModal({
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsError, setReviewsError] = useState<string | null>(null);
   const [canReview, setCanReview] = useState(false);
+  const reviewsCacheRef = useRef<
+    Record<
+      string,
+      {
+        reviews: ProductReview[];
+        average: number | null;
+        count: number;
+        canReview: boolean;
+      }
+    >
+  >({});
 
   // Seller info state
   const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
@@ -208,8 +219,17 @@ export default function ProductModal({
 
     let isCancelled = false;
 
+    const cached = reviewsCacheRef.current[product.productId];
+    if (cached) {
+      setReviewList(cached.reviews);
+      setReviewAverage(cached.average);
+      setReviewCount(cached.count);
+      setCanReview(cached.canReview);
+      setReviewsLoading(false);
+    }
+
     const fetchReviews = async () => {
-      setReviewsLoading(true);
+      setReviewsLoading(!cached);
       setReviewsError(null);
       try {
         const response = await fetch(
@@ -237,6 +257,19 @@ export default function ProductModal({
               : reviews.length
           );
           setCanReview(payload?.data?.canReview === true);
+
+          reviewsCacheRef.current[product.productId] = {
+            reviews,
+            average:
+              typeof payload?.data?.averageRating === "number"
+                ? payload.data.averageRating
+                : null,
+            count:
+              typeof payload?.data?.totalReviews === "number"
+                ? payload.data.totalReviews
+                : reviews.length,
+            canReview: payload?.data?.canReview === true,
+          };
         }
       } catch (error) {
         if (!isCancelled) {
